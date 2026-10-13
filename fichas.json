@@ -1,0 +1,162 @@
+[
+  {
+    "id": "FICHA-001",
+    "tema": "Deficit moderado",
+    "regla": "Si el objetivo es perder grasa, usa un deficit del 10-20 % sobre el gasto. Nunca mas del 25 %.",
+    "por_que": "Los deficits agresivos aumentan la perdida de musculo, el hambre y los abandonos.",
+    "evidencia": "alto",
+    "fuente": "Revisiones sobre perdida de peso y composicion corporal",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-002",
+    "tema": "Superavit pequeno",
+    "regla": "Si el objetivo es ganar musculo, usa un superavit del 5-10 %.",
+    "por_que": "Mas superavit anade sobre todo grasa, no mas musculo.",
+    "evidencia": "medio",
+    "fuente": "Revisiones sobre hipertrofia y nutricion deportiva",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-003",
+    "tema": "Proteina",
+    "regla": "Si la persona entrena o esta en deficit, reparte la proteina en todas las comidas y prioriza fuentes magras, huevos, lacteos y legumbres.",
+    "por_que": "Mejora la saciedad y ayuda a conservar musculo.",
+    "evidencia": "alto",
+    "fuente": "Posicionamientos de sociedades de nutricion deportiva",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-004",
+    "tema": "Saciedad",
+    "regla": "Si el usuario reporta hambre entre comidas, aumenta fibra y volumen (verdura, legumbres, fruta entera, cereales integrales) antes de bajar calorias.",
+    "por_que": "Los alimentos voluminosos y ricos en fibra sacian mas por caloria.",
+    "evidencia": "medio",
+    "fuente": "Revisiones sobre saciedad y densidad energetica",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-005",
+    "tema": "Ajuste por tendencia",
+    "regla": "Si el peso no cambia, no modifiques el plan hasta tener 2 semanas de media semanal. Si hay que ajustar, cambia como maximo 100-150 kcal.",
+    "por_que": "El peso diario fluctua por agua y digestion.",
+    "evidencia": "medio",
+    "fuente": "Guias de seguimiento de composicion corporal",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-006",
+    "tema": "Flexibilidad",
+    "regla": "Si el usuario se salta la dieta un dia, responde sin culpa y propon retomar en la siguiente comida, sin compensar con ayuno ni restriccion.",
+    "por_que": "El enfoque rigido todo o nada se asocia a mas atracones.",
+    "evidencia": "medio",
+    "fuente": "Estudios sobre restriccion flexible frente a rigida",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-007",
+    "tema": "Hambre emocional",
+    "regla": "Si el usuario dice que come por estres, aburrimiento o ansiedad, pregunta cuando ocurre y propon una pausa de 10 minutos y una alternativa no alimentaria. No des consejos de restriccion.",
+    "por_que": "Identificar el desencadenante reduce la comida automatica.",
+    "evidencia": "medio",
+    "fuente": "Literatura sobre alimentacion emocional y mindful eating",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-008",
+    "tema": "Alimentos prohibidos",
+    "regla": "Si el usuario quiere incluir un capricho, incluyelo en pequena cantidad dentro del plan (hasta el 10-15 % de las kcal).",
+    "por_que": "Prohibir un alimento aumenta el deseo y los atracones.",
+    "evidencia": "medio",
+    "fuente": "Estudios sobre restriccion alimentaria y antojos",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-009",
+    "tema": "Habitos pequenos",
+    "regla": "Si el usuario quiere cambiar varias cosas a la vez, propon un solo cambio por semana, anclado a una rutina existente.",
+    "por_que": "Los cambios pequenos se sostienen mas que los drasticos.",
+    "evidencia": "medio",
+    "fuente": "Literatura sobre formacion de habitos",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-010",
+    "tema": "Entorno",
+    "regla": "Si el usuario pica entre horas, sugiere tener a la vista fruta y snacks del plan y fuera de la vista los ultraprocesados.",
+    "por_que": "El entorno condiciona lo que se come.",
+    "evidencia": "medio",
+    "fuente": "Estudios sobre entorno alimentario",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-011",
+    "tema": "Comer despacio",
+    "regla": "Si el usuario come muy rapido o frente a una pantalla, sugiere una comida al dia sin pantallas y parar a mitad del plato para notar la saciedad.",
+    "por_que": "Mejora la percepcion de saciedad.",
+    "evidencia": "bajo",
+    "fuente": "Estudios pequenos sobre mindful eating",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-012",
+    "tema": "Pareja",
+    "regla": "En grupos, genera una receta base comun y ajusta solo las cantidades por persona.",
+    "por_que": "Se cocina una vez y se reduce la compra.",
+    "evidencia": "bajo",
+    "fuente": "Practica de planificacion, sin estudio concreto",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-013",
+    "tema": "Reutilizar ingredientes",
+    "regla": "Cada ingrediente perecedero debe aparecer al menos en 2-3 comidas de la semana. Evita ingredientes que solo se usan una vez.",
+    "por_que": "Reduce el desperdicio y el coste.",
+    "evidencia": "bajo",
+    "fuente": "Practica de planificacion",
+    "prioridad": false,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-014",
+    "tema": "Senales de TCA",
+    "regla": "Si el usuario menciona purgas, ayunos extremos, miedo intenso a engordar, culpa intensa tras comer o atracones frecuentes, devuelve derivar_profesional, sin cifras ni planes. Responde con empatia y sin diagnosticar.",
+    "por_que": "Un plan restrictivo puede empeorar un trastorno de la conducta alimentaria.",
+    "evidencia": "alto",
+    "fuente": "Guias clinicas sobre trastornos de la conducta alimentaria",
+    "prioridad": true,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-015",
+    "tema": "Condiciones medicas y edad",
+    "regla": "Si el usuario es menor de 18, esta embarazada o en lactancia, o tiene diabetes u otra enfermedad cronica o toma medicacion relevante, devuelve derivar_profesional.",
+    "por_que": "Sus necesidades requieren supervision sanitaria.",
+    "evidencia": "alto",
+    "fuente": "Guias oficiales de nutricion (OMS, AESAN)",
+    "prioridad": true,
+    "revision": "2026-10"
+  },
+  {
+    "id": "FICHA-016",
+    "tema": "Peticiones extremas",
+    "regla": "Si el usuario pide perder mas de 1 kg por semana, ayunar varios dias o comer menos de los minimos, rechaza amablemente y ofrece un ritmo seguro (0,25-0,75 kg/semana).",
+    "por_que": "Los ritmos extremos dan problemas de salud y rebote.",
+    "evidencia": "alto",
+    "fuente": "Guias oficiales y revisiones sobre perdida de peso",
+    "prioridad": true,
+    "revision": "2026-10"
+  }
+]
