@@ -18,12 +18,16 @@ Así un supermercado sin scraper (Mercadona, Dia, Lidl…) sigue teniendo catál
 | **Mercadona** | ✅ Catálogo sin precios | Solo lo permitido por `robots.txt`: sitemap y páginas `/product` (nombre e imagen). `/api` está prohibido y no se usa. Los precios llegan por el escáner. El 18740 (Castell de Ferro) queda fuera de su zona online. Open Prices solo tenía 149 precios de Mercadona en España (2026-10-16). |
 | **Ahorramás** | ✅ Scraper | Páginas de categoría HTML (`?start=N&sz=24`), permitidas por `robots.txt`. Distingue ofertas. Sin EAN. |
 | **Gadis** | ✅ Scraper | `__NEXT_DATA__` de las categorías hoja (50 primeros) y, para el resto, de cada ficha. Sin EAN. Diario con `--rapido`, completo los domingos. |
+| **Caprabo** | ✅ Scraper | Misma plataforma que Eroski, pero su `robots.txt` sí permite la paginación (`supermarket:loadpage?t:ac=`). Sin EAN. |
 | Dia, El Corte Inglés, Hipercor | ❌ | 403 a peticiones automáticas |
+| Froiz | ❌ | La tienda (`froiz.epreselec.com`) responde con la página de bloqueo de Imperva ("Pardon Our Interruption"). |
+| BM, masymas | ⏸ | Misma plataforma (Angular): el HTML no trae productos y todo sale de `/api/`, prohibido en `robots.txt`. |
+| Covirán | ➖ | Sin tienda online (solo web corporativa y folleto) → escáner. Importante para Granada. |
+| Condis | ⏸ | La tienda exige una sesión OAuth anónima antes de mostrar nada; sin investigar a fondo. |
 | Alcampo | ❌ | AWS WAF con captcha: `/products/...` y `/api/...` dan 403 (2026-10-16). La portada y el sitemap sí responden, pero no se intenta saltar. |
 | Eroski | ⏸ | Permitido, pero solo los 20 primeros productos de cada categoría: la paginación (`supermarket:loadpage?t:ac=`) y la búsqueda están prohibidas en `robots.txt`, y la ficha no trae EAN. Cobertura parcial; se deja para más adelante. |
 | Consum, Bon Preu | ⏸ | `robots.txt` prohíbe `/api/` |
 | Lidl, Aldi | ➖ | Sin catálogo de alimentación completo online → escáner |
-| Caprabo, masymas, Condis, Froiz, BM, Covirán | 🔍 Por investigar | |
 
 ## Carrefour: detalles
 
@@ -67,6 +71,15 @@ Así un supermercado sin scraper (Mercadona, Dia, Lidl…) sigue teniendo catál
 - **Medido el 2026-10-16:** 415 categorías hoja dan 7.614 productos (35 hojas pasan de 50). El sitemap tiene 12.069 productos, así que quedan ~5.400 fichas (~1,5 h y ~5 GB a 1/s).
 - **Modo diario (`--rapido`):** solo categorías, ~10 min. No descataloga (faltan los que solo salen en su ficha) y se compara solo con otras ejecuciones `--rapido`. Los domingos va la completa.
 
+## Caprabo: detalles
+
+- **Fuente:** [index.ts](../scrapers/caprabo/index.ts). Raíces con id numérico del `sitemap.xml` (sin papelería ni hogar/bricolaje). La página de la raíz trae 20 productos; las siguientes se piden a `supermarket:loadpage?t:ac=<raíz>&pageNumber=N&t:zoneid=productListZone` con `X-Requested-With: XMLHttpRequest` y la cookie de sesión de la visita. Responde JSON `{content: html}`; al acabar, `_tapestry.inits` incluye `pages/supermarket:finishPagination`.
+- **`robots.txt`:** solo prohíbe `:changelanguage`, la búsqueda (`search/results/?q=`), `?zipCode` y `;jsessionid`. Eroski, con la misma plataforma, sí prohíbe `?t:ac=`.
+- **Por producto:** `data-metrics` (JSON con `item_id`, `item_name`, `item_brand`, `price`, `item_category..3`), imagen, enlace, `price-before` (precio anterior si hay oferta), `price-offer-now` y precio por unidad ("1 KILO A 4,17 €").
+- El HTML de `loadpage` usa comillas simples en los atributos y el de la página, dobles: el parser acepta las dos.
+- Va a 1 petición cada 1,5 s. Prueba del 2026-10-16: 760 productos de *frescos* en 39 páginas.
+- Sin ejemplo de oferta todavía: `price-before` venía vacío en todo lo probado. Vigilar en la primera carga que se rellena.
+
 ## Ejecutar
 
 ```bash
@@ -76,6 +89,7 @@ npm run scraper -- carrefour --rapido                     # sin la expansión po
 npm run scraper -- ahorramas                              # ~30 min (1 petición cada 4 s)
 npm run scraper -- gadis --rapido                         # solo categorías, ~10 min
 npm run scraper -- gadis                                  # categorías + fichas que falten, ~2 h
+npm run scraper -- caprabo                                # ~15 min
 ```
 
 Cada ejecución:

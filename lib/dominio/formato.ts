@@ -17,11 +17,11 @@ const FACTORES: Record<string, [UnidadBase, number]> = {
   l: ["ml", 1000], lt: ["ml", 1000], litro: ["ml", 1000], litros: ["ml", 1000],
   cl: ["ml", 10], dl: ["ml", 100], ml: ["ml", 1],
   ud: ["unidad", 1], uds: ["unidad", 1], u: ["unidad", 1], unidad: ["unidad", 1], unidades: ["unidad", 1],
-  lavados: ["unidad", 1], dosis: ["unidad", 1], capsulas: ["unidad", 1], "cápsulas": ["unidad", 1],
+  lavados: ["unidad", 1], lav: ["unidad", 1], dosis: ["unidad", 1], capsulas: ["unidad", 1], "cápsulas": ["unidad", 1],
 };
 
 const NUM = String.raw`(\d+(?:[.,]\d+)?)`;
-const UNI = String.raw`(kg|kilos?|grs?|gramos|g|mg|litros?|lt|l|cl|dl|ml|uds?|unidad(?:es)?|u|lavados|dosis|c[aá]psulas)(?![\p{L}])\.?`;
+const UNI = String.raw`(kg|kilos?|grs?|gramos|g|mg|litros?|lt|l|cl|dl|ml|uds?|unidad(?:es)?|u|lavados|lav|dosis|c[aá]psulas)(?![\p{L}])\.?`;
 
 const ENVASES = String.raw`(?:latas?|botell(?:as?|ines?)|bri[ck]ks?|tarrinas?|envases?|sobres?|bolsas?|tetrabri[ck]ks?)`;
 
@@ -50,6 +50,13 @@ export function parsearFormato(texto: string | null | undefined): Formato | null
     const [unidad, factor] = FACTORES[uni.replace(/\.$/, "")];
     return { cantidad: redondear(aNumero(num) * factor), unidad, pack: 1, aproximado };
   }
+
+  // "1 docena", "media docena", "2 docenas"
+  const docena = t.match(/(\d+|media)\s*docenas?\b/);
+  if (docena) return { cantidad: docena[1] === "media" ? 6 : Number(docena[1]) * 12, unidad: "unidad", pack: 1, aproximado };
+
+  // Sin cantidad pero vendido por pieza: "Coliflor, unidad", "Zanahoria, manojo"
+  if (/(^|[\s,])(unidad|pieza|manojo)\b\.?\s*$/.test(t)) return { cantidad: 1, unidad: "unidad", pack: 1, aproximado };
   return null;
 }
 

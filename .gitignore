@@ -14,6 +14,7 @@ supabase/.branches/
 
 # Dato bruto de scrapers en local (en produccion va a Supabase Storage)
 data/raw/
+data/logs/
 
 .DS_Store
 Thumbs.db

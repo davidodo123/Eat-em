@@ -15,10 +15,11 @@ import { carrefour } from "./carrefour/index.ts";
 import { mercadona } from "./mercadona/index.ts";
 import { ahorramas } from "./ahorramas/index.ts";
 import { gadis } from "./gadis/index.ts";
+import { caprabo } from "./caprabo/index.ts";
 import { informeCalidad, type Anterior } from "./comun/calidad.ts";
 import type { ProductoNormalizado, Scraper } from "./comun/tipos.ts";
 
-const SCRAPERS: Record<string, Scraper> = { carrefour, mercadona, ahorramas, gadis };
+const SCRAPERS: Record<string, Scraper> = { carrefour, mercadona, ahorramas, gadis, caprabo };
 
 const args = process.argv.slice(2);
 const id = args.find((a) => !a.startsWith("--"));

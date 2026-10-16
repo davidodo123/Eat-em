@@ -144,7 +144,7 @@ export function parsearListado(html: string): ItemAhorramas[] {
 // Unidad del precio por unidad -> unidad propia y cuantas hay en ella
 const UNIDADES: Record<string, ["kg" | "l" | "unidad", number]> = {
   KILO: ["kg", 1], KG: ["kg", 1], LITRO: ["l", 1], L: ["l", 1], UNIDAD: ["unidad", 1], UD: ["unidad", 1],
-  DOCENA: ["unidad", 12],
+  DOCENA: ["unidad", 12], LAVADO: ["unidad", 1],
 };
 
 export function normalizar(it: ItemAhorramas, ahora: string): ProductoNormalizado {

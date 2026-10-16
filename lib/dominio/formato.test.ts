@@ -11,6 +11,8 @@ test("formatos simples", () => {
   assert.deepEqual(parsearFormato("1,5 kg"), { cantidad: 1500, unidad: "g", pack: 1, aproximado: false });
   assert.deepEqual(parsearFormato("12 ud"), { cantidad: 12, unidad: "unidad", pack: 1, aproximado: false });
   assert.deepEqual(parsearFormato("80 lavados."), { cantidad: 80, unidad: "unidad", pack: 1, aproximado: false });
+  assert.equal(parsearFormato("Detergente líquido Ariel platinum 40lav + poder quitamanchas")?.cantidad, 40);
+  assert.equal(parsearFormato("Detergente Cápsulas Dixan 24Lav Triocaps")?.cantidad, 24);
   assert.equal(parsearFormato("Galletas 4 lunes"), null); // "l" no debe casar dentro de una palabra
 });
 
@@ -39,6 +41,11 @@ test("peso variable y sin formato", () => {
     { cantidad: 1000, unidad: "g", pack: 1, aproximado: true });
   assert.equal(parsearFormato(""), null);
   assert.equal(parsearFormato("Recuerdos de un hacendado"), null);
+  assert.deepEqual(parsearFormato("Huevo fresco L EROSKI, cartón 1 docena"), { cantidad: 12, unidad: "unidad", pack: 1, aproximado: false });
+  assert.equal(parsearFormato("Huevos media docena")?.cantidad, 6);
+  assert.deepEqual(parsearFormato("Coliflor, unidad"), { cantidad: 1, unidad: "unidad", pack: 1, aproximado: false });
+  assert.equal(parsearFormato("Zanahoria LA CONCA, manojo")?.cantidad, 1);
+  assert.equal(parsearFormato("Unidad de medida"), null);
 });
 
 test("precio por unidad", () => {

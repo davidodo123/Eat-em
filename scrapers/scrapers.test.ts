@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import * as ahorramas from "./ahorramas/index.ts";
 import * as gadis from "./gadis/index.ts";
+import * as caprabo from "./caprabo/index.ts";
 import * as mercadona from "./mercadona/index.ts";
 import { normalizar as normalizarCarrefour } from "./carrefour/index.ts";
 import { adivinarCategoria } from "./comun/categorias.ts";
@@ -109,6 +110,40 @@ test("gadis: categorias hoja", () => {
   const urls = ["https://g.com/lacteos", "https://g.com/lacteos/leche", "https://g.com/lacteos/leche/entera",
     "https://g.com/lacteos/yogures", "https://g.com/precios-especiales/lacteos"];
   assert.deepEqual(gadis.categoriasHoja(urls), ["https://g.com/lacteos/leche/entera", "https://g.com/lacteos/yogures"]);
+});
+
+test("caprabo: categoria y loadpage", () => {
+  // Pagina de categoria (comillas dobles, metricas con &quot;)
+  const [a] = caprabo.parsearTarjetas(fixture("./caprabo/fixtures/categoria.html"));
+  assert.equal(a.id, "16837858");
+  assert.equal(a.url, "https://www.capraboacasa.com/es/productdetail/16837858-danacol-para-beber-natural-danone-pack-14x110-ml/");
+  assert.equal(a.imagen, "https://www.capraboacasa.com/images/16837858.jpg");
+  assert.deepEqual([a.precio, a.precioAntes, a.ppu, a.unidadPpu], [7.99, null, 5.7, "KILO"]);
+  const p = caprabo.normalizar(a, AHORA);
+  assert.deepEqual([p.marca, p.cantidad_neta, p.unidad, p.unidades_pack, p.categoria_origen], ["Danacol", 1540, "ml", 14, "2059829"]);
+
+  // loadpage (JSON con html de comillas simples)
+  const lp = JSON.parse(fixture("./caprabo/fixtures/loadpage.json"));
+  const [b] = caprabo.parsearTarjetas(lp.content);
+  assert.equal(b.id, "26621649");
+  assert.deepEqual([b.precio, b.ppu, b.categorias.length], [2.39, 6.29, 3]);
+  assert.ok(lp._tapestry.inits.includes("pages/supermarket:finishPagination"));
+
+  // Oferta (price-before) con el formato de la plataforma
+  const oferta = caprabo.parsearTarjetas(`<div class="col border-0 product-item-lineal"><a class="product-title-link"
+    data-metrics="{&quot;ecommerce&quot;:{&quot;items&quot;:[{&quot;price&quot;:1.5,&quot;item_name&quot;:&quot;Leche entera 1 l&quot;,&quot;item_id&quot;:&quot;9&quot;}]}}"></a>
+    <span class="price-before"><span>1,95</span></span><span class="price-now"><span class="price-offer-now"> 1,50</span></span>`);
+  const o = caprabo.normalizar(oferta[0], AHORA);
+  assert.deepEqual([o.precio, o.precio_oferta, o.cantidad_neta], [1.95, 1.5, 1000]);
+});
+
+test("caprabo: sitemap", () => {
+  const urls = ["https://www.capraboacasa.com/es/supermercado/2059806-alimentacion/",
+    "https://www.capraboacasa.com/es/supermercado/2059806-alimentacion/2059818-yogures/",
+    "https://www.capraboacasa.com/es/supermercado/6000072-papeleria-libros-y-juguetes/",
+    "https://www.capraboacasa.com/es/supermercado/danacol/"];
+  assert.deepEqual(caprabo.raicesCatalogo(urls), [urls[0]]);
+  assert.equal(caprabo.nombresCategoria(urls).get("2059818"), "yogures");
 });
 
 test("categorias propias", () => {
