@@ -89,6 +89,8 @@
 - [ ] Onboarding: nombre del perfil y perfil de salud con consentimiento explícito RGPD (`consentimiento_salud_en`).
 - [x] `/inventario`: stock del hogar por categoría, +/− y "tirar" (movimientos `ajuste`/`desperdicio`) con actualización optimista, aviso de "queda poco" si hay umbral y últimos movimientos con quién los hizo.
 - [ ] Editar umbrales y producto preferido por ingrediente.
+- [x] `/lista` manual compartida: añadir ingrediente o texto libre (urgente opcional), marcar comprado (`marcar_comprado`, suma al inventario), quitar, copiar o enviar por WhatsApp (`listaParaWhatsapp`, con test).
+- [ ] Lista en tiempo real (Supabase Realtime) para que los dos vean los cambios al momento.
 - [ ] Lista automática: stock bajo + necesidades de los próximos 3/7/14 días de **todos** los miembros, paquetes según el formato real y urgente si no llega a la próxima comida. Texto para WhatsApp. Comparador de precios.
 - [ ] Web Push (VAPID, `web-push`) + Vercel Cron para los recordatorios.
 
