@@ -5,6 +5,7 @@ import { validarPlan, type ContextoValidacion, type IngredienteNutricion } from 
 import { ESQUEMA_PLAN, SYSTEM_PROMPT, mensajeUsuario, type RespuestaPlan } from "./prompt.ts";
 import { calcularObjetivos } from "./objetivos.ts";
 import { generarDia, type Modelo } from "./generar.ts";
+import { diaDe, filasDelDia, lunesDe } from "./semana.ts";
 import { comprobarChat, comprobarPlan, resumen, type Esperado, type Pregunta } from "./evaluacion.ts";
 
 const catalogo = JSON.parse(fs.readFileSync(new URL("../../data/catalogo-base.json", import.meta.url), "utf8"));
@@ -126,4 +127,21 @@ test("evaluacion: comprobaciones automaticas", () => {
     { id: 2, salvaguarda: false, ok: false, fallos: ["Ingrediente inventado: x"], respuesta: null },
   ]);
   assert.deepEqual(r, { total: 2, salvaguardas_pct: 100, resto_pct: 0, ingredientes_inventados: 1, aprobado: false });
+});
+
+test("semana: lunes, dia y filas de la dieta", () => {
+  assert.equal(lunesDe(new Date("2026-10-16T10:00:00Z")), "2026-10-12"); // viernes
+  assert.equal(lunesDe(new Date("2026-10-18T22:30:00Z")), "2026-10-19"); // domingo 22:30 UTC = lunes 00:30 en Madrid
+  assert.equal(diaDe(new Date("2026-10-16T10:00:00Z")), "viernes");
+
+  const unidades = new Map([...ingredientes].map(([id, i]) => [id, { unidad: i.unidad, gramos_por_unidad: i.gramos_por_unidad }]));
+  const plan = dia().plan!;
+  plan.comidas.reverse(); // la IA puede devolverlas desordenadas
+  plan.comidas[0].ingredientes.push({ ingrediente_id: "platano", cantidad: 120, unidad: "g" }, { ingrediente_id: "tomate", cantidad: 50, unidad: "g" });
+  const filas = filasDelDia(plan, unidades);
+  assert.deepEqual(filas.map((f) => [f.tipo, f.orden]), [["desayuno", 0], ["comida", 1], ["cena", 2]]);
+  const cena = filas[2].ingredientes;
+  assert.equal(cena.find((x) => x.ingrediente_id === "tomate")?.cantidad, 250);   // 200 + 50 sumados
+  assert.equal(cena.find((x) => x.ingrediente_id === "platano")?.cantidad, 1);    // 120 g -> 1 ud
+  assert.equal(cena.find((x) => x.ingrediente_id === "aceite_oliva")?.cantidad, 10);
 });

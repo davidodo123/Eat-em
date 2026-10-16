@@ -23,6 +23,7 @@ test("packs", () => {
   assert.deepEqual(parsearFormato("Cerveza Mahou Clásica pack 24 latas 33cl"),
     { cantidad: 7920, unidad: "ml", pack: 24, aproximado: false });
   assert.deepEqual(parsearFormato("Agua 6 botellas de 1,5 l"), { cantidad: 9000, unidad: "ml", pack: 6, aproximado: false });
+  assert.deepEqual(parsearFormato("Sparkling MUCHO MAS 00 botella 75 cl"), { cantidad: 750, unidad: "ml", pack: 1, aproximado: false });
 });
 
 test("formato desde el precio por unidad", () => {

@@ -36,7 +36,7 @@ export function parsearFormato(texto: string | null | undefined): Formato | null
   // "pack 24 latas 33cl", "6 botellas de 1,5 l"
   const pack = t.match(new RegExp(String.raw`(\d+)\s*x\s*${NUM}\s*${UNI}`, "u"))
     ?? t.match(new RegExp(String.raw`(\d+)\s*${ENVASES}\s*(?:de\s+)?${NUM}\s*${UNI}`, "u"));
-  if (pack) {
+  if (pack && Number(pack[1]) >= 1) {   // "00 botella 75 cl" (sin alcohol 0,0) no es un pack
     const [, n, num, uni] = pack;
     const [unidad, factor] = FACTORES[uni.replace(/\.$/, "")];
     const envases = Number(n);

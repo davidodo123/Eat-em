@@ -242,7 +242,24 @@ async function ultimoTotalOk(db: SupabaseClient | null, sid: string, rapido: boo
   return data?.[0]?.n_productos ?? null;
 }
 
+// Red de seguridad antes de guardar: un valor fuera de rango en un solo producto
+// no debe tumbar la carga entera (las restricciones CHECK de la tabla lo rechazarian).
+export function sanear(p: ProductoNormalizado): ProductoNormalizado {
+  const positivo = (n: number | null) => (n !== null && Number.isFinite(n) && n > 0 ? n : null);
+  return {
+    ...p,
+    unidades_pack: Number.isInteger(p.unidades_pack) && p.unidades_pack >= 1 ? p.unidades_pack : 1,
+    cantidad_neta: positivo(p.cantidad_neta),
+    unidad: positivo(p.cantidad_neta) ? p.unidad : null,
+    precio: p.precio !== null && Number.isFinite(p.precio) && p.precio >= 0 ? p.precio : null,
+    precio_oferta: positivo(p.precio_oferta),
+    precio_por_unidad: positivo(p.precio_por_unidad),
+    ean: p.ean && /^(\d{8}|\d{13})$/.test(p.ean) ? p.ean : null,
+  };
+}
+
 async function guardarProductos(db: SupabaseClient, productos: ProductoNormalizado[]) {
+  productos = productos.map(sanear);
   const ids = new Map<string, number>();
   for (const lote of trozos(productos, LOTE)) {
     const { data } = await reintentar("upsert de productos", () => db.from("productos")
