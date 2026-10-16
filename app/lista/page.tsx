@@ -38,7 +38,7 @@ export default async function Lista() {
     const detalle = it.paquetes ? `${it.paquetes} ${it.paquetes === 1 ? "paquete" : "paquetes"}`
       : it.cantidad && i ? formatearCantidad(Number(it.cantidad), i.unidad as UnidadBase) : null;
     return {
-      id: it.id, nombre: i?.nombre ?? it.texto_libre ?? "?", detalle, urgente: it.urgente,
+      id: it.id, nombre: i?.nombre ?? it.texto_libre ?? "?", detalle, urgente: it.urgente, ingredienteId: it.ingrediente_id,
       categoria: (i?.categoria_id && cat.get(i.categoria_id)) || "Otros",
     };
   });
@@ -62,7 +62,7 @@ export default async function Lista() {
           <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-texto-suave">{c}</h2>
           <ul className="divide-y divide-borde rounded-xl border border-borde bg-superficie px-3">
             {filas.filter((f) => f.categoria === c).map((f) => (
-              <ItemLista key={f.id} id={f.id} nombre={f.nombre} detalle={f.detalle} urgente={f.urgente} />
+              <ItemLista key={f.id} id={f.id} nombre={f.nombre} detalle={f.detalle} urgente={f.urgente} ingredienteId={f.ingredienteId} />
             ))}
           </ul>
         </section>

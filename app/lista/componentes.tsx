@@ -27,7 +27,9 @@ export function NuevoItem({ ingredientes }: { ingredientes: { id: string; nombre
   );
 }
 
-export function ItemLista({ id, nombre, detalle, urgente }: { id: number; nombre: string; detalle: string | null; urgente: boolean }) {
+export function ItemLista({ id, nombre, detalle, urgente, ingredienteId }: {
+  id: number; nombre: string; detalle: string | null; urgente: boolean; ingredienteId: string | null;
+}) {
   const [hecho, setHecho] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, empezar] = useTransition();
@@ -42,6 +44,9 @@ export function ItemLista({ id, nombre, detalle, urgente }: { id: number; nombre
         {detalle && <p className="text-sm text-texto-suave">{detalle}</p>}
         {error && <p className="text-xs text-urgente" role="alert">{error}</p>}
       </div>
+      {ingredienteId && (
+        <a href={`/comparar?i=${ingredienteId}`} aria-label={`Comparar precios de ${nombre}`} title="¿Dónde sale más barato?" className="px-1 text-texto-suave">€</a>
+      )}
       <button type="button" aria-label={`Quitar ${nombre}`}
         onClick={() => empezar(async () => { setHecho(true); const r = await quitarItem(id); if (r.error) { setHecho(false); setError(r.error); } })}
         className="px-2 text-texto-suave">✕</button>

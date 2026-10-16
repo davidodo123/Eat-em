@@ -6,7 +6,7 @@
 
 ## 0. Lo primero al retomar
 
-> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` a `20261016000007` (supermercados, Open Food Facts, enlace de ingredientes y emparejado por nombre). **El usuario tiene que aplicarlas con `SUPABASE_DB_PASSWORD=... npx supabase db push`** (ver §1). Las filas de `supermercados` ya se insertaron a mano; el `db push` las repetirá sin problema. Hasta entonces, `npm run off` falla (no existe `off_productos`) y las cargas avisan de que no pueden enlazar ingredientes.
+> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` a `20261016000008` (supermercados, Open Food Facts, enlace de ingredientes, emparejado por nombre y comparador de precios). **El usuario tiene que aplicarlas con `SUPABASE_DB_PASSWORD=... npx supabase db push`** (ver §1). Las filas de `supermercados` ya se insertaron a mano; el `db push` las repetirá sin problema. Hasta entonces, `npm run off` falla (no existe `off_productos`) y las cargas avisan de que no pueden enlazar ingredientes.
 
 1. **Relanzar las cargas completas.** Se cortaron al cerrar la sesión; solo escriben en la base al final, así que no quedó nada a medias.
    ```bash
@@ -64,7 +64,7 @@
 - [ ] Subir el repo a GitHub, configurar los secretos y probar el workflow a mano (*Actions → Scrapers → Run workflow*).
 
 ### Fase 3: enriquecimiento y catálogo genérico
-- [x] **Open Food Facts:** importador en streaming del CSV completo (`npm run off`), tabla `off_productos`, `aplicar_off()` y `agrupar_por_ean()` (migración `20261016000005`). Workflow semanal. **Falta aplicar las migraciones 3 a 7 con `db push`** y lanzar la primera importación real (~10 min de volcado más el emparejado).
+- [x] **Open Food Facts:** importador en streaming del CSV completo (`npm run off`), tabla `off_productos`, `aplicar_off()` y `agrupar_por_ean()` (migración `20261016000005`). Workflow semanal. **Falta aplicar las migraciones 3 a 8 con `db push`** y lanzar la primera importación real (~10 min de volcado más el emparejado).
 - [ ] Mostrar en la app la atribución de OFF (licencia ODbL).
 - [x] `producto_clusters` por EAN (`agrupar_por_ean`).
 - [x] Sin EAN (Mercadona, Ahorramás, Gadis, Caprabo): `agrupar_por_similitud()` contra `off_productos` y Carrefour (migración `20261016000007`), dentro de `npm run off`.
@@ -92,6 +92,7 @@
 - [ ] Editar umbrales y producto preferido por ingrediente.
 - [x] `/lista` manual compartida: añadir ingrediente o texto libre (urgente opcional), marcar comprado (`marcar_comprado`, suma al inventario), quitar, copiar o enviar por WhatsApp (`listaParaWhatsapp`, con test).
 - [x] Lista e inventario en tiempo real (`app/tiempo-real.tsx`: Supabase Realtime filtrado por hogar y `router.refresh()`). Probar con dos sesiones a la vez.
+- [x] Comparador `/comparar` (`comparar_precios()`, migración `20261016000008`): por ingrediente, el producto más barato de cada tienda por kg/l/ud con la oferta aplicada; para Mercadona, el último precio apuntado con el escáner (90 días). Enlace "€" en cada ingrediente de la lista.
 - [ ] Lista automática: stock bajo + necesidades de los próximos 3/7/14 días de **todos** los miembros, paquetes según el formato real y urgente si no llega a la próxima comida. Texto para WhatsApp. Comparador de precios.
 - [ ] Web Push (VAPID, `web-push`) + Vercel Cron para los recordatorios.
 

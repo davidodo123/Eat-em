@@ -232,5 +232,24 @@ await db.exec("SELECT aplicar_off(1, 100000)");
 assert.equal((await uno("SELECT kcal_100::float k FROM productos WHERE supermercado_id='mercadona' AND id_origen='1'")).k, 46);
 console.log("OK emparejado por nombre sin EAN");
 
+// 13. Comparador de precios por ingrediente (web de la tienda y precios de usuario)
+await db.exec(`
+  INSERT INTO productos (supermercado_id, id_origen, nombre, cantidad_neta, unidad, precio, precio_oferta, precio_por_unidad, unidad_precio) VALUES
+    ('carrefour','ac1','AOVE Carbonell 1 l',     1000,'ml', 9.95, 8.95, 8.95,'l'),
+    ('carrefour','ac2','AOVE Carrefour 1 l',     1000,'ml', 7.50, NULL, 7.50,'l'),
+    ('carrefour','ac3','AOVE garrafa 5 l',       5000,'ml',34.00, NULL, 6.80,'l'),
+    ('ahorramas','ah1','AOVE Alipende 1 l',      1000,'ml', 7.20, NULL, 7.20,'l');
+  INSERT INTO productos (supermercado_id, id_origen, nombre, cantidad_neta, unidad) VALUES
+    ('mercadona','me1','Aceite de oliva virgen extra Hacendado 1 L', 1000, 'ml');
+  INSERT INTO ingrediente_productos (ingrediente_id, producto_id, confianza, metodo)
+    SELECT 'aceite_oliva', id, 1, 'manual' FROM productos WHERE id_origen IN ('ac1','ac2','ac3','ah1','me1');
+  INSERT INTO precios_usuario (ean, supermercado, precio, usuario_id, producto_id)
+    SELECT '8480000000000', 'mercadona', 6.95, '${A}', id FROM productos WHERE id_origen = 'me1';
+`);
+const precios = await como(A, () => q("SELECT supermercado_id, nombre, precio::float, precio_por_unidad::float ppu, fuente FROM comparar_precios('aceite_oliva') ORDER BY ppu"));
+assert.deepEqual(precios.map((p) => [p.supermercado_id, p.ppu, p.fuente]),
+  [["carrefour", 6.8, "web"], ["mercadona", 6.95, "usuario"], ["ahorramas", 7.2, "web"]]);
+console.log("OK comparador de precios por ingrediente");
+
 console.log("\nTODO OK");
 await db.close();
