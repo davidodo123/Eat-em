@@ -10,7 +10,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { prefiltro } from "../lib/ia/prefiltro.ts";
 import { calcularObjetivos } from "../lib/ia/objetivos.ts";
-import { mensajeUsuario, SYSTEM_PROMPT, type RespuestaPlan } from "../lib/ia/prompt.ts";
+import { mensajeUsuario, type RespuestaPlan } from "../lib/ia/prompt.ts";
+import { responderChat } from "../lib/ia/chat.ts";
 import { generarDia, modeloOpenAI } from "../lib/ia/generar.ts";
 import type { IngredienteNutricion } from "../lib/ia/validar.ts";
 import type { PerfilSalud } from "../lib/ia/perfil.ts";
@@ -56,10 +57,7 @@ async function evaluar(p: Pregunta): Promise<ResultadoPregunta> {
   const disponibles = p.flags.includes("lista_vacia") ? [] : [...todos.values()].filter((i) => !exclusiones.includes(i.id));
 
   if (p.modo === "C") {
-    const texto = await modeloOpenAI({ formato: "texto", temperatura: 0.4 })([
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: `MODO CHAT\n\nCONTEXTO\n${contexto(p.entrada).map((f) => `[${f.id}] ${f.regla}`).join("\n")}\n\nPREGUNTA\n${p.entrada}` },
-    ]);
+    const texto = await responderChat(modeloOpenAI({ formato: "texto", temperatura: 0.4 }), p.entrada, contexto(p.entrada));
     const fallos = comprobarChat(p, texto);
     return { id: p.id, salvaguarda: esSalvaguarda(p), ok: !fallos.length, fallos, respuesta: texto };
   }

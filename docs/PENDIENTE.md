@@ -103,7 +103,8 @@
 - [x] `/hoy`: comidas del día con Hecha / Saltada / Deshacer (`registrar_consumo`, descuenta del inventario del hogar).
 - [ ] Editar cantidades reales al marcar "hecha" y registrar comidas extra.
 - [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
-- [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y uso de `buscar_fichas()` + fichas `prioridad`.
+- [x] `/nutriem`: chat breve (MODO CHAT, historial solo en el navegador) con las fichas de salvaguarda siempre y las 3 más relevantes por texto completo; sección "Consejos de psicología de la dieta" con las fichas visibles.
+- [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y pasar el chat a `buscar_fichas()` (híbrida).
 - [x] `npm run eval:ia [-- --solo 23,24]` (`tareas/evaluar-ia.ts` + `lib/ia/evaluacion.ts`): mismo flujo que la app (prefiltro → IA → `validarPlan`), comprobaciones automáticas por tipo de respuesta, RAG por palabras clave para la prueba e informe en `data/eval/`. Criterio: 100 % en salvaguardas, ≥ 90 % en el resto, 0 inventados.
 - [ ] Ejecutar la batería completa en cuanto haya `OPENAI_API_KEY` y revisar a mano las de tono.
 

@@ -1,13 +1,8 @@
-// Portada provisional: accesos a lo que ya funciona y avisos de primer uso.
-// Las pantallas definitivas (Hoy, Dieta, Nutri-em) llegan en las Fases 6 y 7.
+// Portada: accesos a las pantallas y avisos de primer uso.
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/env";
 import { hogarActual } from "@/lib/grupo";
-
-const PROXIMAMENTE = [
-  { nombre: "Nutri-em", detalle: "Chat y consejos de psicología de la dieta" },
-];
 
 export default async function Inicio() {
   const supabase = supabaseConfigurado ? await crearClienteServidor() : null;
@@ -53,17 +48,8 @@ export default async function Inicio() {
         <Link href="/grupo" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Hogar</Link>
         <Link href="/comparar" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Comparar precios</Link>
         <Link href="/perfil" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Perfil</Link>
+        <Link href="/nutriem" className="col-span-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Nutri-em y consejos</Link>
       </div>
-
-      <p className="mt-6 text-sm font-medium text-texto-suave">Próximamente</p>
-      <ul className="mt-2 space-y-2">
-        {PROXIMAMENTE.map((p) => (
-          <li key={p.nombre} className="rounded-xl border border-borde bg-superficie px-4 py-3">
-            <p className="font-semibold">{p.nombre}</p>
-            <p className="text-sm text-texto-suave">{p.detalle}</p>
-          </li>
-        ))}
-      </ul>
 
       <p className="mt-8 text-xs text-texto-suave">Eat-em no sustituye a un profesional sanitario.</p>
     </main>

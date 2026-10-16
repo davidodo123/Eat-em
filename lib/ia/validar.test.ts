@@ -6,6 +6,7 @@ import { ESQUEMA_PLAN, SYSTEM_PROMPT, mensajeUsuario, type RespuestaPlan } from 
 import { calcularObjetivos } from "./objetivos.ts";
 import { generarDia, type Modelo } from "./generar.ts";
 import { diaDe, filasDelDia, lunesDe } from "./semana.ts";
+import { consultaFichas, mensajesChat } from "./chat.ts";
 import { comprobarChat, comprobarPlan, resumen, type Esperado, type Pregunta } from "./evaluacion.ts";
 
 const catalogo = JSON.parse(fs.readFileSync(new URL("../../data/catalogo-base.json", import.meta.url), "utf8"));
@@ -144,4 +145,14 @@ test("semana: lunes, dia y filas de la dieta", () => {
   assert.equal(cena.find((x) => x.ingrediente_id === "tomate")?.cantidad, 250);   // 200 + 50 sumados
   assert.equal(cena.find((x) => x.ingrediente_id === "platano")?.cantidad, 1);    // 120 g -> 1 ud
   assert.equal(cena.find((x) => x.ingrediente_id === "aceite_oliva")?.cantidad, 10);
+});
+
+test("chat: mensajes y consulta de fichas", () => {
+  const m = mensajesChat("¿Qué hago si tengo hambre por la tarde?", [{ id: "FICHA-004", regla: "Subir fibra y volumen." }],
+    [{ role: "user", content: "hola" }, { role: "assistant", content: "¡Hola!" }]);
+  assert.equal(m[0].role, "system");
+  assert.equal(m.length, 4);
+  assert.match(m[3].content, /^MODO CHAT\n\nCONTEXTO\n\[FICHA-004\] Subir fibra y volumen\.\n\nPREGUNTA\n¿Qué hago/);
+  assert.equal(consultaFichas("¿Qué hago si tengo HAMBRE por la tarde?"), "hago or tengo or hambre or tarde");
+  assert.equal(consultaFichas("¿y?"), "");
 });
