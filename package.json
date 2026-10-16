@@ -12,7 +12,9 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "db:seed": "node scripts/generar-seed.mjs",
-    "db:validar": "npm run db:seed && node scripts/validar-sql.mjs"
+    "db:validar": "npm run db:seed && node scripts/validar-sql.mjs",
+    "scraper": "tsx --env-file-if-exists=.env.local scrapers/ejecutar.ts",
+    "test": "tsx --test lib/**/*.test.ts scrapers/**/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -30,6 +32,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }

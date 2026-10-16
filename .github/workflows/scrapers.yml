@@ -1,0 +1,40 @@
+name: Scrapers
+
+on:
+  schedule:
+    - cron: "15 3 * * *"   # Carrefour: todos los dias a las 03:15 UTC
+    - cron: "30 2 * * 1"   # Mercadona: los lunes a las 02:30 UTC (catalogo, sin precios)
+  workflow_dispatch:
+    inputs:
+      supermercado:
+        description: "Supermercado (carrefour | mercadona)"
+        default: "carrefour"
+      opciones:
+        description: "Opciones extra (p. ej. --rapido o --max-peticiones 50)"
+        default: ""
+
+concurrency:
+  group: scrapers-${{ github.event.schedule || inputs.supermercado }}
+  cancel-in-progress: false
+
+jobs:
+  scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      SUPER: ${{ github.event.schedule == '30 2 * * 1' && 'mercadona' || inputs.supermercado || 'carrefour' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Ejecutar scraper
+        # Sale con codigo 2 si hay alerta de calidad (0 productos o caida >= 30 %):
+        # GitHub marca el job como fallido y envia un email.
+        run: npm run scraper -- "$SUPER" ${{ inputs.opciones }}
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT || 'Eat-em/0.1 (uso personal)' }}
