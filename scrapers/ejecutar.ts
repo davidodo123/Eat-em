@@ -4,7 +4,11 @@
 //   npm run scraper -- carrefour --seco          sin tocar la base de datos (guarda en data/raw/)
 //   npm run scraper -- carrefour --rapido        sin la expansion por marcas
 //   npm run scraper -- carrefour --max-peticiones 50
+//   npm run scraper -- carrefour --cargar data/raw/carrefour/2026-10-16/1530.pendiente.json
+//                                                 sube un respaldo sin volver a descargar
 //
+// Antes de escribir en la base se guarda un respaldo en data/raw/<super>/<fecha>/<hora>.pendiente.json
+// (se borra si todo va bien). Las escrituras se reintentan ante cortes de red.
 // Variables: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SCRAPER_USER_AGENT.
 // Codigo de salida 2 si hay alerta de calidad (para que GitHub Actions avise).
 import fs from "node:fs";
@@ -27,10 +31,13 @@ const seco = args.includes("--seco");
 const rapido = args.includes("--rapido");
 const maxIdx = args.indexOf("--max-peticiones");
 const maxPeticiones = maxIdx >= 0 ? Number(args[maxIdx + 1]) : undefined;
+const cargarIdx = args.indexOf("--cargar");
+const archivoCargar = cargarIdx >= 0 ? args[cargarIdx + 1] : undefined;
 
 const scraper = id ? SCRAPERS[id] : undefined;
+const dirRaw = id ? path.join("data", "raw", id, new Date().toISOString().slice(0, 10)) : "";
 if (!scraper) {
-  console.error(`Uso: npm run scraper -- <${Object.keys(SCRAPERS).join("|")}> [--seco] [--rapido] [--max-peticiones N]`);
+  console.error(`Uso: npm run scraper -- <${Object.keys(SCRAPERS).join("|")}> [--seco] [--rapido] [--max-peticiones N] [--cargar archivo]`);
   process.exit(1);
 }
 
@@ -44,11 +51,10 @@ async function main() {
   let ejecucionId: number | null = null;
 
   if (db) {
-    const { data, error } = await db.from("scraper_ejecuciones")
-      .insert({ supermercado_id: scraper!.id, parametros: { rapido, maxPeticiones: maxPeticiones ?? null } })
-      .select("id").single();
-    if (error) throw error;
-    ejecucionId = data.id;
+    const { data } = await reintentar("alta de la ejecucion", () => db.from("scraper_ejecuciones")
+      .insert({ supermercado_id: scraper!.id, parametros: { rapido, maxPeticiones: maxPeticiones ?? null, cargado_de: archivoCargar ?? null } })
+      .select("id").single());
+    ejecucionId = data!.id;
   }
 
   // Dato bruto: JSONL comprimido, una linea por pagina descargada
@@ -56,9 +62,10 @@ async function main() {
   try {
     console.log(`Scraper ${scraper!.id}${seco ? " (seco)" : ""}...`);
     const anteriores = await cargarAnteriores(db, scraper!.id);
-    const res = await scraper!.ejecutar({
+    const res = archivoCargar ? leerRespaldo(archivoCargar) : await scraper!.ejecutar({
       maxPeticiones, rapido, conocidos: anteriores, guardarRaw: (p) => raw.push(JSON.stringify(p)),
     });
+    const respaldo = db && !archivoCargar ? guardarRespaldo(res) : null;
     const rawGz = gzipSync(raw.join("\n"));
     const rawPath = `${scraper!.id}/${hoy}/${marca}.jsonl.gz`;
 
@@ -82,7 +89,8 @@ async function main() {
       fs.writeFileSync(path.join(dir, `${marca}.informe.json`), JSON.stringify(resumen, null, 2));
       console.log(`\nGuardado en ${dir}`);
     } else {
-      const subida = await db.storage.from("raw").upload(rawPath, rawGz, { contentType: "application/gzip", upsert: true });
+      const subida = await reintentar("subida del raw", () => db.storage.from("raw").upload(rawPath, rawGz, { contentType: "application/gzip", upsert: true }))
+        .catch((e: Error) => ({ error: { message: e.message } }));
       if (subida.error) res.avisos.push("No se pudo subir el raw: " + subida.error.message);
 
       const ids = await guardarProductos(db, res.productos);
@@ -95,7 +103,7 @@ async function main() {
       if (fiable) informe.descatalogados = await descatalogar(db, scraper!.id, res.productos, anteriores);
       else informe.descatalogados = 0;
 
-      const { error } = await db.from("scraper_ejecuciones").update({
+      await reintentar("cierre de la ejecucion", () => db.from("scraper_ejecuciones").update({
         fin: new Date().toISOString(),
         estado: informe.alerta ? "alerta" : "ok",
         parametros: { ...res.parametros, tope: maxPeticiones ?? null, completo: res.completo ?? true },
@@ -105,8 +113,8 @@ async function main() {
         n_errores: res.errores,
         raw_path: subida.error ? null : "raw/" + rawPath,
         informe_calidad: { ...resumen, descatalogados: informe.descatalogados },
-      }).eq("id", ejecucionId!);
-      if (error) throw error;
+      }).eq("id", ejecucionId!));
+      if (respaldo) fs.rmSync(respaldo, { force: true });
     }
 
     imprimir(resumen);
@@ -116,6 +124,9 @@ async function main() {
     }
   } catch (e) {
     console.error(e);
+    const pendiente = fs.existsSync(dirRaw) ? fs.readdirSync(dirRaw).filter((f) => f.endsWith(".pendiente.json")).pop() : undefined;
+    if (pendiente) console.error(`
+Respaldo sin subir: npm run scraper -- ${scraper!.id} --cargar ${path.join(dirRaw, pendiente)}`);
     if (db && ejecucionId) {
       await db.from("scraper_ejecuciones").update({
         fin: new Date().toISOString(), estado: "error", error: String((e as Error).message ?? e),
@@ -123,6 +134,42 @@ async function main() {
     }
     process.exitCode = 1;
   }
+}
+
+// Reintenta una operacion de Supabase ante cortes de red o errores 5xx (espera 5, 10, 20, 40, 80 s)
+async function reintentar<T extends { error: { message: string; code?: string } | null }>(
+  que: string, fn: () => PromiseLike<T>, intentos = 6,
+): Promise<T> {
+  for (let i = 1; ; i++) {
+    let r: T;
+    try {
+      r = await fn();
+    } catch (e) {
+      r = { error: { message: String((e as Error).message ?? e) } } as T;
+    }
+    if (!r.error) return r;
+    const red = /fetch failed|timeout|network|ECONN|ETIMEDOUT|EAI_AGAIN|socket|50[234]|gateway/i.test(r.error.message);
+    if (!red || i >= intentos) throw new Error(`${que}: ${r.error.message}`);
+    const espera = 5000 * 2 ** (i - 1);
+    console.warn(`  ${que}: ${r.error.message}; reintento ${i}/${intentos - 1} en ${espera / 1000} s`);
+    await new Promise((ok) => setTimeout(ok, espera));
+  }
+}
+
+type Resultado = Awaited<ReturnType<Scraper["ejecutar"]>>;
+
+// Respaldo local del resultado (por si la base no responde al final de una carga larga)
+function guardarRespaldo(res: Resultado) {
+  fs.mkdirSync(dirRaw, { recursive: true });
+  const archivo = path.join(dirRaw, `${marca}.pendiente.json`);
+  const votos = [...res.votosCategoria].map(([k, v]) => [k, [...v]]);
+  fs.writeFileSync(archivo, JSON.stringify({ ...res, votosCategoria: votos }));
+  return archivo;
+}
+
+function leerRespaldo(archivo: string): Resultado {
+  const r = JSON.parse(fs.readFileSync(archivo, "utf8"));
+  return { ...r, votosCategoria: new Map((r.votosCategoria as [string, [string, number][]][]).map(([k, v]) => [k, new Map(v)])) };
 }
 
 function clienteAdmin() {
@@ -138,9 +185,8 @@ async function cargarCategorias(db: SupabaseClient | null): Promise<Map<string, 
     const base = JSON.parse(fs.readFileSync("data/catalogo-base.json", "utf8"));
     return new Map(base.categorias.map((c: { slug: string }, i: number) => [c.slug, i + 1]));
   }
-  const { data, error } = await db.from("categorias").select("id, slug");
-  if (error) throw error;
-  return new Map(data.map((c) => [c.slug, c.id]));
+  const { data } = await reintentar("lectura de categorias", () => db.from("categorias").select("id, slug"));
+  return new Map(data!.map((c) => [c.slug, c.id]));
 }
 
 // Categoria de origen -> la categoria propia con mas votos. Las manuales mandan.
@@ -150,7 +196,8 @@ async function mapearCategorias(
   const mapeo = new Map<string, number>();
   const manuales = new Set<string>();
   if (db) {
-    const { data } = await db.from("categorias_origen").select("id_origen, categoria_id, metodo").eq("supermercado_id", sid);
+    const { data } = await reintentar("lectura de categorias_origen", () =>
+      db.from("categorias_origen").select("id_origen, categoria_id, metodo").eq("supermercado_id", sid));
     for (const c of data ?? []) {
       if (c.categoria_id) mapeo.set(c.id_origen, c.categoria_id);
       if (c.metodo === "manual") manuales.add(c.id_origen);
@@ -165,8 +212,7 @@ async function mapearCategorias(
     filas.push({ supermercado_id: sid, id_origen: cat, categoria_id: catId, metodo: "auto", updated_at: new Date().toISOString() });
   }
   if (db) for (const lote of trozos(filas, LOTE)) {
-    const { error } = await db.from("categorias_origen").upsert(lote, { onConflict: "supermercado_id,id_origen" });
-    if (error) throw error;
+    await reintentar("categorias_origen", () => db.from("categorias_origen").upsert(lote, { onConflict: "supermercado_id,id_origen" }));
   }
   return mapeo;
 }
@@ -175,12 +221,11 @@ async function cargarAnteriores(db: SupabaseClient | null, sid: string): Promise
   const m = new Map<string, Anterior>();
   if (!db) return m;
   for (let desde = 0; ; desde += 1000) {
-    const { data, error } = await db.from("productos")
+    const { data } = await reintentar("lectura de productos", () => db.from("productos")
       .select("id_origen, nombre, imagen_url, precio, cantidad_neta, descatalogado_en")
-      .eq("supermercado_id", sid).order("id").range(desde, desde + 999);
-    if (error) throw error;
-    for (const p of data) m.set(p.id_origen, p);
-    if (data.length < 1000) return m;
+      .eq("supermercado_id", sid).order("id").range(desde, desde + 999));
+    for (const p of data!) m.set(p.id_origen, p);
+    if (data!.length < 1000) return m;
   }
 }
 
@@ -197,10 +242,9 @@ async function ultimoTotalOk(db: SupabaseClient | null, sid: string, rapido: boo
 async function guardarProductos(db: SupabaseClient, productos: ProductoNormalizado[]) {
   const ids = new Map<string, number>();
   for (const lote of trozos(productos, LOTE)) {
-    const { data, error } = await db.from("productos")
-      .upsert(lote, { onConflict: "supermercado_id,id_origen" }).select("id, id_origen");
-    if (error) throw error;
-    for (const p of data) ids.set(p.id_origen, p.id);
+    const { data } = await reintentar("upsert de productos", () => db.from("productos")
+      .upsert(lote, { onConflict: "supermercado_id,id_origen" }).select("id, id_origen"));
+    for (const p of data!) ids.set(p.id_origen, p.id);
   }
   return ids;
 }
@@ -210,8 +254,7 @@ async function guardarPrecios(db: SupabaseClient, productos: ProductoNormalizado
     producto_id: ids.get(p.id_origen)!, fecha: hoy, precio: p.precio!, precio_oferta: p.precio_oferta,
   }));
   for (const lote of trozos(filas, LOTE)) {
-    const { error } = await db.from("precios_historico").upsert(lote, { onConflict: "producto_id,fecha" });
-    if (error) throw error;
+    await reintentar("precios_historico", () => db.from("precios_historico").upsert(lote, { onConflict: "producto_id,fecha" }));
   }
 }
 
@@ -235,9 +278,8 @@ async function descatalogar(db: SupabaseClient, sid: string, productos: Producto
   const vistos = new Set(productos.map((p) => p.id_origen));
   const fuera = [...anteriores.values()].filter((a) => !a.descatalogado_en && !vistos.has(a.id_origen)).map((a) => a.id_origen);
   for (const lote of trozos(fuera, 200)) {
-    const { error } = await db.from("productos").update({ disponible: false, descatalogado_en: new Date().toISOString() })
-      .eq("supermercado_id", sid).in("id_origen", lote);
-    if (error) throw error;
+    await reintentar("descatalogar", () => db.from("productos").update({ disponible: false, descatalogado_en: new Date().toISOString() })
+      .eq("supermercado_id", sid).in("id_origen", lote));
   }
   return fuera.length;
 }

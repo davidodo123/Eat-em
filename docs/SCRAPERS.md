@@ -116,7 +116,8 @@ Cada ejecución:
 4. Marca como descatalogados (nunca borra) los productos que desaparecen, solo si la ejecución es fiable.
 5. Registra el **informe de calidad** en `scraper_ejecuciones.informe_calidad`: sin precio, sin formato, sin EAN, precios anómalos (más del 50 % de cambio), cambios de formato, nuevos y descatalogados.
 6. Si la ejecución queda incompleta (tope, bloqueo o errores) tampoco se descataloga nada. Un desafío anti-bots (`cf-mitigated: challenge`) para la ejecución en el acto: no se insiste ni se intenta saltar.
-7. Sale con **código 2** si hay 0 productos o caen un 30 % o más frente a la última ejecución completa. En GitHub Actions eso marca el job como fallido y GitHub te avisa por email.
+7. Antes de escribir guarda un **respaldo** en `data/raw/<super>/<fecha>/<hora>.pendiente.json` y reintenta cada escritura ante cortes de red (5 a 80 s). Si aun así falla, el respaldo queda y se sube con `npm run scraper -- <super> --cargar <archivo>` sin volver a descargar.
+8. Sale con **código 2** si hay 0 productos o caen un 30 % o más frente a la última ejecución completa. En GitHub Actions eso marca el job como fallido y GitHub te avisa por email.
 
 ## GitHub Actions
 
