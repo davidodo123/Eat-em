@@ -32,7 +32,8 @@ export default async function Inicio() {
 
       <div className="mt-6 grid grid-cols-2 gap-2">
         <Link href="/escanear" className="rounded-xl bg-marca px-4 py-4 text-center font-semibold text-marca-texto">Escanear compra</Link>
-        <Link href="/grupo" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Hogar</Link>
+        <Link href="/inventario" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Inventario</Link>
+        <Link href="/grupo" className="col-span-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Hogar</Link>
       </div>
 
       <p className="mt-6 text-sm font-medium text-texto-suave">Próximamente</p>

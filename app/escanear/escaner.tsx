@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { Camara } from "./camara";
 import { altaManual, buscarCodigo, registrarCompra, type ResultadoBusqueda, type ResultadoGuardar } from "./acciones";
@@ -63,6 +64,7 @@ export function Escaner({ ingredientes, supermercados, superPorDefecto }: {
           <div className="space-y-3">
             <p className="rounded-xl border border-marca/40 bg-superficie p-4 font-medium text-marca" role="status">✓ {guardado.mensaje}</p>
             <button onClick={reiniciar} className={botonPrincipal}>Escanear otro</button>
+            <Link href="/inventario" className={`${botonSecundario} block text-center`}>Ver inventario</Link>
           </div>
         ) : (
           <FormularioCompra
