@@ -83,10 +83,12 @@ Así un supermercado sin scraper (Mercadona, Dia, Lidl…) sigue teniendo catál
 ## Open Food Facts (Fase 3)
 
 - **Fuente:** volcado CSV `static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz` (~1,3 GB, tabuladores), leído en streaming sin guardarlo ([importar.ts](../scrapers/off/importar.ts)). La API por EAN tiene un límite de 100 peticiones/min (~7 h para 45.000 EAN) y su buscador estaba caído. Licencia **ODbL**: hay que citar la fuente en la app.
-- **Filtro:** productos con país `en:spain` más los que comparten EAN con alguna tienda, y solo si traen nutrición, ingredientes o alérgenos. Los UPC-A de 12 dígitos se pasan a EAN-13 y los valores imposibles (más de 100 g/100 g o más de 1.000 kcal) se descartan.
+- **Filtro:** los que comparten EAN con alguna tienda, más los de España de **marcas blancas** de cadenas sin EAN en su web (Hacendado, Alipende, Ifa Eliges, Eroski, Dia…, `MARCAS_BLANCAS`), y solo si traen nutrición, ingredientes o alérgenos. Todo España son 252.067 filas (2026-10-16), demasiado para el plan gratuito; con el filtro quedan **28.215 filas (~19 MB)** más las de EAN de tienda. Las marcas de fabricante no hacen falta: se emparejan con Carrefour, que publica EAN. Los UPC-A de 12 dígitos se pasan a EAN-13 y los valores imposibles (más de 100 g/100 g o más de 1.000 kcal) se descartan.
 - **Destino:** tabla `off_productos`. Después, por tramos de id:
   - `aplicar_off()` copia la nutrición, los alérgenos (los 14 de la UE, [alergenos.ts](../lib/dominio/alergenos.ts)) y los ingredientes a los `productos` con el mismo EAN. Pone `nutricion_origen = 'off'` y no pisa datos de la tienda, del usuario ni manuales.
   - `agrupar_por_ean()` crea un `producto_clusters` por EAN y enlaza las fichas de todas las tiendas.
+  - `agrupar_por_similitud()` empareja los productos **sin EAN** con OFF y, si no, con una tienda que tenga EAN. Exige la misma marca, un formato compatible (±3 %) y las mismas palabras significativas (`palabras_clave()`: sin marca, cantidades, envases ni palabras vacías), o una similitud ≥ 0,85 para las erratas. La similitud de trigramas sola no basta: "leche desnatada" contra "leche semidesnatada" da 0,56.
+  - El orden es: agrupar por EAN → emparejar por nombre → `aplicar_off()`, que también llega por el cluster.
 - **Frecuencia:** semanal (domingos, [open-food-facts.yml](../.github/workflows/open-food-facts.yml)). Más adelante se pueden usar los volcados diarios incrementales (`data/delta/`).
 
 ## Enlace ingrediente → productos (Fase 3)

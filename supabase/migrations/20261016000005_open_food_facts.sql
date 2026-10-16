@@ -8,6 +8,8 @@ CREATE TABLE off_productos (
   nombre             TEXT,
   marca              TEXT,
   cantidad_texto     TEXT,
+  cantidad_neta      NUMERIC(10,2) CHECK (cantidad_neta > 0),   -- normalizada (lib/dominio/formato.ts)
+  unidad             unidad_base,
   categorias         TEXT[] NOT NULL DEFAULT '{}',   -- categories_tags de OFF ("en:yogurts")
   ingredientes_texto TEXT,
   alergenos          TEXT[] NOT NULL DEFAULT '{}',   -- vocabulario propio (lib/dominio/alergenos.ts)
@@ -33,8 +35,9 @@ ALTER TABLE off_productos ENABLE ROW LEVEL SECURITY;
 CREATE POLICY lectura ON off_productos FOR SELECT TO authenticated USING (true);
 
 -- Copia la nutricion, los alergenos y los ingredientes de OFF a los productos con el
--- mismo EAN. No pisa datos de mejor origen (tienda, usuario, manual). Por tramos de id
--- para no superar el statement_timeout de la API.
+-- mismo EAN, propio o de su cluster (los emparejados por nombre no tienen EAN propio).
+-- No pisa datos de mejor origen (tienda, usuario, manual). Por tramos de id para no
+-- superar el statement_timeout de la API.
 CREATE OR REPLACE FUNCTION public.aplicar_off(p_desde BIGINT, p_hasta BIGINT) RETURNS INT
 LANGUAGE plpgsql SECURITY INVOKER SET search_path = public AS $$
 DECLARE n INT;
@@ -47,7 +50,7 @@ BEGIN
     ingredientes_texto = coalesce(o.ingredientes_texto, p.ingredientes_texto),
     nutricion_origen = 'off'
   FROM off_productos o
-  WHERE p.ean = o.ean
+  WHERE o.ean = coalesce(p.ean, (SELECT c.ean FROM producto_clusters c WHERE c.id = p.cluster_id))
     AND p.id BETWEEN p_desde AND p_hasta
     AND (p.nutricion_origen IS NULL OR p.nutricion_origen = 'off')
     AND (o.kcal_100 IS NOT NULL OR o.ingredientes_texto IS NOT NULL OR cardinality(o.alergenos) > 0)

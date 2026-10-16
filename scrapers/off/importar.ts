@@ -22,6 +22,7 @@ import { createGunzip } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { normalizarEan } from "../../lib/dominio/ean.ts";
 import { alergenosDesdeOff } from "../../lib/dominio/alergenos.ts";
+import { parsearFormato } from "../../lib/dominio/formato.ts";
 
 const VOLCADO = "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz";
 const LOTE = 500;
@@ -34,6 +35,8 @@ export interface FilaOff {
   nombre: string | null;
   marca: string | null;
   cantidad_texto: string | null;
+  cantidad_neta: number | null;
+  unidad: string | null;
   categorias: string[];
   ingredientes_texto: string | null;
   alergenos: string[];
@@ -69,11 +72,14 @@ export function convertir(v: Record<Col, string>, eanesTienda: Set<string>): Fil
   const enEspana = /(^|,)en:spain(,|$)/.test(v.countries_tags ?? "");
   if (!eanesTienda.has(ean) && !(enEspana && MARCAS_BLANCAS.test(v.brands ?? ""))) return null;
 
+  const formato = parsearFormato(v.quantity) ?? parsearFormato(v.product_name);
   const fila: FilaOff = {
     ean,
     nombre: texto(v.product_name, 300),
     marca: texto(v.brands?.split(",")[0], 120),
     cantidad_texto: texto(v.quantity, 60),
+    cantidad_neta: formato?.cantidad ?? null,
+    unidad: formato?.unidad ?? null,
     categorias: (v.categories_tags ?? "").split(",").map((c) => c.trim()).filter(Boolean).slice(0, 15),
     ingredientes_texto: texto(v.ingredients_text, 3000),
     alergenos: alergenosDesdeOff(v.allergens),
@@ -177,21 +183,30 @@ async function main() {
   for (const [k, val] of Object.entries(resumen)) console.log(`${k.padEnd(20)} ${val}`);
 }
 
-// Aplica OFF a productos y agrupa por EAN, por tramos de id
+// Agrupa por EAN, empareja por nombre los productos sin EAN y aplica OFF a todo,
+// por tramos de id (statement_timeout de la API). La nutricion va la ultima para que
+// llegue tambien a los emparejados por nombre (a traves del cluster).
 async function aplicar(db: SupabaseClient) {
   const { data } = await db.from("productos").select("id").order("id", { ascending: false }).limit(1);
   const max = data?.[0]?.id ?? 0;
-  let enriquecidos = 0, agrupados = 0;
-  for (let desde = 1; desde <= max; desde += TRAMO_IDS) {
-    const tramo = { p_desde: desde, p_hasta: desde + TRAMO_IDS - 1 };
-    const a = await db.rpc("aplicar_off", tramo);
-    if (a.error) throw a.error;
-    const b = await db.rpc("agrupar_por_ean", tramo);
-    if (b.error) throw b.error;
-    enriquecidos += a.data ?? 0;
-    agrupados += b.data ?? 0;
+  const tramos = (paso: number) => Array.from({ length: Math.ceil(max / paso) }, (_, k) => ({ p_desde: k * paso + 1, p_hasta: (k + 1) * paso }));
+  const rpc = async (fn: string, args: Record<string, unknown>) => {
+    const { data: n, error } = await db.rpc(fn, args);
+    if (error) throw new Error(`${fn}: ${error.message}`);
+    return (n as number) ?? 0;
+  };
+
+  let agrupados = 0, emparejados = 0, enriquecidos = 0;
+  for (const t of tramos(TRAMO_IDS)) agrupados += await rpc("agrupar_por_ean", t);
+  const { data: supers } = await db.from("supermercados").select("id");
+  for (const { id } of supers ?? []) {
+    let n = 0;
+    for (const t of tramos(1000)) n += await rpc("agrupar_por_similitud", { p_supermercado: id, ...t });
+    if (n) console.log(`  emparejados por nombre en ${id}: ${n}`);
+    emparejados += n;
   }
-  return { productos_enriquecidos: enriquecidos, productos_agrupados: agrupados };
+  for (const t of tramos(TRAMO_IDS)) enriquecidos += await rpc("aplicar_off", t);
+  return { productos_agrupados_ean: agrupados, emparejados_por_nombre: emparejados, productos_enriquecidos: enriquecidos };
 }
 
 async function eanesDeTiendas(db: SupabaseClient) {

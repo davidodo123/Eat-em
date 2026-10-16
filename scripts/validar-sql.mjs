@@ -203,5 +203,34 @@ assert.equal(await conf("leche_semidesnatada", "Bebida de avena Oatly"), undefin
 assert.deepEqual(await conf("leche_semidesnatada", "Leche entera Pascual 1 l"), { c: 1, metodo: "manual" });
 console.log("OK enlace automatico de ingredientes");
 
+// 12. Emparejar por nombre los productos sin EAN (Mercadona) con OFF y con otras tiendas
+assert.equal((await uno("SELECT nombre_comparable('Leche Semidesnatada HACENDADO 1 L', 'Hacendado') n")).n, "leche semidesnatada 1 l");
+assert.deepEqual((await uno("SELECT palabras_clave('Leche entera Hacendado 6 bricks x 1 L', 'Hacendado') p")).p, ["entera", "leche"]);
+assert.deepEqual((await uno("SELECT palabras_clave('Atún claro en aceite de oliva, pack 3x80g', NULL) p")).p, ["aceite", "atun", "claro", "oliva"]);
+await db.exec(`
+  INSERT INTO off_productos (ean, nombre, marca, cantidad_neta, unidad, kcal_100, en_espana) VALUES
+    ('8480000101234','Leche semidesnatada','Hacendado',1000,'ml',46,true),
+    ('8480000105555','Leche entera','Hacendado',1000,'ml',63,true);
+  INSERT INTO productos (supermercado_id, id_origen, nombre, marca, ean, cantidad_neta, unidad) VALUES
+    ('carrefour','cc1','Cacao soluble Cola Cao 760 g','Cola Cao','8410014312345',760,'g');
+  INSERT INTO productos (supermercado_id, id_origen, nombre, marca, cantidad_neta, unidad) VALUES
+    ('mercadona','3','Leche entera Hacendado 6 bricks x 1 L','Hacendado',6000,'ml'),
+    ('mercadona','4','Cacao soluble Cola Cao','Cola Cao',NULL,NULL),
+    ('mercadona','5','Leche desnatada Hacendado 1 L','Hacendado',1000,'ml');
+`);
+// '1' (leche semi 1 L) -> OFF; '4' -> Carrefour por marca; '3' (pack de 6) y '5' (desnatada) no casan
+assert.equal((await uno("SELECT agrupar_por_similitud('mercadona', 1, 100000) n")).n, 2);
+const clusterDe = async (idOrigen) => (await uno(
+  "SELECT c.ean FROM productos p LEFT JOIN producto_clusters c ON c.id = p.cluster_id WHERE p.supermercado_id='mercadona' AND p.id_origen=$1",
+  [idOrigen])).ean;
+assert.equal(await clusterDe("1"), "8480000101234");
+assert.equal(await clusterDe("4"), "8410014312345");
+assert.equal(await clusterDe("3"), null);
+assert.equal(await clusterDe("5"), null);
+// La nutricion de OFF llega por el cluster
+await db.exec("SELECT aplicar_off(1, 100000)");
+assert.equal((await uno("SELECT kcal_100::float k FROM productos WHERE supermercado_id='mercadona' AND id_origen='1'")).k, 46);
+console.log("OK emparejado por nombre sin EAN");
+
 console.log("\nTODO OK");
 await db.close();

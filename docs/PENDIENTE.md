@@ -6,7 +6,7 @@
 
 ## 0. Lo primero al retomar
 
-> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` a `20261016000006` (supermercados, Open Food Facts y enlace de ingredientes). **El usuario tiene que aplicarlas con `SUPABASE_DB_PASSWORD=... npx supabase db push`** (ver §1). Las filas de `supermercados` ya se insertaron a mano; el `db push` las repetirá sin problema. Hasta entonces, `npm run off` falla (no existe `off_productos`) y las cargas avisan de que no pueden enlazar ingredientes.
+> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` a `20261016000007` (supermercados, Open Food Facts, enlace de ingredientes y emparejado por nombre). **El usuario tiene que aplicarlas con `SUPABASE_DB_PASSWORD=... npx supabase db push`** (ver §1). Las filas de `supermercados` ya se insertaron a mano; el `db push` las repetirá sin problema. Hasta entonces, `npm run off` falla (no existe `off_productos`) y las cargas avisan de que no pueden enlazar ingredientes.
 
 1. **Relanzar las cargas completas.** Se cortaron al cerrar la sesión; solo escriben en la base al final, así que no quedó nada a medias.
    ```bash
@@ -64,10 +64,11 @@
 - [ ] Subir el repo a GitHub, configurar los secretos y probar el workflow a mano (*Actions → Scrapers → Run workflow*).
 
 ### Fase 3: enriquecimiento y catálogo genérico
-- [x] **Open Food Facts:** importador en streaming del CSV completo (`npm run off`), tabla `off_productos`, `aplicar_off()` y `agrupar_por_ean()` (migración `20261016000005`). Workflow semanal. **Falta aplicar las migraciones 3 a 6 con `db push`** y lanzar la primera importación real.
+- [x] **Open Food Facts:** importador en streaming del CSV completo (`npm run off`), tabla `off_productos`, `aplicar_off()` y `agrupar_por_ean()` (migración `20261016000005`). Workflow semanal. **Falta aplicar las migraciones 3 a 7 con `db push`** y lanzar la primera importación real (~10 min de volcado más el emparejado).
 - [ ] Mostrar en la app la atribución de OFF (licencia ODbL).
 - [x] `producto_clusters` por EAN (`agrupar_por_ean`).
-- [ ] Sin EAN (Mercadona, Ahorramás, Gadis, Caprabo): agrupar por similitud de nombre + marca + formato con `pg_trgm`, contra Carrefour y `off_productos`.
+- [x] Sin EAN (Mercadona, Ahorramás, Gadis, Caprabo): `agrupar_por_similitud()` contra `off_productos` y Carrefour (migración `20261016000007`), dentro de `npm run off`.
+- [ ] Revisar una muestra de emparejados por nombre tras la primera importación real y ajustar `palabras_clave()` si hay falsos positivos.
 - [ ] Marcas de Mercadona que no son propias (Puleva…): detectarlas con la lista de marcas de Carrefour y OFF.
 - [x] Enlace automático `ingredientes` → `productos` (`enlazar_ingredientes`, migración `20261016000006`). Lo llama el ejecutor tras cada carga.
 - [ ] Ampliar `data/catalogo-base.json` (solo hay 24 ingredientes) y contrastar su nutrición con BEDCA: ahora es `aprox_referencia`. Afinar los sinónimos demasiado amplios ("pan", "leche", "aceite", "copos").
