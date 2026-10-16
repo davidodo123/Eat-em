@@ -1,22 +1,26 @@
-// Pantalla provisional (Fase 1). Las pantallas reales llegan en la Fase 7.
+// Portada provisional: accesos a lo que ya funciona y avisos de primer uso.
+// Las pantallas definitivas (Hoy, Dieta, Nutri-em) llegan en las Fases 6 y 7.
+import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/env";
-import Link from "next/link";
+import { hogarActual } from "@/lib/grupo";
 
-const PANTALLAS = [
-  { nombre: "Hoy", detalle: "Comidas del dia: marcar hecha, editar cantidad, saltar" },
-  { nombre: "Inventario", detalle: "Stock del hogar y escaner de codigos de barras" },
-  { nombre: "Lista", detalle: "Lista de la compra compartida, copiar para WhatsApp" },
+const PROXIMAMENTE = [
+  { nombre: "Hoy", detalle: "Comidas del día: marcar hecha, editar cantidad, saltar" },
   { nombre: "Dieta", detalle: "Plan semanal individual" },
-  { nombre: "Grupo", detalle: "Hogar compartido, invitaciones y actividad" },
-  { nombre: "Nutri-em", detalle: "Chat y consejos de psicologia de la dieta" },
-  { nombre: "Ajustes", detalle: "Perfil, notificaciones y privacidad" },
+  { nombre: "Nutri-em", detalle: "Chat y consejos de psicología de la dieta" },
 ];
 
 export default async function Inicio() {
-  const usuario = supabaseConfigurado
-    ? (await (await crearClienteServidor()).auth.getUser()).data.user
-    : null;
+  const supabase = supabaseConfigurado ? await crearClienteServidor() : null;
+  const usuario = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const [hogar, salud] = supabase && usuario
+    ? await Promise.all([
+        hogarActual(supabase),
+        supabase.from("perfiles_salud").select("consentimiento_salud_en").eq("usuario_id", usuario.id).maybeSingle().then((r) => r.data),
+      ])
+    : [null, null];
+
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
       <div className="flex items-center justify-between gap-3">
@@ -30,6 +34,18 @@ export default async function Inicio() {
       </div>
       <p className="mt-1 text-texto-suave">Tu dieta, tu despensa y tu lista de la compra, sincronizadas.</p>
 
+      {usuario && (!hogar || !salud?.consentimiento_salud_en) && (
+        <ol className="mt-5 space-y-2 rounded-xl border border-marca/40 bg-superficie p-4 text-sm">
+          <li className="font-semibold">Para empezar</li>
+          <li className={hogar ? "text-texto-suave line-through" : ""}>
+            1. {hogar ? "Hogar creado" : <Link href="/grupo" className="font-medium text-marca underline">Crea tu hogar o únete al de tu pareja</Link>}
+          </li>
+          <li className={salud?.consentimiento_salud_en ? "text-texto-suave line-through" : ""}>
+            2. {salud?.consentimiento_salud_en ? "Perfil completado" : <Link href="/perfil" className="font-medium text-marca underline">Completa tu perfil para calcular tus objetivos</Link>}
+          </li>
+        </ol>
+      )}
+
       <div className="mt-6 grid grid-cols-2 gap-2">
         <Link href="/escanear" className="rounded-xl bg-marca px-4 py-4 text-center font-semibold text-marca-texto">Escanear compra</Link>
         <Link href="/inventario" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Inventario</Link>
@@ -40,7 +56,7 @@ export default async function Inicio() {
 
       <p className="mt-6 text-sm font-medium text-texto-suave">Próximamente</p>
       <ul className="mt-2 space-y-2">
-        {PANTALLAS.map((p) => (
+        {PROXIMAMENTE.map((p) => (
           <li key={p.nombre} className="rounded-xl border border-borde bg-superficie px-4 py-3">
             <p className="font-semibold">{p.nombre}</p>
             <p className="text-sm text-texto-suave">{p.detalle}</p>
@@ -48,9 +64,7 @@ export default async function Inicio() {
         ))}
       </ul>
 
-      <p className="mt-8 text-xs text-texto-suave">
-        Eat-em no sustituye a un profesional sanitario.
-      </p>
+      <p className="mt-8 text-xs text-texto-suave">Eat-em no sustituye a un profesional sanitario.</p>
     </main>
   );
 }
