@@ -13,10 +13,12 @@ import { gzipSync } from "node:zlib";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { carrefour } from "./carrefour/index.ts";
 import { mercadona } from "./mercadona/index.ts";
+import { ahorramas } from "./ahorramas/index.ts";
+import { gadis } from "./gadis/index.ts";
 import { informeCalidad, type Anterior } from "./comun/calidad.ts";
 import type { ProductoNormalizado, Scraper } from "./comun/tipos.ts";
 
-const SCRAPERS: Record<string, Scraper> = { carrefour, mercadona };
+const SCRAPERS: Record<string, Scraper> = { carrefour, mercadona, ahorramas, gadis };
 
 const args = process.argv.slice(2);
 const id = args.find((a) => !a.startsWith("--"));
@@ -64,7 +66,7 @@ async function main() {
     const mapeo = await mapearCategorias(db, scraper!.id, res.votosCategoria, categorias);
     for (const p of res.productos) p.categoria_id = p.categoria_origen ? mapeo.get(p.categoria_origen) ?? null : null;
 
-    const ultimoTotal = await ultimoTotalOk(db, scraper!.id);
+    const ultimoTotal = await ultimoTotalOk(db, scraper!.id, rapido);
     const informe = informeCalidad(res.productos, anteriores, ultimoTotal);
     const resumen = {
       ...informe, peticiones: res.peticiones, errores_http: res.errores, avisos: res.avisos.slice(0, 30),
@@ -85,14 +87,14 @@ async function main() {
       const ids = await guardarProductos(db, res.productos);
       await guardarPrecios(db, res.productos, ids);
       // Solo se descatalogan productos si la ejecucion es fiable (sin alerta y sin tope)
-      const fiable = !informe.alerta && maxPeticiones === undefined;
+      const fiable = !informe.alerta && maxPeticiones === undefined && res.completo !== false;
       if (fiable) informe.descatalogados = await descatalogar(db, scraper!.id, res.productos, anteriores);
       else informe.descatalogados = 0;
 
       const { error } = await db.from("scraper_ejecuciones").update({
         fin: new Date().toISOString(),
         estado: informe.alerta ? "alerta" : "ok",
-        parametros: { ...res.parametros, tope: maxPeticiones ?? null },
+        parametros: { ...res.parametros, tope: maxPeticiones ?? null, completo: res.completo ?? true },
         n_productos: informe.total,
         n_nuevos: informe.nuevos,
         n_descatalogados: informe.descatalogados,
@@ -178,11 +180,13 @@ async function cargarAnteriores(db: SupabaseClient | null, sid: string): Promise
   }
 }
 
-async function ultimoTotalOk(db: SupabaseClient | null, sid: string): Promise<number | null> {
+// Ultima ejecucion correcta del mismo modo (una --rapido no se compara con una completa)
+async function ultimoTotalOk(db: SupabaseClient | null, sid: string, rapido: boolean): Promise<number | null> {
   if (!db) return null;
-  const { data } = await db.from("scraper_ejecuciones").select("n_productos")
-    .eq("supermercado_id", sid).eq("estado", "ok").filter("parametros->>tope", "is", null)
-    .order("inicio", { ascending: false }).limit(1);
+  let q = db.from("scraper_ejecuciones").select("n_productos")
+    .eq("supermercado_id", sid).eq("estado", "ok").filter("parametros->>tope", "is", null);
+  q = rapido ? q.eq("parametros->>rapido", "true") : q.or("parametros->>rapido.is.null,parametros->>rapido.eq.false");
+  const { data } = await q.order("inicio", { ascending: false }).limit(1);
   return data?.[0]?.n_productos ?? null;
 }
 

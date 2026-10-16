@@ -11,6 +11,7 @@
 import { ClienteHttp } from "../comun/http.ts";
 import type { ProductoNormalizado, ResultadoScraper, Scraper } from "../comun/tipos.ts";
 import { parsearFormato } from "../../lib/dominio/formato.ts";
+import { decodificar } from "../comun/texto.ts";
 
 const SITEMAP = "https://tienda.mercadona.es/sitemap.xml";
 const MARCAS_PROPIAS = ["Hacendado", "Deliplus", "Bosque Verde", "Compy", "Solcare", "Agerul"];
@@ -37,9 +38,7 @@ export const mercadona: Scraper = {
       }
       if (http.agotado) continue; // sin tope: el producto queda para la proxima ejecucion
       try {
-        const html = await http.texto(url);
-        const nombre = decodificar(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? "");
-        const imagen = html.match(/property="og:image" content="([^"]*)"/)?.[1] ?? null;
+        const { nombre, imagen } = parsearPagina(await http.texto(url));
         guardarRaw({ id, url, nombre, imagen });
         productos.push(fila(id, url, nombre || nombreDesdeSlug(url), imagen, ahora));
       } catch (e) {
@@ -58,11 +57,12 @@ export const mercadona: Scraper = {
       errores: http.errores,
       avisos,
       parametros: { fuente: "sitemap + /product (robots.txt)", sin_precios: true, paginas_nuevas: descargadas },
+      completo: !http.bloqueado,
     } satisfies ResultadoScraper;
   },
 };
 
-function fila(id: string, url: string, nombre: string, imagen: string | null, ahora: string): ProductoNormalizado {
+export function fila(id: string, url: string, nombre: string, imagen: string | null, ahora: string): ProductoNormalizado {
   const formato = parsearFormato(nombre);
   return {
     supermercado_id: "mercadona",
@@ -89,13 +89,17 @@ function fila(id: string, url: string, nombre: string, imagen: string | null, ah
   };
 }
 
+// Pagina /product/<id>/<slug>: nombre (meta description) e imagen (og:image)
+export function parsearPagina(html: string) {
+  return {
+    nombre: decodificar(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? ""),
+    imagen: html.match(/property="og:image" content="([^"]*)"/)?.[1] ?? null,
+  };
+}
+
 // ".../product/31011/huevos-codorniz-paquete" -> "Huevos codorniz paquete"
-function nombreDesdeSlug(url: string) {
+export function nombreDesdeSlug(url: string) {
   const slug = url.split("/").pop() ?? "";
   const t = slug.replace(/-/g, " ");
   return t.charAt(0).toUpperCase() + t.slice(1);
-}
-
-function decodificar(s: string) {
-  return s.replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
 }

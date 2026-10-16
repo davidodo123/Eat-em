@@ -8,6 +8,8 @@
     { "id": "alcampo", "nombre": "Alcampo", "web": "https://www.compraonline.alcampo.es", "activo": true, "orden": 4 },
     { "id": "lidl", "nombre": "Lidl", "web": "https://www.lidl.es", "activo": true, "orden": 5 },
     { "id": "eroski", "nombre": "Eroski", "web": "https://supermercado.eroski.es", "activo": false, "orden": 10 },
+    { "id": "ahorramas", "nombre": "Ahorramas", "web": "https://www.ahorramas.com", "activo": true, "orden": 6 },
+    { "id": "gadis", "nombre": "Gadis", "web": "https://www.gadisline.com", "activo": true, "orden": 7 },
     { "id": "consum", "nombre": "Consum", "web": "https://tienda.consum.es", "activo": false, "orden": 11 },
     { "id": "aldi", "nombre": "Aldi", "web": "https://www.aldi.es", "activo": false, "orden": 12 },
     { "id": "otro", "nombre": "Otro", "web": null, "activo": true, "orden": 99 }

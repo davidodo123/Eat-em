@@ -19,6 +19,7 @@ import type { ProductoNormalizado, ResultadoScraper, Scraper } from "../comun/ti
 import { normalizarEan } from "../../lib/dominio/ean.ts";
 import { parsearFormato, precioPorUnidad, type Formato } from "../../lib/dominio/formato.ts";
 import { TERMINOS } from "./terminos.ts";
+import { tituloMarca } from "../comun/texto.ts";
 
 const BASE = "https://api.empathy.co/search/v1/query/carrefour/search";
 const FILAS = 100;
@@ -124,6 +125,7 @@ export const carrefour: Scraper = {
       errores: http.errores,
       avisos,
       parametros: { fuente: "api.empathy.co", catalogo: "food", terminos: lista.length, marcas: marcas.size, rapido: !!rapido },
+      completo: !http.bloqueado,
     } satisfies ResultadoScraper;
   },
 };
@@ -168,7 +170,7 @@ export function normalizar(it: ItemCarrefour, ahora: string): ProductoNormalizad
     id_origen: it.product_id,
     url_origen: it.urls?.food ? "https://www.carrefour.es" + it.urls.food : null,
     nombre: (it.display_name ?? "").trim() || it.product_id,
-    marca: it.brand ? tituloMarca(it.brand) : null,
+    marca: tituloMarca(it.brand),
     categoria_origen: it.parent_category?.food ?? null,
     categoria_id: null, // lo asigna el ejecutor con el mapeo de categorias
     formato_texto: texto,
@@ -190,10 +192,3 @@ export function normalizar(it: ItemCarrefour, ahora: string): ProductoNormalizad
 }
 
 const numero = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
-
-// "LA CANTARA" -> "La Cantara" (las marcas vienen en mayusculas)
-function tituloMarca(m: string) {
-  const t = m.trim();
-  if (t !== t.toUpperCase()) return t;
-  return t.toLowerCase().replace(/(^|[\s\-'.])(\p{L})/gu, (_, sep, l) => sep + l.toUpperCase());
-}

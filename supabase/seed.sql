@@ -7,6 +7,8 @@ INSERT INTO supermercados (id, nombre, web, activo, orden) VALUES
 ('alcampo', 'Alcampo', 'https://www.compraonline.alcampo.es', true, 4),
 ('lidl', 'Lidl', 'https://www.lidl.es', true, 5),
 ('eroski', 'Eroski', 'https://supermercado.eroski.es', false, 10),
+('ahorramas', 'Ahorramas', 'https://www.ahorramas.com', true, 6),
+('gadis', 'Gadis', 'https://www.gadisline.com', true, 7),
 ('consum', 'Consum', 'https://tienda.consum.es', false, 11),
 ('aldi', 'Aldi', 'https://www.aldi.es', false, 12),
 ('otro', 'Otro', NULL, true, 99)

@@ -36,6 +36,8 @@ export interface ResultadoScraper {
   errores: number;
   avisos: string[];
   parametros: Record<string, unknown>;
+  // false si faltan partes del catalogo (bloqueo, errores): no se descatalogan productos
+  completo?: boolean;
 }
 
 // Lo que ya hay en la base de un producto (para scrapers incrementales)

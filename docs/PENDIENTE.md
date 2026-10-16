@@ -6,10 +6,14 @@
 
 ## 0. Lo primero al retomar
 
+> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y **no hay `.env.local`**: hay que volver a crearlo con la URL y las claves de Supabase antes de lanzar nada contra la base. Añadidos los scrapers de **Ahorramás** y **Gadis** (probados en seco) y la migración `20261016000003_mas_supermercados.sql`, que hay que aplicar (`db push`, ver §1).
+
 1. **Relanzar las cargas completas.** Se cortaron al cerrar la sesión; solo escriben en la base al final, así que no quedó nada a medias.
    ```bash
    npm run scraper -- carrefour     # ~60-90 min. A mitad de la carga ya llevaba 21.400 productos: el catálogo es grande
    npm run scraper -- mercadona     # ~70 min la primera vez (4.269 páginas a 1/s), luego incremental
+   npm run scraper -- ahorramas     # ~30 min; ojo: a 1/s salta el desafío de Cloudflare
+   npm run scraper -- gadis         # ~2 h la completa; a diario va con --rapido
    ```
    Lánzalas en segundo plano y revisa el informe de calidad que imprimen al terminar.
 2. **Limpiar las ejecuciones colgadas.** Las cortadas quedaron con `estado = 'en_curso'`:
@@ -24,7 +28,7 @@
 | Fase | Estado |
 |---|---|
 | 1. Arquitectura, SQL y estructura | ✅ Hecho y aplicado en Supabase (commit `676f0a7`) |
-| 2. Productos: scrapers | 🟡 Carrefour y Mercadona escritos y probados; falta la primera carga completa (punto 0) y el resto de cadenas |
+| 2. Productos: scrapers | 🟡 Carrefour, Mercadona, Ahorramás y Gadis escritos y probados en seco; falta la primera carga completa en Supabase (punto 0) |
 | 3 a 8 | ⏳ Sin empezar |
 
 **Infraestructura:**
@@ -50,9 +54,12 @@
 
 ### Fase 2: catálogo (seguir aquí)
 - [ ] Primera carga completa de Carrefour y Mercadona (punto 0) y revisión de la calidad.
-- [ ] Investigar y, si se puede sin saltar protecciones, añadir scrapers de **Alcampo**, **Eroski**, **Gadis** y **Ahorramás**. Después Caprabo, masymas, Condis, Froiz, BM y Covirán. Para cada uno: revisar `robots.txt`, buscar la API JSON en DevTools y documentarlo en SCRAPERS.md.
+- [x] Alcampo, Eroski, Gadis y Ahorramás investigados (SCRAPERS.md). ✅ Ahorramás y Gadis con scraper. ❌ Alcampo (AWS WAF con captcha). ⏸ Eroski (solo 20 productos por categoría sin saltarse `robots.txt`).
+- [ ] Siguientes: Caprabo, masymas, Condis, Froiz, BM y Covirán. Para cada uno: revisar `robots.txt`, buscar la API JSON en DevTools y documentarlo en SCRAPERS.md.
+- [ ] Ahorramás: confirmar en la primera carga real que a 1 petición cada 4 s no salta el desafío de Cloudflare. Si salta, bajar más o repartir las raíces en varios días.
+- [ ] Gadis: las fichas traen nutrición, ingredientes y cantidad neta (`aecoc_properties`); aprovecharlas en la Fase 3.
 - [ ] **Bloqueados:** Dia, El Corte Inglés e Hipercor (403); Consum y Bon Preu (prohíben `/api/`). Lidl y Aldi no tienen catálogo online completo. Todos ellos se cubren con el escáner y Open Food Facts.
-- [ ] Tests de los scrapers con respuestas grabadas: `normalizar()` de Carrefour y el parseo de páginas de Mercadona.
+- [x] Tests de los scrapers con respuestas grabadas ([scrapers.test.ts](../scrapers/scrapers.test.ts) y `fixtures/`).
 - [ ] Subir el repo a GitHub, configurar los secretos y probar el workflow a mano (*Actions → Scrapers → Run workflow*).
 
 ### Fase 3: enriquecimiento y catálogo genérico

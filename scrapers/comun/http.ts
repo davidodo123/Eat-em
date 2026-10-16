@@ -11,6 +11,7 @@ export interface OpcionesHttp {
 export class ClienteHttp {
   peticiones = 0;
   errores = 0;
+  bloqueado = false; // la web ha respondido con un desafio anti-bots: hay que parar
   private ultima = 0;
   private readonly ua: string;
 
@@ -19,7 +20,7 @@ export class ClienteHttp {
   }
 
   get agotado() {
-    return this.op.maxPeticiones !== undefined && this.peticiones >= this.op.maxPeticiones;
+    return this.bloqueado || (this.op.maxPeticiones !== undefined && this.peticiones >= this.op.maxPeticiones);
   }
 
   async json<T>(url: string): Promise<T> {
@@ -37,6 +38,11 @@ export class ClienteHttp {
           signal: AbortSignal.timeout(this.op.timeoutMs ?? 20_000),
         });
         if (r.ok) return await r.text();
+        // Desafio anti-bots (Cloudflare): no se intenta saltar ni se insiste
+        if (r.headers.get("cf-mitigated") === "challenge") {
+          this.bloqueado = true;
+          throw new ErrorHttp(r.status, url, false, undefined, true);
+        }
         // 4xx (salvo 429) no se arregla reintentando
         if (r.status !== 429 && r.status < 500) throw new ErrorHttp(r.status, url, false);
         const retry = Number(r.headers.get("retry-after"));
@@ -63,8 +69,10 @@ export class ClienteHttp {
 }
 
 export class ErrorHttp extends Error {
-  constructor(public status: number, url: string, public reintentable: boolean, public esperaMs?: number) {
-    super(`HTTP ${status} en ${url}`);
+  constructor(
+    public status: number, url: string, public reintentable: boolean, public esperaMs?: number, public desafio = false,
+  ) {
+    super(`HTTP ${status}${desafio ? " (desafio anti-bots)" : ""} en ${url}`);
   }
 }
 

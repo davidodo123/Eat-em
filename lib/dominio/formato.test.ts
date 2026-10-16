@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parsearFormato, precioPorUnidad } from "./formato.ts";
+import { elegirFormato, formatoDesdePrecioUnidad, parsearFormato, precioPorUnidad } from "./formato.ts";
 import { eanValido, normalizarEan } from "./ean.ts";
 
 test("formatos simples", () => {
@@ -18,6 +18,20 @@ test("packs", () => {
   assert.deepEqual(parsearFormato("pack 12x33 cl."), { cantidad: 3960, unidad: "ml", pack: 12, aproximado: false });
   assert.deepEqual(parsearFormato("6 x 125 g"), { cantidad: 750, unidad: "g", pack: 6, aproximado: false });
   assert.deepEqual(parsearFormato("Pack 6x25 cl"), { cantidad: 1500, unidad: "ml", pack: 6, aproximado: false });
+  assert.deepEqual(parsearFormato("Cerveza Mahou Clásica pack 24 latas 33cl"),
+    { cantidad: 7920, unidad: "ml", pack: 24, aproximado: false });
+  assert.deepEqual(parsearFormato("Agua 6 botellas de 1,5 l"), { cantidad: 9000, unidad: "ml", pack: 6, aproximado: false });
+});
+
+test("formato desde el precio por unidad", () => {
+  const delPrecio = formatoDesdePrecioUnidad(13.44, 1.7, "l");
+  assert.deepEqual(delPrecio, { cantidad: 7906, unidad: "ml", pack: 1, aproximado: false });
+  // El nombre cuadra: se queda el del nombre (exacto)
+  assert.deepEqual(elegirFormato(parsearFormato("pack 24 latas 33cl"), delPrecio)?.cantidad, 7920);
+  // El nombre no cuadra ("33cl" sin pack): manda la tienda
+  assert.equal(elegirFormato(parsearFormato("Cerveza lata 33cl"), delPrecio)?.cantidad, 7906);
+  assert.deepEqual(formatoDesdePrecioUnidad(2.4, 0.2, "unidad"), { cantidad: 12, unidad: "unidad", pack: 1, aproximado: false });
+  assert.equal(formatoDesdePrecioUnidad(null, 1, "kg"), null);
 });
 
 test("peso variable y sin formato", () => {

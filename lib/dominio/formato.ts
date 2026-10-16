@@ -23,6 +23,8 @@ const FACTORES: Record<string, [UnidadBase, number]> = {
 const NUM = String.raw`(\d+(?:[.,]\d+)?)`;
 const UNI = String.raw`(kg|kilos?|grs?|gramos|g|mg|litros?|lt|l|cl|dl|ml|uds?|unidad(?:es)?|u|lavados|dosis|c[aá]psulas)(?![\p{L}])\.?`;
 
+const ENVASES = String.raw`(?:latas?|botell(?:as?|ines?)|bri[ck]ks?|tarrinas?|envases?|sobres?|bolsas?|tetrabri[ck]ks?)`;
+
 const aNumero = (s: string) => Number(s.replace(",", "."));
 
 export function parsearFormato(texto: string | null | undefined): Formato | null {
@@ -31,7 +33,9 @@ export function parsearFormato(texto: string | null | undefined): Formato | null
   const aproximado = /\baprox/.test(t) || /\bpeso variable\b/.test(t);
 
   // "6x125 g", "pack 12 x 33 cl", "2 x 1 l"
-  const pack = t.match(new RegExp(String.raw`(\d+)\s*x\s*${NUM}\s*${UNI}`, "u"));
+  // "pack 24 latas 33cl", "6 botellas de 1,5 l"
+  const pack = t.match(new RegExp(String.raw`(\d+)\s*x\s*${NUM}\s*${UNI}`, "u"))
+    ?? t.match(new RegExp(String.raw`(\d+)\s*${ENVASES}\s*(?:de\s+)?${NUM}\s*${UNI}`, "u"));
   if (pack) {
     const [, n, num, uni] = pack;
     const [unidad, factor] = FACTORES[uni.replace(/\.$/, "")];
@@ -54,6 +58,25 @@ export function precioPorUnidad(precio: number, f: Formato): { valor: number; un
   if (f.unidad === "g") return { valor: redondear((precio / f.cantidad) * 1000, 4), unidad: "kg" };
   if (f.unidad === "ml") return { valor: redondear((precio / f.cantidad) * 1000, 4), unidad: "l" };
   return { valor: redondear(precio / f.cantidad, 4), unidad: "unidad" };
+}
+
+// Cantidad total deducida del precio y el precio por kg / l / unidad que publica la tienda.
+// Es aproximada (los dos precios vienen redondeados a centimos), por eso se redondea
+// a entero y solo se usa cuando el nombre no trae formato o contradice a la tienda.
+export function formatoDesdePrecioUnidad(precio: number | null, ppu: number | null, unidad: "kg" | "l" | "unidad" | null): Formato | null {
+  if (!precio || !ppu || !unidad) return null;
+  const base = precio / ppu;
+  if (unidad === "unidad") return { cantidad: Math.max(1, Math.round(base)), unidad: "unidad", pack: 1, aproximado: false };
+  return { cantidad: Math.round(base * 1000), unidad: unidad === "kg" ? "g" : "ml", pack: 1, aproximado: false };
+}
+
+// El formato del nombre manda si cuadra (±10 %) con el que sale del precio por unidad
+export function elegirFormato(delNombre: Formato | null, delPrecio: Formato | null): Formato | null {
+  if (!delNombre || !delPrecio) return delNombre ?? delPrecio;
+  if (delNombre.unidad !== delPrecio.unidad) return delNombre; // "12 huevos" a precio por kg: no son comparables
+  return Math.abs(delNombre.cantidad - delPrecio.cantidad) / delPrecio.cantidad <= 0.1
+    ? delNombre
+    : { ...delPrecio, pack: delNombre.pack, aproximado: delNombre.aproximado };
 }
 
 function redondear(n: number, dec = 2) {
