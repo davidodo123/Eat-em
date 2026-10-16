@@ -98,7 +98,8 @@
 
 ### Fase 6: IA (Nutri-em)
 - [x] `lib/ia/prefiltro.ts` (datos ausentes → `falta_dato`; menores, embarazo, lactancia, condiciones médicas e IMC < 18,5 → derivar) y `lib/ia/objetivos.ts` (Mifflin-St Jeor, ajuste, mínimos 1.500/1.200, macros), con tests.
-- [ ] Portar a `lib/ia/` el resto del código del PDF: exportar `SYSTEM_PROMPT`/`ESQUEMA_PLAN`, `validarPlan` con alérgenos y suma de kcal/macros (±5-10 %) y hasta 2 reintentos. Necesita `OPENAI_API_KEY`.
+- [x] `lib/ia/prompt.ts` (`SYSTEM_PROMPT` literal, `ESQUEMA_PLAN`, `mensajeUsuario` con las secciones PERFIL/OBJETIVOS_CALCULADOS/…), `lib/ia/validar.ts` (`validarPlan`: ids, cantidades, alérgenos, tipo de dieta, exclusiones, nº de comidas, kcal ±10 % y proteína ±15 %) y `lib/ia/generar.ts` (`generarDia` con hasta 2 reintentos devolviendo los errores al modelo; `modeloOpenAI` con `json_schema` estricto). Con tests y un modelo falso.
+- [ ] Endpoint/acción que genere la semana (7 llamadas) y la guarde en `dietas` / `dieta_comidas` / `dieta_comida_ingredientes`. Necesita `OPENAI_API_KEY`.
 - [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
 - [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y uso de `buscar_fichas()` + fichas `prioridad`.
 - [ ] Script de evaluación con `data/preguntas.json`: 100 % en salvaguardas.
