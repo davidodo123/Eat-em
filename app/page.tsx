@@ -1,6 +1,7 @@
 // Pantalla provisional (Fase 1). Las pantallas reales llegan en la Fase 7.
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/env";
+import Link from "next/link";
 
 const PANTALLAS = [
   { nombre: "Hoy", detalle: "Comidas del dia: marcar hecha, editar cantidad, saltar" },
@@ -29,7 +30,13 @@ export default async function Inicio() {
       </div>
       <p className="mt-1 text-texto-suave">Tu dieta, tu despensa y tu lista de la compra, sincronizadas.</p>
 
-      <ul className="mt-6 space-y-2">
+      <div className="mt-6 grid grid-cols-2 gap-2">
+        <Link href="/escanear" className="rounded-xl bg-marca px-4 py-4 text-center font-semibold text-marca-texto">Escanear compra</Link>
+        <Link href="/grupo" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Hogar</Link>
+      </div>
+
+      <p className="mt-6 text-sm font-medium text-texto-suave">Próximamente</p>
+      <ul className="mt-2 space-y-2">
         {PANTALLAS.map((p) => (
           <li key={p.nombre} className="rounded-xl border border-borde bg-superficie px-4 py-3">
             <p className="font-semibold">{p.nombre}</p>

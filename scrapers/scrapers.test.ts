@@ -166,20 +166,23 @@ test("open food facts: conversion de filas", () => {
     "energy-kcal_100g", "fat_100g", "saturated-fat_100g", "carbohydrates_100g", "sugars_100g", "fiber_100g",
     "proteins_100g", "salt_100g"].map((c) => [c, ""])) as Parameters<typeof convertirOff>[0];
   const fila = {
-    ...base, code: "8437012214583", product_name: "Leche semidesnatada", brands: "La Cantara,Carrefour",
+    ...base, code: "8437012214583", product_name: "Leche semidesnatada", brands: "Hacendado,Mercadona",
     countries_tags: "en:france,en:spain", allergens: "en:milk", traces_tags: "en:nuts,en:soybeans",
     "energy-kcal_100g": "46", proteins_100g: "3.1", salt_100g: "0.13", nutriscore_grade: "b", nova_group: "1",
     last_modified_t: "1791181482",
   };
   const f = convertirOff(fila, new Set())!;
   assert.deepEqual([f.ean, f.marca, f.kcal_100, f.proteinas_100, f.sal_100, f.nutriscore, f.nova, f.en_espana],
-    ["8437012214583", "La Cantara", 46, 3.1, 0.13, "b", 1, true]);
+    ["8437012214583", "Hacendado", 46, 3.1, 0.13, "b", 1, true]);
   assert.deepEqual([f.alergenos, f.trazas], [["leche"], ["soja", "frutos_cascara"]]);
 
-  // Fuera de Espana solo si lo vende alguna tienda; sin datos utiles, nada
+  // Fuera de Espana o de marca de fabricante, solo si lo vende alguna tienda; sin datos utiles, nada
   const fuera = { ...fila, countries_tags: "en:france" };
   assert.equal(convertirOff(fuera, new Set()), null);
   assert.ok(convertirOff(fuera, new Set(["8437012214583"])));
+  assert.equal(convertirOff({ ...fila, brands: "Danone" }, new Set()), null);
+  assert.ok(convertirOff({ ...fila, brands: "Pascual, Dia" }, new Set()));
+  assert.equal(convertirOff({ ...fila, brands: "Diamante" }, new Set()), null);
   assert.equal(convertirOff({ ...fila, "energy-kcal_100g": "", allergens: "", ingredients_text: "" }, new Set()), null);
   // EAN invalido, kcal imposibles y UPC-A de 12 digitos
   assert.equal(convertirOff({ ...fila, code: "8437012214584" }, new Set()), null);

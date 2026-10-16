@@ -74,15 +74,18 @@
 - [ ] Mapear `categorias_origen` a mano donde la votación automática falle.
 
 ### Fase 4: escáner
-- [ ] PWA con `zxing-js` o `html5-qrcode` (no basta `BarcodeDetector`: no funciona en iOS) y entrada manual del código.
-- [ ] Flujo: validar EAN (`lib/dominio/ean.ts`) → buscar en `productos` → OFF `/api/v2/product/<ean>` (guardar con `origen = 'off'`, `verificado = false`) → alta manual con foto (bucket `etiquetas`) y entrada en `revision_productos` → cantidad y precio → `precios_usuario` + `inventario_movimientos`.
-- [ ] Precio por defecto en la tienda del usuario: Mercadona Motril / Castell de Ferro.
+- [x] `/escanear`: cámara con `@zxing/browser` (EAN-13/8, UPC-A/E; también iOS) y entrada manual del código.
+- [x] Flujo: validar EAN → `productos` de cualquier tienda → `off_productos` → API de OFF (`origen = 'off'`, `verificado = false`) → alta manual con entrada en `revision_productos` → ingrediente (★ los candidatos), envases y cantidad sugerida (`cantidadComprada`) → `precios_usuario` + `inventario_movimientos`. Lo que elige el usuario queda como enlace `usuario` en `ingrediente_productos`.
+- [x] Tienda por defecto: Mercadona.
+- [ ] Foto de la etiqueta en el alta manual (bucket `etiquetas`).
+- [ ] Probar en móvil real (iOS Safari y Android Chrome): la cámara exige HTTPS, así que hay que desplegar en Vercel o usar `next dev --experimental-https`.
 
 ### Fase 5: backend
 - [x] Auth por enlace mágico (email) con `@supabase/ssr`: `proxy.ts` refresca la sesión y manda a `/entrar` lo que no es público; `/auth/confirmar` acepta `?code=` (PKCE) y `?token_hash=`; `/salir` por POST; `rutaInterna()` evita redirecciones abiertas.
 - [ ] **Configurar en Supabase** (*Authentication → URL Configuration*): *Site URL* y *Redirect URLs* con `http://localhost:3000/auth/confirmar` y la URL de Vercel (`https://<app>.vercel.app/auth/confirmar`). Sin esto, el enlace del email no vuelve a la app.
 - [ ] Google y Apple como proveedores (necesitan credenciales de cada plataforma).
-- [ ] Onboarding: perfil de salud con consentimiento explícito RGPD (`consentimiento_salud_en`), crear grupo o unirse por código.
+- [x] `/grupo`: crear hogar o unirse por código, ver código y miembros.
+- [ ] Onboarding: nombre del perfil y perfil de salud con consentimiento explícito RGPD (`consentimiento_salud_en`).
 - [ ] Lista automática: stock bajo + necesidades de los próximos 3/7/14 días de **todos** los miembros, paquetes según el formato real y urgente si no llega a la próxima comida. Texto para WhatsApp. Comparador de precios.
 - [ ] Web Push (VAPID, `web-push`) + Vercel Cron para los recordatorios.
 

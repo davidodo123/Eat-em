@@ -61,4 +61,5 @@ test("EAN", () => {
   assert.equal(eanValido("96385074"), true);         // EAN-8
   assert.equal(normalizarEan(" 8437012214583 "), "8437012214583");
   assert.equal(normalizarEan("123"), null);
+  assert.equal(normalizarEan("036000291452"), "0036000291452"); // UPC-A
 });

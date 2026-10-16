@@ -13,8 +13,10 @@ export function eanValido(codigo: string | null | undefined): boolean {
   return (10 - (suma % 10)) % 10 === control;
 }
 
-// Devuelve el EAN limpio si es valido; si no, null
+// Devuelve el EAN limpio si es valido; si no, null. Los UPC-A (12 digitos, EEUU)
+// son EAN-13 con un 0 delante.
 export function normalizarEan(codigo: string | null | undefined): string | null {
-  const limpio = (codigo ?? "").replace(/\D/g, "");
+  let limpio = (codigo ?? "").replace(/\D/g, "");
+  if (limpio.length === 12) limpio = "0" + limpio;
   return eanValido(limpio) ? limpio : null;
 }

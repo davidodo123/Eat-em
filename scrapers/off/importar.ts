@@ -6,8 +6,13 @@
 //
 // Fuente: https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
 // (~1,3 GB comprimido, separado por tabuladores, una fila por producto). Se lee en
-// streaming, sin guardarlo en disco. Se quedan los productos con pais "en:spain" y los
-// que comparten EAN con alguna tienda, y solo si traen nutricion, ingredientes o alergenos.
+// streaming, sin guardarlo en disco. Se quedan:
+//  - los que comparten EAN con alguna tienda (para enriquecerlos por EAN), y
+//  - los de Espana de marcas blancas de cadenas sin EAN en su web (Hacendado, Alipende,
+//    Ifa Eliges, Eroski...), para emparejarlos despues por nombre.
+// y solo si traen nutricion, ingredientes o alergenos. Las marcas de fabricante no hacen
+// falta: se emparejan con Carrefour, que si publica EAN. Todo Espana son ~250.000 filas
+// (2026-10-16), demasiado para el plan gratuito de Supabase (500 MB).
 // La API por EAN tiene limite de 100 peticiones/min: para el catalogo entero no sirve.
 import fs from "node:fs";
 import path from "node:path";
@@ -20,6 +25,8 @@ import { alergenosDesdeOff } from "../../lib/dominio/alergenos.ts";
 
 const VOLCADO = "https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz";
 const LOTE = 500;
+// Marcas blancas de las cadenas con scraper sin EAN (y de las que solo tienen escaner)
+export const MARCAS_BLANCAS = /(^|,)\s*(hacendado|mercadona|deliplus|bosque verde|compy|solcare|agerul|alipende|ifa eliges|eliges|gadis|eroski|eroski basic|caprabo|dia|dia nature|delicious dia|bonte|auchan|alcampo|consum|lidl|milbona|pilos|aldi|milsani|coviran)\s*(,|$)/i;
 const TRAMO_IDS = 5000;
 
 export interface FilaOff {
@@ -57,10 +64,10 @@ type Col = (typeof COLUMNAS)[number];
 
 // Fila del volcado -> fila de off_productos (null si no sirve)
 export function convertir(v: Record<Col, string>, eanesTienda: Set<string>): FilaOff | null {
-  const ean = normalizarEan(v.code?.length === 12 ? "0" + v.code : v.code); // UPC-A -> EAN-13
+  const ean = normalizarEan(v.code);
   if (!ean) return null;
   const enEspana = /(^|,)en:spain(,|$)/.test(v.countries_tags ?? "");
-  if (!enEspana && !eanesTienda.has(ean)) return null;
+  if (!eanesTienda.has(ean) && !(enEspana && MARCAS_BLANCAS.test(v.brands ?? ""))) return null;
 
   const fila: FilaOff = {
     ean,
@@ -117,7 +124,7 @@ async function main() {
   const lineas = readline.createInterface({ input: Readable.fromWeb(r.body as never).pipe(createGunzip()), crlfDelay: Infinity });
 
   let indices: Record<Col, number> | null = null;
-  let leidas = 0, guardadas = 0, enEspana = 0, deTiendas = 0;
+  let leidas = 0, guardadas = 0, enEspana = 0, deTiendas = 0, bytes = 0;
   let lote: FilaOff[] = [];
   const muestra: FilaOff[] = [];
   const vaciar = async () => {
@@ -146,6 +153,7 @@ async function main() {
       if (f.en_espana) enEspana++;
       if (eanes.has(f.ean)) deTiendas++;
       if (muestra.length < 20) muestra.push(f);
+      bytes += JSON.stringify(f).length;
       lote.push(f);
       if (lote.length >= LOTE) await vaciar();
     }
@@ -155,7 +163,8 @@ async function main() {
   lineas.close();
 
   const resumen: Record<string, unknown> = {
-    filas_leidas: leidas, guardadas, en_espana: enEspana, con_ean_de_tienda: deTiendas, duracion_s: Math.round((Date.now() - inicio) / 1000),
+    filas_leidas: leidas, guardadas, en_espana: enEspana, con_ean_de_tienda: deTiendas,
+    datos_mb: Math.round(bytes / 1e5) / 10, duracion_s: Math.round((Date.now() - inicio) / 1000),
   };
   if (db) Object.assign(resumen, await aplicar(db));
   else {
