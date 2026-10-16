@@ -1,0 +1,20 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+.env
+.env*.local
+!.env.example
+
+.vercel/
+supabase/.temp/
+supabase/.branches/
+
+# Dato bruto de scrapers en local (en produccion va a Supabase Storage)
+data/raw/
+
+.DS_Store
+Thumbs.db
+npm-debug.log*

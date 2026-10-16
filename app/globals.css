@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Tokens de color. Modo oscuro automatico (sistema) o forzado con data-theme. */
+:root {
+  --fondo: #f7f7f4;
+  --superficie: #ffffff;
+  --texto: #1c1f1d;
+  --texto-suave: #5c645f;
+  --borde: #e2e4df;
+  --marca: #1f7a55;
+  --marca-texto: #ffffff;
+  --aviso: #b45309;
+  --urgente: #b91c1c;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fondo: #121513;
+    --superficie: #1b1f1c;
+    --texto: #e9ece9;
+    --texto-suave: #a3aba6;
+    --borde: #2c322e;
+    --marca: #3fb886;
+    --marca-texto: #08140e;
+    --aviso: #f59e0b;
+    --urgente: #f87171;
+  }
+}
+:root[data-theme="dark"] {
+  --fondo: #121513;
+  --superficie: #1b1f1c;
+  --texto: #e9ece9;
+  --texto-suave: #a3aba6;
+  --borde: #2c322e;
+  --marca: #3fb886;
+  --marca-texto: #08140e;
+  --aviso: #f59e0b;
+  --urgente: #f87171;
+}
+
+@theme inline {
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-texto: var(--texto);
+  --color-texto-suave: var(--texto-suave);
+  --color-borde: var(--borde);
+  --color-marca: var(--marca);
+  --color-marca-texto: var(--marca-texto);
+  --color-aviso: var(--aviso);
+  --color-urgente: var(--urgente);
+}
+
+html, body {
+  background: var(--fondo);
+  color: var(--texto);
+}
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
