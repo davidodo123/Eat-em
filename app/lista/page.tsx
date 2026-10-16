@@ -5,6 +5,7 @@ import { hogarActual } from "@/lib/grupo";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
 import { CopiarWhatsapp, ItemLista, NuevoItem } from "./componentes";
+import { TiempoReal } from "../tiempo-real";
 
 export const metadata: Metadata = { title: "Lista de la compra · Eat-em" };
 
@@ -47,6 +48,7 @@ export default async function Lista() {
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
       <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
       <h1 className="mt-2 mb-4 text-2xl font-bold">Lista de la compra</h1>
+      <TiempoReal grupoId={hogar.id} tablas={["lista_items"]} />
 
       <NuevoItem ingredientes={(ingredientes ?? []).map(({ id, nombre }) => ({ id, nombre }))} />
 

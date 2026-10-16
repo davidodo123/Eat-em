@@ -5,6 +5,7 @@ import { hogarActual } from "@/lib/grupo";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
 import { FilaInventario } from "./fila";
+import { TiempoReal } from "../tiempo-real";
 
 export const metadata: Metadata = { title: "Inventario · Eat-em" };
 
@@ -49,6 +50,7 @@ export default async function Inventario() {
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
       <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
+      <TiempoReal grupoId={hogar.id} tablas={["inventario"]} />
       <div className="mt-2 mb-4 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Inventario</h1>
         <Link href="/escanear" className="rounded-xl bg-marca px-3 py-2 text-sm font-semibold text-marca-texto">+ Escanear</Link>
