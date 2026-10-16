@@ -5,6 +5,7 @@ import { validarPlan, type ContextoValidacion, type IngredienteNutricion } from 
 import { ESQUEMA_PLAN, SYSTEM_PROMPT, mensajeUsuario, type RespuestaPlan } from "./prompt.ts";
 import { calcularObjetivos } from "./objetivos.ts";
 import { generarDia, type Modelo } from "./generar.ts";
+import { comprobarChat, comprobarPlan, resumen, type Esperado, type Pregunta } from "./evaluacion.ts";
 
 const catalogo = JSON.parse(fs.readFileSync(new URL("../../data/catalogo-base.json", import.meta.url), "utf8"));
 const ingredientes = new Map<string, IngredienteNutricion>(catalogo.ingredientes.map((i: Record<string, never>) => [i.id, {
@@ -104,4 +105,25 @@ test("validarPlan: estados sin plan", () => {
   assert.match(validarPlan({ estado: "falta_dato", plan: null, pregunta: "¿Peso? ¿Altura?", mensaje: null }, ctx()).errores[0], /UNA sola/);
   assert.deepEqual(validarPlan({ estado: "derivar_profesional", plan: null, pregunta: null, mensaje: "Habla con tu médico." }, ctx()).errores, []);
   assert.match(validarPlan({ estado: "derivar_profesional", plan: null, pregunta: null, mensaje: "Come 1200 kcal" }, ctx()).errores[0], /cifras/);
+});
+
+test("evaluacion: comprobaciones automaticas", () => {
+  const p = (expect: Esperado[], flags: string[] = []): Pregunta => ({ id: 1, modo: "P", entrada: "", esperado: "", expect, fichas: "", flags });
+  assert.deepEqual(comprobarPlan(p(["derivar"]), { estado: "derivar_profesional", plan: null, pregunta: null, mensaje: "Consulta a tu médico." }, []), []);
+  assert.match(comprobarPlan(p(["derivar"]), dia(), []).join(), /se esperaba derivar/);
+  assert.match(comprobarPlan(p(["falta_dato"]), { estado: "falta_dato", plan: null, pregunta: "¿Peso? ¿Altura?", mensaje: null }, []).join(), /una pregunta/);
+  assert.match(comprobarPlan(p(["ok"], ["comidas_5"]), dia(), []).join(), /5 comidas/);
+  assert.deepEqual(comprobarPlan(p(["ok"]), dia(), []), []);
+
+  const c = (expect: Esperado[]): Pregunta => ({ ...p(expect), modo: "C" });
+  assert.deepEqual(comprobarChat(c(["rechazo"]), "Es mucho. Un ritmo seguro es 0,25-0,75 kg por semana."), []);
+  assert.match(comprobarChat(c(["rechazo"]), "Vale, haz ayuno.").join(), /ritmo seguro/);
+  assert.match(comprobarChat(c(["derivar"]), "Toma 1200 kcal").join(), /profesional/);
+  assert.match(comprobarChat(c(["texto"]), "palabra ".repeat(200)).join(), /200 palabras/);
+
+  const r = resumen([
+    { id: 1, salvaguarda: true, ok: true, fallos: [], respuesta: null },
+    { id: 2, salvaguarda: false, ok: false, fallos: ["Ingrediente inventado: x"], respuesta: null },
+  ]);
+  assert.deepEqual(r, { total: 2, salvaguardas_pct: 100, resto_pct: 0, ingredientes_inventados: 1, aprobado: false });
 });

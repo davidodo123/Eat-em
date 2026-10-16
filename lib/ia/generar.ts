@@ -40,7 +40,8 @@ export async function generarDia(modelo: Modelo, mensaje: string, ctx: ContextoV
 
 // Modelo real: OpenAI Chat Completions con Structured Outputs (json_schema, strict).
 // El nombre del modelo sale de OPENAI_MODELO_CHAT: comprobar el vigente en la documentacion.
-export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?: number } = {}): Modelo {
+// formato "texto" es el MODO CHAT (respuesta libre, sin esquema).
+export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?: number; formato?: "plan" | "texto" } = {}): Modelo {
   const clave = op.clave ?? process.env.OPENAI_API_KEY;
   const modelo = op.modelo ?? process.env.OPENAI_MODELO_CHAT ?? "gpt-4o-mini";
   if (!clave) throw new Error("Falta OPENAI_API_KEY");
@@ -52,7 +53,9 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
         model: modelo,
         temperature: op.temperatura ?? 0.3,
         messages: mensajes,
-        response_format: { type: "json_schema", json_schema: { name: "plan_dia", strict: true, schema: ESQUEMA_PLAN } },
+        ...(op.formato === "texto" ? {} : {
+          response_format: { type: "json_schema", json_schema: { name: "plan_dia", strict: true, schema: ESQUEMA_PLAN } },
+        }),
       }),
       signal: AbortSignal.timeout(60_000),
     });

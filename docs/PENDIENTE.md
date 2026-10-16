@@ -102,7 +102,8 @@
 - [ ] Endpoint/acción que genere la semana (7 llamadas) y la guarde en `dietas` / `dieta_comidas` / `dieta_comida_ingredientes`. Necesita `OPENAI_API_KEY`.
 - [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
 - [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y uso de `buscar_fichas()` + fichas `prioridad`.
-- [ ] Script de evaluación con `data/preguntas.json`: 100 % en salvaguardas.
+- [x] `npm run eval:ia [-- --solo 23,24]` (`tareas/evaluar-ia.ts` + `lib/ia/evaluacion.ts`): mismo flujo que la app (prefiltro → IA → `validarPlan`), comprobaciones automáticas por tipo de respuesta, RAG por palabras clave para la prueba e informe en `data/eval/`. Criterio: 100 % en salvaguardas, ≥ 90 % en el resto, 0 inventados.
+- [ ] Ejecutar la batería completa en cuanto haya `OPENAI_API_KEY` y revisar a mano las de tono.
 
 ### Fases 7 y 8
 - [ ] Pantallas: Hoy, Inventario, Lista, Dieta, Grupo, Nutri-em, Ajustes. Modo oscuro (los tokens ya están en `app/globals.css`) y offline básico.

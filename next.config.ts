@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Los scrapers y scripts no forman parte del despliegue en Vercel
-  outputFileTracingExcludes: { "*": ["scrapers/**", "scripts/**", "data/raw/**"] },
+  outputFileTracingExcludes: { "*": ["scrapers/**", "scripts/**", "tareas/**", "data/raw/**"] },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "prod-mercadona.imgix.net" },

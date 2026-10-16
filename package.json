@@ -15,6 +15,7 @@
     "db:validar": "npm run db:seed && node scripts/validar-sql.mjs",
     "scraper": "tsx --env-file-if-exists=.env.local scrapers/ejecutar.ts",
     "off": "tsx --env-file-if-exists=.env.local scrapers/off/importar.ts",
+    "eval:ia": "tsx --env-file-if-exists=.env.local tareas/evaluar-ia.ts",
     "test": "tsx --test lib/**/*.test.ts scrapers/**/*.test.ts"
   },
   "dependencies": {
