@@ -86,7 +86,8 @@
 - [ ] **Configurar en Supabase** (*Authentication → URL Configuration*): *Site URL* y *Redirect URLs* con `http://localhost:3000/auth/confirmar` y la URL de Vercel (`https://<app>.vercel.app/auth/confirmar`). Sin esto, el enlace del email no vuelve a la app.
 - [ ] Google y Apple como proveedores (necesitan credenciales de cada plataforma).
 - [x] `/grupo`: crear hogar o unirse por código, ver código y miembros.
-- [ ] Onboarding: nombre del perfil y perfil de salud con consentimiento explícito RGPD (`consentimiento_salud_en`).
+- [x] `/perfil`: nombre y datos de salud (solo con consentimiento explícito; retirarlo los borra junto con los pesajes), alergias, situaciones médicas y objetivos estimados.
+- [ ] Flujo de primer uso guiado (nombre → hogar → perfil) en vez de pantallas sueltas.
 - [x] `/inventario`: stock del hogar por categoría, +/− y "tirar" (movimientos `ajuste`/`desperdicio`) con actualización optimista, aviso de "queda poco" si hay umbral y últimos movimientos con quién los hizo.
 - [ ] Editar umbrales y producto preferido por ingrediente.
 - [x] `/lista` manual compartida: añadir ingrediente o texto libre (urgente opcional), marcar comprado (`marcar_comprado`, suma al inventario), quitar, copiar o enviar por WhatsApp (`listaParaWhatsapp`, con test).
@@ -95,7 +96,8 @@
 - [ ] Web Push (VAPID, `web-push`) + Vercel Cron para los recordatorios.
 
 ### Fase 6: IA (Nutri-em)
-- [ ] Portar a `lib/ia/` el código del PDF con las correcciones de ARQUITECTURA.md §8: exportar `SYSTEM_PROMPT`/`ESQUEMA_PLAN`, `prefiltro` con datos ausentes → `falta_dato`, `validarPlan` con alérgenos y suma de kcal/macros (±5-10 %) y hasta 2 reintentos.
+- [x] `lib/ia/prefiltro.ts` (datos ausentes → `falta_dato`; menores, embarazo, lactancia, condiciones médicas e IMC < 18,5 → derivar) y `lib/ia/objetivos.ts` (Mifflin-St Jeor, ajuste, mínimos 1.500/1.200, macros), con tests.
+- [ ] Portar a `lib/ia/` el resto del código del PDF: exportar `SYSTEM_PROMPT`/`ESQUEMA_PLAN`, `validarPlan` con alérgenos y suma de kcal/macros (±5-10 %) y hasta 2 reintentos. Necesita `OPENAI_API_KEY`.
 - [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
 - [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y uso de `buscar_fichas()` + fichas `prioridad`.
 - [ ] Script de evaluación con `data/preguntas.json`: 100 % en salvaguardas.

@@ -35,6 +35,7 @@ export default async function Inicio() {
         <Link href="/inventario" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Inventario</Link>
         <Link href="/lista" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Lista</Link>
         <Link href="/grupo" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Hogar</Link>
+        <Link href="/perfil" className="col-span-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Perfil y objetivos</Link>
       </div>
 
       <p className="mt-6 text-sm font-medium text-texto-suave">Próximamente</p>
