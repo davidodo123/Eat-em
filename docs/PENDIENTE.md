@@ -79,7 +79,9 @@
 - [ ] Precio por defecto en la tienda del usuario: Mercadona Motril / Castell de Ferro.
 
 ### Fase 5: backend
-- [ ] Auth (email, Google, Apple) con `@supabase/ssr`. En Next 16 el middleware se llama **`proxy.ts`**; leer `node_modules/next/dist/docs/` antes de usarlo (ver `AGENTS.md`).
+- [x] Auth por enlace mágico (email) con `@supabase/ssr`: `proxy.ts` refresca la sesión y manda a `/entrar` lo que no es público; `/auth/confirmar` acepta `?code=` (PKCE) y `?token_hash=`; `/salir` por POST; `rutaInterna()` evita redirecciones abiertas.
+- [ ] **Configurar en Supabase** (*Authentication → URL Configuration*): *Site URL* y *Redirect URLs* con `http://localhost:3000/auth/confirmar` y la URL de Vercel (`https://<app>.vercel.app/auth/confirmar`). Sin esto, el enlace del email no vuelve a la app.
+- [ ] Google y Apple como proveedores (necesitan credenciales de cada plataforma).
 - [ ] Onboarding: perfil de salud con consentimiento explícito RGPD (`consentimiento_salud_en`), crear grupo o unirse por código.
 - [ ] Lista automática: stock bajo + necesidades de los próximos 3/7/14 días de **todos** los miembros, paquetes según el formato real y urgente si no llega a la próxima comida. Texto para WhatsApp. Comparador de precios.
 - [ ] Web Push (VAPID, `web-push`) + Vercel Cron para los recordatorios.
