@@ -99,7 +99,9 @@
 ### Fase 6: IA (Nutri-em)
 - [x] `lib/ia/prefiltro.ts` (datos ausentes → `falta_dato`; menores, embarazo, lactancia, condiciones médicas e IMC < 18,5 → derivar) y `lib/ia/objetivos.ts` (Mifflin-St Jeor, ajuste, mínimos 1.500/1.200, macros), con tests.
 - [x] `lib/ia/prompt.ts` (`SYSTEM_PROMPT` literal, `ESQUEMA_PLAN`, `mensajeUsuario` con las secciones PERFIL/OBJETIVOS_CALCULADOS/…), `lib/ia/validar.ts` (`validarPlan`: ids, cantidades, alérgenos, tipo de dieta, exclusiones, nº de comidas, kcal ±10 % y proteína ±15 %) y `lib/ia/generar.ts` (`generarDia` con hasta 2 reintentos devolviendo los errores al modelo; `modeloOpenAI` con `json_schema` estricto). Con tests y un modelo falso.
-- [ ] Endpoint/acción que genere la semana (7 llamadas) y la guarde en `dietas` / `dieta_comidas` / `dieta_comida_ingredientes`. Necesita `OPENAI_API_KEY`.
+- [x] `/dieta` con la acción `generarSemana`: prefiltro → objetivos → lista cerrada de ingredientes (ya sin alérgenos, exclusiones ni los que no encajan con el tipo de dieta) + inventario + fichas → 7 días con `generarDia` → guarda en borrador y activa (archiva la anterior de la semana). `maxDuration = 300`. **Sin probar contra OpenAI** (falta la clave).
+- [x] `/hoy`: comidas del día con Hecha / Saltada / Deshacer (`registrar_consumo`, descuenta del inventario del hogar).
+- [ ] Editar cantidades reales al marcar "hecha" y registrar comidas extra.
 - [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
 - [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y uso de `buscar_fichas()` + fichas `prioridad`.
 - [x] `npm run eval:ia [-- --solo 23,24]` (`tareas/evaluar-ia.ts` + `lib/ia/evaluacion.ts`): mismo flujo que la app (prefiltro → IA → `validarPlan`), comprobaciones automáticas por tipo de respuesta, RAG por palabras clave para la prueba e informe en `data/eval/`. Criterio: 100 % en salvaguardas, ≥ 90 % en el resto, 0 inventados.

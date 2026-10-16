@@ -6,8 +6,6 @@ import { supabaseConfigurado } from "@/lib/env";
 import { hogarActual } from "@/lib/grupo";
 
 const PROXIMAMENTE = [
-  { nombre: "Hoy", detalle: "Comidas del día: marcar hecha, editar cantidad, saltar" },
-  { nombre: "Dieta", detalle: "Plan semanal individual" },
   { nombre: "Nutri-em", detalle: "Chat y consejos de psicología de la dieta" },
 ];
 
@@ -47,6 +45,8 @@ export default async function Inicio() {
       )}
 
       <div className="mt-6 grid grid-cols-2 gap-2">
+        <Link href="/hoy" className="rounded-xl bg-marca px-4 py-4 text-center font-semibold text-marca-texto">Hoy</Link>
+        <Link href="/dieta" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Mi semana</Link>
         <Link href="/escanear" className="rounded-xl bg-marca px-4 py-4 text-center font-semibold text-marca-texto">Escanear compra</Link>
         <Link href="/inventario" className="rounded-xl border border-borde bg-superficie px-4 py-4 text-center font-semibold">Inventario</Link>
         <Link href="/lista" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Lista</Link>
