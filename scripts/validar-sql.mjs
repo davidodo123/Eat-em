@@ -20,6 +20,7 @@ await db.exec(`
   CREATE FUNCTION auth.uid() RETURNS UUID LANGUAGE sql STABLE AS
     $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   CREATE ROLE authenticated;
+  CREATE ROLE anon;
   GRANT USAGE ON SCHEMA auth, public TO authenticated;
   GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
 `);
@@ -151,6 +152,56 @@ const fichas = await q("SELECT * FROM buscar_fichas($1::vector, 'como por ansied
 assert.equal(fichas[0].id, "FICHA-007");
 assert.equal((await uno("SELECT count(*)::int n FROM fichas WHERE prioridad")).n, 3);
 console.log("OK fichas RAG (busqueda hibrida)");
+
+// 10. Open Food Facts: nutricion por EAN y clusters (sin pisar datos de la tienda)
+await db.exec(`
+  INSERT INTO productos (supermercado_id, id_origen, nombre, ean, precio) VALUES
+    ('carrefour','c1','Yogur natural Danone','8480000123459',1.0),
+    ('ahorramas','a1','Yogur natural Danone','8480000123459',1.1);
+  INSERT INTO productos (supermercado_id, id_origen, nombre, ean, kcal_100, nutricion_origen) VALUES
+    ('gadis','g1','Yogur natural Danone','8480000123459',99,'tienda');
+  INSERT INTO off_productos (ean, nombre, kcal_100, proteinas_100, alergenos, en_espana)
+    VALUES ('8480000123459','Yogur natural',60,3.5,'{leche}',true);
+`);
+assert.equal((await uno("SELECT aplicar_off(1, 100000) n")).n, 2);
+assert.equal((await uno("SELECT aplicar_off(1, 100000) n")).n, 0); // idempotente
+const yogures = await q("SELECT supermercado_id, kcal_100::float k, alergenos, nutricion_origen FROM productos WHERE ean='8480000123459' ORDER BY supermercado_id");
+assert.deepEqual(yogures.map((y) => [y.supermercado_id, y.k, y.nutricion_origen]),
+  [["ahorramas", 60, "off"], ["carrefour", 60, "off"], ["gadis", 99, "tienda"]]);
+assert.deepEqual(yogures[0].alergenos, ["leche"]);
+assert.equal((await uno("SELECT agrupar_por_ean(1, 100000) n")).n, 3);
+assert.equal((await uno("SELECT count(DISTINCT cluster_id)::int n FROM productos WHERE ean='8480000123459'")).n, 1);
+await como(A, async () => {
+  assert.equal((await uno("SELECT count(*)::int n FROM off_productos")).n, 1); // lectura para usuarios
+});
+console.log("OK Open Food Facts por EAN y clusters");
+
+// 11. Enlace automatico ingrediente -> productos
+await db.exec(`
+  INSERT INTO productos (supermercado_id, id_origen, nombre, categoria_id) VALUES
+    ('carrefour','l1','Leche semidesnatada Asturiana 1 l', (SELECT id FROM categorias WHERE slug='lacteos')),
+    ('carrefour','l2','Leche entera Pascual 1 l',          (SELECT id FROM categorias WHERE slug='lacteos')),
+    ('carrefour','l3','Chocolate con leche Milka',          (SELECT id FROM categorias WHERE slug='despensa')),
+    ('carrefour','l4','Platanos de Canarias',               (SELECT id FROM categorias WHERE slug='fruta'));
+`);
+const conf = async (ing, nombre) => (await uno(
+  "SELECT ip.confianza::float c, ip.metodo FROM ingrediente_productos ip JOIN productos p ON p.id = ip.producto_id WHERE ip.ingrediente_id = $1 AND p.nombre = $2",
+  [ing, nombre]));
+assert.ok((await uno("SELECT enlazar_ingredientes('carrefour', 1, 100000) n")).n >= 3);
+assert.equal((await conf("leche_semidesnatada", "Leche semidesnatada Asturiana 1 l")).c, 1);
+assert.equal((await conf("leche_semidesnatada", "Leche entera Pascual 1 l")).c, 0.8);   // por el sinonimo "leche"
+assert.equal(await conf("leche_semidesnatada", "Chocolate con leche Milka"), undefined); // otra categoria
+assert.equal((await conf("platano", "Platanos de Canarias")).c, 1);                      // plural por stemming
+await db.exec("SELECT enlazar_ingredientes('mercadona', 1, 100000)");                    // sin categoria: x0.7
+assert.equal((await conf("leche_semidesnatada", "Leche semidesnatada")).c, 0.7);
+// Los manuales no se tocan y los automaticos que dejan de casar se borran
+await db.exec(`UPDATE ingrediente_productos SET metodo='manual', confianza=1
+  WHERE producto_id = (SELECT id FROM productos WHERE id_origen='l2')`);
+await db.exec("UPDATE productos SET nombre='Bebida de avena Oatly' WHERE id_origen='l1'");
+await db.exec("SELECT enlazar_ingredientes('carrefour', 1, 100000)");
+assert.equal(await conf("leche_semidesnatada", "Bebida de avena Oatly"), undefined);
+assert.deepEqual(await conf("leche_semidesnatada", "Leche entera Pascual 1 l"), { c: 1, metodo: "manual" });
+console.log("OK enlace automatico de ingredientes");
 
 console.log("\nTODO OK");
 await db.close();

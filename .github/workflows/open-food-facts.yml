@@ -1,0 +1,28 @@
+name: Open Food Facts
+
+on:
+  schedule:
+    - cron: "0 9 * * 0"   # Domingos a las 09:00 UTC, despues de las cargas de las tiendas
+  workflow_dispatch:
+
+concurrency:
+  group: open-food-facts
+  cancel-in-progress: false
+
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Importar volcado y enriquecer productos por EAN
+        run: npm run off
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SCRAPER_USER_AGENT: ${{ vars.SCRAPER_USER_AGENT || 'Eat-em/0.1 (uso personal)' }}

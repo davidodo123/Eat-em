@@ -6,7 +6,7 @@
 
 ## 0. Lo primero al retomar
 
-> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` y `20261016000004`. Sus filas de `supermercados` ya se insertaron a mano en la base; el `db push` (ver §1) las repetirá sin problema.
+> **2026-10-16 (2ª sesión):** el repo se clonó de nuevo desde GitHub (`origin` = `github.com/davidodo123/Eat-em`) y se rehízo `.env.local`. Añadidos los scrapers de **Ahorramás**, **Gadis** y **Caprabo** y las migraciones `20261016000003` a `20261016000006` (supermercados, Open Food Facts y enlace de ingredientes). **El usuario tiene que aplicarlas con `SUPABASE_DB_PASSWORD=... npx supabase db push`** (ver §1). Las filas de `supermercados` ya se insertaron a mano; el `db push` las repetirá sin problema. Hasta entonces, `npm run off` falla (no existe `off_productos`) y las cargas avisan de que no pueden enlazar ingredientes.
 
 1. **Relanzar las cargas completas.** Se cortaron al cerrar la sesión; solo escriben en la base al final, así que no quedó nada a medias.
    ```bash
@@ -64,10 +64,13 @@
 - [ ] Subir el repo a GitHub, configurar los secretos y probar el workflow a mano (*Actions → Scrapers → Run workflow*).
 
 ### Fase 3: enriquecimiento y catálogo genérico
-- [ ] **Open Food Facts:** importar el **volcado completo** de productos de España (JSONL/Parquet en `static.openfoodfacts.org/data/`). El buscador `/api/v2/search` estaba caído ("temporarily unavailable"); `/api/v2/product/<ean>` sí funciona. Licencia ODbL: citar la fuente. Cruzar por EAN con `productos` para rellenar `kcal_100`, macros, `alergenos` y `nutricion_origen = 'off'`.
-- [ ] `producto_clusters`: agrupar por EAN y, si no hay EAN, por similitud de nombre + marca + formato con `pg_trgm`. Mercadona no tiene EAN: emparejarlo por nombre con Carrefour y OFF.
+- [x] **Open Food Facts:** importador en streaming del CSV completo (`npm run off`), tabla `off_productos`, `aplicar_off()` y `agrupar_por_ean()` (migración `20261016000005`). Workflow semanal. **Falta aplicar las migraciones 3 a 6 con `db push`** y lanzar la primera importación real.
+- [ ] Mostrar en la app la atribución de OFF (licencia ODbL).
+- [x] `producto_clusters` por EAN (`agrupar_por_ean`).
+- [ ] Sin EAN (Mercadona, Ahorramás, Gadis, Caprabo): agrupar por similitud de nombre + marca + formato con `pg_trgm`, contra Carrefour y `off_productos`.
 - [ ] Marcas de Mercadona que no son propias (Puleva…): detectarlas con la lista de marcas de Carrefour y OFF.
-- [ ] Enlazar `ingredientes` ↔ `productos` (`ingrediente_productos`) usando los sinónimos y la búsqueda. Ampliar `data/catalogo-base.json` y contrastar su nutrición con BEDCA: ahora es `aprox_referencia`.
+- [x] Enlace automático `ingredientes` → `productos` (`enlazar_ingredientes`, migración `20261016000006`). Lo llama el ejecutor tras cada carga.
+- [ ] Ampliar `data/catalogo-base.json` (solo hay 24 ingredientes) y contrastar su nutrición con BEDCA: ahora es `aprox_referencia`. Afinar los sinónimos demasiado amplios ("pan", "leche", "aceite", "copos").
 - [ ] Mapear `categorias_origen` a mano donde la votación automática falle.
 
 ### Fase 4: escáner

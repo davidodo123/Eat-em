@@ -9,6 +9,8 @@ import * as mercadona from "./mercadona/index.ts";
 import { normalizar as normalizarCarrefour } from "./carrefour/index.ts";
 import { adivinarCategoria } from "./comun/categorias.ts";
 import { decodificar, tituloMarca } from "./comun/texto.ts";
+import { convertir as convertirOff } from "./off/importar.ts";
+import { alergenosDesdeOff } from "../lib/dominio/alergenos.ts";
 
 const AHORA = "2026-10-16T00:00:00.000Z";
 const fixture = (ruta: string) => fs.readFileSync(new URL(ruta, import.meta.url), "utf8");
@@ -155,6 +157,40 @@ test("categorias propias", () => {
   assert.equal(adivinarCategoria(["Bebidas", "Refrescos"]), "bebidas");
   assert.equal(adivinarCategoria(["Frescos", "Charcutería"]), "carne");
   assert.equal(adivinarCategoria([]), null);
+});
+
+test("open food facts: conversion de filas", () => {
+  const base = Object.fromEntries([
+    "code", "last_modified_t", "product_name", "quantity", "brands", "categories_tags", "countries_tags",
+    "ingredients_text", "allergens", "traces_tags", "nutriscore_grade", "nova_group", "image_url",
+    "energy-kcal_100g", "fat_100g", "saturated-fat_100g", "carbohydrates_100g", "sugars_100g", "fiber_100g",
+    "proteins_100g", "salt_100g"].map((c) => [c, ""])) as Parameters<typeof convertirOff>[0];
+  const fila = {
+    ...base, code: "8437012214583", product_name: "Leche semidesnatada", brands: "La Cantara,Carrefour",
+    countries_tags: "en:france,en:spain", allergens: "en:milk", traces_tags: "en:nuts,en:soybeans",
+    "energy-kcal_100g": "46", proteins_100g: "3.1", salt_100g: "0.13", nutriscore_grade: "b", nova_group: "1",
+    last_modified_t: "1791181482",
+  };
+  const f = convertirOff(fila, new Set())!;
+  assert.deepEqual([f.ean, f.marca, f.kcal_100, f.proteinas_100, f.sal_100, f.nutriscore, f.nova, f.en_espana],
+    ["8437012214583", "La Cantara", 46, 3.1, 0.13, "b", 1, true]);
+  assert.deepEqual([f.alergenos, f.trazas], [["leche"], ["soja", "frutos_cascara"]]);
+
+  // Fuera de Espana solo si lo vende alguna tienda; sin datos utiles, nada
+  const fuera = { ...fila, countries_tags: "en:france" };
+  assert.equal(convertirOff(fuera, new Set()), null);
+  assert.ok(convertirOff(fuera, new Set(["8437012214583"])));
+  assert.equal(convertirOff({ ...fila, "energy-kcal_100g": "", allergens: "", ingredients_text: "" }, new Set()), null);
+  // EAN invalido, kcal imposibles y UPC-A de 12 digitos
+  assert.equal(convertirOff({ ...fila, code: "8437012214584" }, new Set()), null);
+  assert.equal(convertirOff({ ...fila, "energy-kcal_100g": "4600" }, new Set())?.kcal_100, null);
+  assert.equal(convertirOff({ ...fila, code: "036000291452" }, new Set())?.ean, "0036000291452");
+});
+
+test("alergenos desde OFF", () => {
+  assert.deepEqual(alergenosDesdeOff("en:milk,en:gluten,en:unknown,en:milk"), ["gluten", "leche"]);
+  assert.deepEqual(alergenosDesdeOff(""), []);
+  assert.deepEqual(alergenosDesdeOff("en:sulphur-dioxide-and-sulphites, EN:Sesame-seeds"), ["sesamo", "sulfitos"]);
 });
 
 test("texto", () => {

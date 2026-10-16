@@ -80,6 +80,19 @@ Así un supermercado sin scraper (Mercadona, Dia, Lidl…) sigue teniendo catál
 - Va a 1 petición cada 1,5 s. Prueba del 2026-10-16: 760 productos de *frescos* en 39 páginas.
 - Sin ejemplo de oferta todavía: `price-before` venía vacío en todo lo probado. Vigilar en la primera carga que se rellena.
 
+## Open Food Facts (Fase 3)
+
+- **Fuente:** volcado CSV `static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz` (~1,3 GB, tabuladores), leído en streaming sin guardarlo ([importar.ts](../scrapers/off/importar.ts)). La API por EAN tiene un límite de 100 peticiones/min (~7 h para 45.000 EAN) y su buscador estaba caído. Licencia **ODbL**: hay que citar la fuente en la app.
+- **Filtro:** productos con país `en:spain` más los que comparten EAN con alguna tienda, y solo si traen nutrición, ingredientes o alérgenos. Los UPC-A de 12 dígitos se pasan a EAN-13 y los valores imposibles (más de 100 g/100 g o más de 1.000 kcal) se descartan.
+- **Destino:** tabla `off_productos`. Después, por tramos de id:
+  - `aplicar_off()` copia la nutrición, los alérgenos (los 14 de la UE, [alergenos.ts](../lib/dominio/alergenos.ts)) y los ingredientes a los `productos` con el mismo EAN. Pone `nutricion_origen = 'off'` y no pisa datos de la tienda, del usuario ni manuales.
+  - `agrupar_por_ean()` crea un `producto_clusters` por EAN y enlaza las fichas de todas las tiendas.
+- **Frecuencia:** semanal (domingos, [open-food-facts.yml](../.github/workflows/open-food-facts.yml)). Más adelante se pueden usar los volcados diarios incrementales (`data/delta/`).
+
+## Enlace ingrediente → productos (Fase 3)
+
+`enlazar_ingredientes(tienda, desde, hasta)` se ejecuta al final de cada carga. Un producto es candidato de un ingrediente si su nombre contiene, como frase y con stemming en español, el nombre del ingrediente (confianza 1,0) o un sinónimo (0,8), y es de la misma categoría propia. Los productos sin categoría (Mercadona) entran con la confianza × 0,7. No toca los enlaces `manual` ni `usuario` y borra los `auto` que dejan de casar. Los sinónimos amplios ("leche", "pan", "aceite") dan muchos candidatos de confianza 0,8: la app debe ordenar por confianza y precio y dejar elegir.
+
 ## Ejecutar
 
 ```bash
@@ -90,6 +103,8 @@ npm run scraper -- ahorramas                              # ~30 min (1 petición
 npm run scraper -- gadis --rapido                         # solo categorías, ~10 min
 npm run scraper -- gadis                                  # categorías + fichas que falten, ~2 h
 npm run scraper -- caprabo                                # ~15 min
+npm run off -- --seco --max-filas 300000                  # prueba de Open Food Facts sin base
+npm run off                                               # importa OFF y enriquece por EAN
 ```
 
 Cada ejecución:

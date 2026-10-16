@@ -87,6 +87,9 @@ async function main() {
 
       const ids = await guardarProductos(db, res.productos);
       await guardarPrecios(db, res.productos, ids);
+      const enlaces = await enlazarIngredientes(db, scraper!.id, ids);
+      if (typeof enlaces === "string") res.avisos.push(enlaces);
+      else Object.assign(resumen, { enlaces_ingredientes: enlaces });
       // Solo se descatalogan productos si la ejecucion es fiable (sin alerta y sin tope)
       const fiable = !informe.alerta && maxPeticiones === undefined && res.completo !== false;
       if (fiable) informe.descatalogados = await descatalogar(db, scraper!.id, res.productos, anteriores);
@@ -210,6 +213,21 @@ async function guardarPrecios(db: SupabaseClient, productos: ProductoNormalizado
     const { error } = await db.from("precios_historico").upsert(lote, { onConflict: "producto_id,fecha" });
     if (error) throw error;
   }
+}
+
+// Enlaza los productos guardados con los ingredientes genericos (por tramos de id).
+// Devuelve el numero de enlaces o un aviso si la funcion aun no existe en la base.
+async function enlazarIngredientes(db: SupabaseClient, sid: string, ids: Map<string, number>): Promise<number | string> {
+  if (!ids.size) return 0;
+  let min = Infinity, max = 0;
+  for (const id of ids.values()) { if (id < min) min = id; if (id > max) max = id; }
+  let n = 0;
+  for (let desde = min; desde <= max; desde += 5000) {
+    const { data, error } = await db.rpc("enlazar_ingredientes", { p_supermercado: sid, p_desde: desde, p_hasta: desde + 4999 });
+    if (error) return `Sin enlace de ingredientes: ${error.message} (aplica la migracion 20261016000006)`;
+    n += data ?? 0;
+  }
+  return n;
 }
 
 // Marca (nunca borra) los productos que ya no aparecen
