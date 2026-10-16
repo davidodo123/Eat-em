@@ -98,8 +98,11 @@ async function main() {
       const enlaces = await enlazarIngredientes(db, scraper!.id, ids);
       if (typeof enlaces === "string") res.avisos.push(enlaces);
       else Object.assign(resumen, { enlaces_ingredientes: enlaces });
-      // Solo se descatalogan productos si la ejecucion es fiable (sin alerta y sin tope)
-      const fiable = !informe.alerta && maxPeticiones === undefined && res.completo !== false;
+      // Solo se descatalogan productos si la ejecucion es fiable: sin alerta, sin tope, completa
+      // y casi sin errores HTTP (un corte de red no debe dar por retirados productos que siguen a la venta)
+      const pocosErrores = res.errores <= Math.max(5, res.peticiones * 0.01);
+      const fiable = !informe.alerta && maxPeticiones === undefined && res.completo !== false && pocosErrores;
+      if (!pocosErrores) res.avisos.push(`${res.errores} errores HTTP: no se descataloga nada en esta ejecucion`);
       if (fiable) informe.descatalogados = await descatalogar(db, scraper!.id, res.productos, anteriores);
       else informe.descatalogados = 0;
 
