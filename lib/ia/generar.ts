@@ -6,6 +6,21 @@ import { ajustarAKcal, validarPlan, type ContextoValidacion, type Totales } from
 import { proveedorIA } from "./proveedor.ts";
 
 export interface Mensaje { role: "system" | "user" | "assistant"; content: string }
+
+// Error del proveedor de IA. "cupo": limite de peticiones (429) o sin credito (402) -> no
+// tiene sentido reintentar hasta el dia siguiente o hasta recargar.
+export class ErrorIA extends Error {
+  constructor(public status: number, detalle: string) {
+    super(`IA ${status}: ${detalle.slice(0, 300)}`);
+  }
+  get cupo() { return this.status === 429 || this.status === 402; }
+}
+
+export function mensajeErrorIA(e: unknown): string {
+  if (e instanceof ErrorIA && e.cupo) return "Se ha agotado el cupo gratuito de la IA por hoy. Vuelve a intentarlo mañana.";
+  if (e instanceof Error && /timeout|aborted/i.test(e.message)) return "La IA está tardando demasiado. Inténtalo en un rato.";
+  return "La IA no ha podido responder ahora. Inténtalo en un momento.";
+}
 export type Modelo = (mensajes: Mensaje[]) => Promise<string>;
 
 export interface ResultadoDia {
@@ -69,7 +84,7 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
       }),
       signal: AbortSignal.timeout(120_000), // los modelos gratuitos son lentos
     });
-    if (!r.ok) throw new Error(`IA ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw new ErrorIA(r.status, await r.text());
     const j = await r.json();
     const contenido = j.choices?.[0]?.message;
     if (contenido?.refusal) throw new Error(`OpenAI rechazo la peticion: ${contenido.refusal}`);

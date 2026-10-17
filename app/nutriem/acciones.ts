@@ -1,7 +1,7 @@
 "use server";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { consultaFichas, responderChat } from "@/lib/ia/chat";
-import { modeloOpenAI, type Mensaje } from "@/lib/ia/generar";
+import { mensajeErrorIA, modeloOpenAI, type Mensaje } from "@/lib/ia/generar";
 import { embeddings } from "@/lib/ia/proveedor";
 
 async function fichasRelevantes(supabase: Awaited<ReturnType<typeof crearClienteServidor>>, texto: string) {
@@ -38,7 +38,7 @@ export async function preguntar(pregunta: string, historial: Mensaje[]): Promise
   try {
     const respuesta = await responderChat(modeloOpenAI({ formato: "texto", temperatura: 0.4 }), texto, [...(siempre ?? []), ...relevantes.filter((r) => !(siempre ?? []).some((s) => s.id === r.id))], historialSeguro);
     return { respuesta };
-  } catch {
-    return { error: "Nutri-em no ha podido responder ahora. Inténtalo en un momento." };
+  } catch (e) {
+    return { error: mensajeErrorIA(e) };
   }
 }

@@ -5,7 +5,7 @@ import { hogarActual } from "@/lib/grupo";
 import { prefiltro } from "@/lib/ia/prefiltro";
 import { calcularObjetivos } from "@/lib/ia/objetivos";
 import { DIAS, mensajeUsuario } from "@/lib/ia/prompt";
-import { generarDia, modeloOpenAI } from "@/lib/ia/generar";
+import { ErrorIA, generarDia, mensajeErrorIA, modeloOpenAI } from "@/lib/ia/generar";
 import { filasDelDia, lunesDe } from "@/lib/ia/semana";
 import type { IngredienteNutricion } from "@/lib/ia/validar";
 import type { PerfilSalud } from "@/lib/ia/perfil";
@@ -78,8 +78,14 @@ export async function generarSemana(_previo: EstadoDieta): Promise<EstadoDieta> 
       const filas = filasDelDia({ ...r.respuesta.plan, dia }, todos);
       dias.push(filas);
       nombresPrevios.push(...filas.map((f) => f.nombre));
-    } catch {
+    } catch (e) {
       fallidos.push(dia);
+      // Sin cupo no merece la pena seguir: se guarda lo que haya y se avisa
+      if (e instanceof ErrorIA && e.cupo) {
+        fallidos.push(...DIAS.slice(DIAS.indexOf(dia) + 1));
+        if (!dias.length) return { error: mensajeErrorIA(e) };
+        break;
+      }
     }
   }
   if (!dias.length) return { error: "No se pudo generar ningún día válido. Inténtalo más tarde." };
