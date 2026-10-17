@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
+import { hogarActual } from "@/lib/grupo";
+import { BotonPreferido } from "./preferido";
 
 export const metadata: Metadata = { title: "Comparar precios · Eat-em" };
 
@@ -23,6 +25,10 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
     ? await supabase.rpc("comparar_precios", { p_ingrediente: elegido.id })
     : { data: null, error: null };
   const filas = ((data ?? []) as Fila[]).sort((a, b) => a.precio_por_unidad - b.precio_por_unidad);
+  const hogar = elegido ? await hogarActual(supabase) : null;
+  const preferido = hogar
+    ? (await supabase.from("inventario").select("producto_preferido_id").eq("grupo_id", hogar.id).eq("ingrediente_id", elegido!.id).maybeSingle()).data?.producto_preferido_id ?? null
+    : null;
   const nombreSuper = new Map((supers ?? []).map((s) => [s.id, s.nombre]));
 
   return (
@@ -64,6 +70,7 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
             <div className="text-right">
               <p className="font-bold">{euros(f.precio_por_unidad)}<span className="text-xs font-normal">/{f.unidad_precio === "unidad" ? "ud" : f.unidad_precio}</span></p>
               <p className="text-sm text-texto-suave">{euros(f.precio)}</p>
+              {hogar && <BotonPreferido ingredienteId={elegido!.id} productoId={f.producto_id} elegido={preferido === f.producto_id} />}
             </div>
           </li>
         ))}

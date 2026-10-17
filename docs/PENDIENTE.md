@@ -90,7 +90,7 @@
 - [ ] Flujo de primer uso guiado (nombre → hogar → perfil) en vez de pantallas sueltas.
 - [x] `/inventario`: stock del hogar por categoría, +/− y "tirar" (movimientos `ajuste`/`desperdicio`) con actualización optimista, aviso de "queda poco" si hay umbral y últimos movimientos con quién los hizo.
 - [x] Umbral de "queda poco" por ingrediente (`fijarUmbral`). Al cruzarlo (ajuste manual o comida hecha) entra solo en la lista (`origen = 'auto'`) y se avisa a los demás del hogar (`lib/stock.ts`).
-- [ ] Producto preferido por ingrediente.
+- [x] Producto preferido por ingrediente: "Este es el nuestro" en `/comparar` (`inventario.producto_preferido_id`); la lista muestra el producto, la tienda y el precio.
 - [x] `/lista` manual compartida: añadir ingrediente o texto libre (urgente opcional), marcar comprado (`marcar_comprado`, suma al inventario), quitar, copiar o enviar por WhatsApp (`listaParaWhatsapp`, con test).
 - [x] Lista e inventario en tiempo real (`app/tiempo-real.tsx`: Supabase Realtime filtrado por hogar y `router.refresh()`). Probar con dos sesiones a la vez.
 - [x] Comparador `/comparar` (`comparar_precios()`, migración `20261016000008`): por ingrediente, el producto más barato de cada tienda por kg/l/ud con la oferta aplicada; para Mercadona, el último precio apuntado con el escáner (90 días). Enlace "€" en cada ingrediente de la lista.

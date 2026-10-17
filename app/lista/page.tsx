@@ -24,19 +24,26 @@ export default async function Lista() {
     );
   }
 
-  const [{ data: items }, { data: ingredientes }, { data: categorias }] = await Promise.all([
+  const [{ data: items }, { data: ingredientes }, { data: categorias }, { data: preferidos }] = await Promise.all([
     supabase.from("lista_items").select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente")
       .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at"),
     supabase.from("ingredientes").select("id, nombre, unidad, categoria_id").eq("activo", true).order("nombre"),
     supabase.from("categorias").select("id, nombre"),
+    supabase.from("inventario").select("ingrediente_id, productos:producto_preferido_id (nombre, supermercado_id, precio, precio_oferta)")
+      .eq("grupo_id", hogar.id).not("producto_preferido_id", "is", null),
   ]);
+  const pref = new Map((preferidos ?? []).map((p) => [p.ingrediente_id, p.productos as unknown as { nombre: string; supermercado_id: string | null; precio: number | null; precio_oferta: number | null } | null]));
   const ing = new Map((ingredientes ?? []).map((i) => [i.id, i]));
   const cat = new Map((categorias ?? []).map((c) => [c.id, c.nombre]));
 
   const filas = (items ?? []).map((it) => {
     const i = it.ingrediente_id ? ing.get(it.ingrediente_id) : undefined;
-    const detalle = it.paquetes ? `${it.paquetes} ${it.paquetes === 1 ? "paquete" : "paquetes"}`
+    const cantidad = it.paquetes ? `${it.paquetes} ${it.paquetes === 1 ? "paquete" : "paquetes"}`
       : it.cantidad && i ? formatearCantidad(Number(it.cantidad), i.unidad as UnidadBase) : null;
+    const p = it.ingrediente_id ? pref.get(it.ingrediente_id) : null;
+    const precio = p ? Number(p.precio_oferta ?? p.precio) || null : null;
+    const producto = p ? `${p.nombre}${p.supermercado_id ? ` · ${p.supermercado_id}` : ""}${precio ? ` · ${precio.toFixed(2)} €` : ""}` : null;
+    const detalle = [cantidad, producto].filter(Boolean).join(" · ") || null;
     return {
       id: it.id, nombre: i?.nombre ?? it.texto_libre ?? "?", detalle, urgente: it.urgente, ingredienteId: it.ingrediente_id,
       categoria: (i?.categoria_id && cat.get(i.categoria_id)) || "Otros",
