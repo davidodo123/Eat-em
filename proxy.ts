@@ -24,5 +24,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Todo salvo estaticos, imagenes y ficheros de la PWA
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|sw.js|manifest.webmanifest|.*\\.(?:png|jpg|jpeg|svg|webp)$).*)"],
 };

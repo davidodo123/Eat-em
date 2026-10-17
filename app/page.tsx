@@ -48,7 +48,8 @@ export default async function Inicio() {
         <Link href="/grupo" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Hogar</Link>
         <Link href="/comparar" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Comparar precios</Link>
         <Link href="/perfil" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Perfil</Link>
-        <Link href="/nutriem" className="col-span-2 rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Nutri-em y consejos</Link>
+        <Link href="/nutriem" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Nutri-em</Link>
+        <Link href="/ajustes" className="rounded-xl border border-borde bg-superficie px-4 py-3 text-center font-semibold">Ajustes</Link>
       </div>
 
       <p className="mt-8 text-xs text-texto-suave">Eat-em no sustituye a un profesional sanitario.</p>
