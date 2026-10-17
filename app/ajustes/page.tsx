@@ -22,7 +22,7 @@ export default async function Ajustes() {
         <Preferencias v={{
           item_anadido: prefs?.item_anadido ?? true, stock_bajo: prefs?.stock_bajo ?? true,
           recordatorio_comidas: prefs?.recordatorio_comidas ?? false, recordatorio_compra: prefs?.recordatorio_compra ?? false,
-        }} />
+        }} diaCompra={prefs?.dia_compra ?? null} />
       </section>
 
       <section className="space-y-2 rounded-xl border border-borde bg-superficie p-4 text-sm">

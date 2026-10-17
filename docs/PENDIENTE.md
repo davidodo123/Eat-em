@@ -97,7 +97,7 @@
 - [x] Lista automática ("Calcular lo que falta" en `/lista`, `recalcularLista`): suma lo que piden las dietas activas de **todos** los miembros en los próximos 3/7/14 días (ajustable en `/grupo` por el admin), sin las comidas de hoy ya registradas, menos el stock; paquetes según el formato del producto preferido; urgente si no llega a lo de hoy. Solo toca las líneas automáticas. `calcularFaltas` y `paquetesPara` con tests.
 - [ ] Sin producto preferido no se proponen paquetes: usar el más barato de `comparar_precios()` cuando esté la migración.
 - [x] Web Push: `public/sw.js` (con las cabeceras de la guía de PWA de Next), `/ajustes` para activar o desactivar en cada dispositivo, preferencias y aviso de prueba, `lib/push.ts` (respeta `notificacion_prefs`, guarda el historial en `notificaciones` y borra suscripciones caducadas). Primer aviso real: lo que se añade a la lista llega a los demás del hogar. Las claves VAPID están en `.env.local` (generadas el 2026-10-17): **copiarlas a Vercel**. En iPhone solo funciona con la app añadida a la pantalla de inicio.
-- [ ] Recordatorios (comidas, día de compra) con Vercel Cron.
+- [x] Recordatorios diarios con Vercel Cron (`vercel.json`, 07:00 UTC; el plan gratuito solo permite crons diarios): día de la compra con lo pendiente de la lista y comidas de hoy. `/api/cron/recordatorios` exige `Authorization: Bearer <CRON_SECRET>` (generado en `.env.local`: **copiarlo a Vercel**). Día de la compra en `/ajustes`.
 
 ### Fase 6: IA (Nutri-em)
 - [x] `lib/ia/prefiltro.ts` (datos ausentes → `falta_dato`; menores, embarazo, lactancia, condiciones médicas e IMC < 18,5 → derivar) y `lib/ia/objetivos.ts` (Mifflin-St Jeor, ajuste, mínimos 1.500/1.200, macros), con tests.

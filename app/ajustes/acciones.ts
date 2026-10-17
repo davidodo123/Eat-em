@@ -25,6 +25,7 @@ export async function quitarSuscripcion(endpoint: string): Promise<{ error?: str
 }
 
 export interface EstadoPrefs { ok?: boolean; error?: string }
+const DIAS_VALIDOS = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
 
 export async function guardarPreferencias(_previo: EstadoPrefs, d: FormData): Promise<EstadoPrefs> {
   const supabase = await crearClienteServidor();
@@ -36,6 +37,7 @@ export async function guardarPreferencias(_previo: EstadoPrefs, d: FormData): Pr
     stock_bajo: d.get("stock_bajo") === "on",
     recordatorio_comidas: d.get("recordatorio_comidas") === "on",
     recordatorio_compra: d.get("recordatorio_compra") === "on",
+    dia_compra: DIAS_VALIDOS.includes(String(d.get("dia_compra"))) ? String(d.get("dia_compra")) : null,
   }, { onConflict: "usuario_id" });
   revalidatePath("/ajustes");
   return error ? { error: "No se pudo guardar." } : { ok: true };

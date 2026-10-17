@@ -61,7 +61,7 @@ export function ActivarNotificaciones({ clavePublica }: { clavePublica: string }
   );
 }
 
-export function Preferencias({ v }: { v: Record<string, boolean> }) {
+export function Preferencias({ v, diaCompra }: { v: Record<string, boolean>; diaCompra: string | null }) {
   const [estado, accion, guardando] = useActionState<EstadoPrefs, FormData>(guardarPreferencias, {});
   const opciones: [string, string][] = [
     ["item_anadido", "Cosas nuevas en la lista de la compra"],
@@ -76,6 +76,15 @@ export function Preferencias({ v }: { v: Record<string, boolean> }) {
           <input type="checkbox" name={k} defaultChecked={v[k]} className="h-5 w-5" /> {t}
         </label>
       ))}
+      <label className="flex items-center gap-3 text-sm">
+        Día de la compra
+        <select name="dia_compra" defaultValue={diaCompra ?? ""} className="rounded-lg border border-borde bg-superficie px-2 py-1.5">
+          <option value="">—</option>
+          {[["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]]
+            .map(([k, t]) => <option key={k} value={k}>{t}</option>)}
+        </select>
+      </label>
+      <p className="text-xs text-texto-suave">Los recordatorios llegan por la mañana.</p>
       <button type="submit" disabled={guardando} className="mt-2 rounded-xl border border-borde px-4 py-2 font-medium">
         {guardando ? "Guardando…" : "Guardar"}
       </button>
