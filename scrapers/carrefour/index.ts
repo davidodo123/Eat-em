@@ -23,7 +23,7 @@ import { tituloMarca } from "../comun/texto.ts";
 
 const BASE = "https://api.empathy.co/search/v1/query/carrefour/search";
 const FILAS = 100;
-const MAX_PAGINAS_TERMINO = 30; // 3.000 productos por termino como maximo
+const MAX_PAGINAS_TERMINO = 25; // la API no pagina mas alla de start=2500 (HTTP 400, comprobado el 2026-10-17)
 
 interface ItemCarrefour {
   product_id: string;

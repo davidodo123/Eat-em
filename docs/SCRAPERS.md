@@ -41,6 +41,8 @@ Así un supermercado sin scraper (Mercadona, Dia, Lidl…) sigue teniendo catál
   - Los precios son los nacionales de la tienda online; no dependen del código postal.
   - No se distinguen ofertas: `active_price` ya trae la promoción aplicada.
   - `active_price: 0` significa no disponible.
+  - La paginación se corta en `start=2500` (HTTP 400): como máximo 2.500 resultados por búsqueda. Los términos muy amplios ("queso", "pan", marca Carrefour) se completan con el resto de términos y marcas.
+  - Primera carga completa (2026-10-17): **52.023 productos, todos con EAN**; 726 sin precio (no disponibles), 24 sin formato, 198 sin categoría; 6.783 peticiones en 1 h 54 min.
   - La API no da nutrición ni alérgenos (se cubrirá con Open Food Facts por EAN).
 - **Riesgo legal:** los términos de uso de Carrefour pueden prohibir la extracción automatizada. Uso personal, a 1 petición/s, una vez al día, sin redistribuir.
 

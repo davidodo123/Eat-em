@@ -28,7 +28,7 @@
 | Fase | Estado |
 |---|---|
 | 1. Arquitectura, SQL y estructura | ✅ Hecho y aplicado en Supabase (commit `676f0a7`) |
-| 2. Productos: scrapers | 🟡 Carrefour, Mercadona, Ahorramás, Gadis y Caprabo escritos; primera carga completa lanzada el 2026-10-16 (revisar informes) |
+| 2. Productos: scrapers | 🟡 Carrefour, Mercadona, Ahorramás, Gadis y Caprabo escritos; cargados en Supabase el 2026-10-16/17: Carrefour 52.023, Caprabo 12.701, Gadis 7.614 (solo categorías), Ahorramás 6.200, Mercadona 4.269 (sin precios) |
 | 3 a 8 | ⏳ Sin empezar |
 
 **Infraestructura:**
