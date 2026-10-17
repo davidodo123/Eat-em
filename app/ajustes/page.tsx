@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { ActivarNotificaciones, Preferencias } from "./notificaciones";
+import { SelectorTema } from "./tema";
 
 export const metadata: Metadata = { title: "Ajustes · Eat-em" };
 
@@ -23,6 +24,11 @@ export default async function Ajustes() {
           item_anadido: prefs?.item_anadido ?? true, stock_bajo: prefs?.stock_bajo ?? true,
           recordatorio_comidas: prefs?.recordatorio_comidas ?? false, recordatorio_compra: prefs?.recordatorio_compra ?? false,
         }} diaCompra={prefs?.dia_compra ?? null} />
+      </section>
+
+      <section className="mb-4 space-y-3 rounded-xl border border-borde bg-superficie p-4">
+        <h2 className="font-semibold">Apariencia</h2>
+        <SelectorTema />
       </section>
 
       <section className="space-y-2 rounded-xl border border-borde bg-superficie p-4 text-sm">

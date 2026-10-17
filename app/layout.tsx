@@ -17,9 +17,17 @@ export const viewport: Viewport = {
   ],
 };
 
+// Tema elegido en Ajustes (localStorage "tema": "claro" | "oscuro"; sin valor = el del sistema).
+// Script en linea para aplicarlo antes de pintar y evitar el parpadeo
+// (node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md).
+const TEMA = `try{var t=localStorage.getItem("tema");if(t==="claro"||t==="oscuro")document.documentElement.dataset.theme=t==="claro"?"light":"dark"}catch(e){}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: TEMA }} />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );
