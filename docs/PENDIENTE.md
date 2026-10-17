@@ -113,7 +113,9 @@
   - el modelo derivaba en casos sanos (alergia, ingrediente no disponible, cambio de formato) → bloque `VERIFICACION_PREVIA` en el mensaje y detector de riesgo en código (`lib/ia/riesgo.ts`): si deriva sin señal de riesgo, se le devuelve como error;
   - se quedaba corto de kcal → `ajustarAKcal()` escala las cantidades en código antes de validar; proteína como mínimo (−15 % / +30 %);
   - falsos positivos de la comprobación automática del modo chat, corregidos.
-  La 2ª pasada se cortó en la pregunta 34: **la cuenta de OpenRouter no tiene crédito** (402). Falta repetir la batería completa (~0,03 $) tras recargar y revisar a mano las de tono.
+  La 2ª pasada se cortó en la pregunta 34: **la cuenta de OpenRouter no tiene crédito** (402).
+  - Se pasa a un **modelo gratuito**: `nvidia/nemotron-3-super-120b-a12b:free` (structured outputs; límite de 50 peticiones gratis al día). Más `max_tokens` (razona antes de responder), timeout de 120 s y reintento si el chat llega vacío.
+  - Con Nemotron, tras más arreglos (varias respuestas válidas por pregunta, "plan solo para la persona del PERFIL", comprobación del rechazo menos literal), han aprobado todas las que fallaban. **Falta una pasada completa de las 50 seguidas con Nemotron** (no cabe en el cupo diario: repartirla en dos días con `--solo`) y revisar a mano las de tono.
 
 ### Fases 7 y 8
 - [ ] Pantallas: Hoy, Inventario, Lista, Dieta, Grupo, Nutri-em, Ajustes. Modo oscuro (los tokens ya están en `app/globals.css`) y offline básico.

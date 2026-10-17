@@ -59,14 +59,15 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
       body: JSON.stringify({
         model: modelo,
         temperature: op.temperatura ?? 0.3,
-        // Sin limite, algunos proveedores reservan 16k tokens por peticion (OpenRouter: 402 sin credito)
-        max_tokens: op.formato === "texto" ? 400 : 2000,
+        // Sin limite, algunos proveedores reservan 16k tokens por peticion (OpenRouter: 402 sin credito).
+        // Los modelos que razonan gastan tokens antes de responder: margen suficiente.
+        max_tokens: op.formato === "texto" ? 1500 : 4000,
         messages: mensajes,
         ...(op.formato === "texto" ? {} : {
           response_format: { type: "json_schema", json_schema: { name: "plan_dia", strict: true, schema: ESQUEMA_PLAN } },
         }),
       }),
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(120_000), // los modelos gratuitos son lentos
     });
     if (!r.ok) throw new Error(`IA ${r.status}: ${(await r.text()).slice(0, 300)}`);
     const j = await r.json();

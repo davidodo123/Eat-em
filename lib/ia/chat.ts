@@ -13,7 +13,13 @@ export function mensajesChat(pregunta: string, fichas: FichaContexto[], historia
 }
 
 export async function responderChat(modelo: Modelo, pregunta: string, fichas: FichaContexto[], historial: Mensaje[] = []) {
-  return (await modelo(mensajesChat(pregunta, fichas, historial))).trim();
+  const mensajes = mensajesChat(pregunta, fichas, historial);
+  // Algunos modelos que razonan devuelven el contenido vacio si se les acaban los tokens: un reintento
+  for (let i = 0; i < 2; i++) {
+    const texto = (await modelo(mensajes)).trim();
+    if (texto) return texto;
+  }
+  throw new Error("respuesta vacia");
 }
 
 // Consulta de texto completo (websearch) a partir de la pregunta: palabras de 4+ letras unidas con "or"

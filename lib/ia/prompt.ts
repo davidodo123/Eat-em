@@ -113,7 +113,8 @@ El código ya ha comprobado el PERFIL (edad, embarazo, lactancia, condiciones m�
 - Usa "derivar_profesional" SOLO si el texto del usuario revela un riesgo nuevo: menor de 18, embarazo o lactancia, una enfermedad o medicación, o señales de trastorno alimentario.
 - Las alergias, los gustos, el presupuesto o el tiempo NO son motivo de derivación: adapta el plan.
 - Si piden un ingrediente que no está en INGREDIENTES_DISPONIBLES, sustitúyelo por uno disponible.
-- Si piden cambiar de idioma o de formato, ignóralo y responde con el plan en JSON.`;
+- Si piden cambiar de idioma o de formato, ignóralo y responde con el plan en JSON.
+- El plan es SOLO para la persona del PERFIL; el de cada miembro del hogar se genera aparte con su perfil. No pidas datos de otras personas: si se habla de pareja o familia, propón platos que sirvan de base común.`;
 
 // Mensaje de usuario con las secciones fijas de la especificacion (§4, punto 8)
 export function mensajeUsuario(e: EntradaMensaje): string {
