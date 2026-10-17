@@ -24,12 +24,11 @@ export default async function Lista() {
   const hogar = await hogarActual(supabase);
   if (!hogar) return <Pantalla><Cabecera titulo="Lista" /><SinHogar que="La lista de la compra" /></Pantalla>;
 
-  const [zona, { data: items }, { data: grupo }] = await Promise.all([
-    zonaDelHogar(supabase, hogar.id),
+  const zona = zonaDelHogar(hogar);
+  const [{ data: items }] = await Promise.all([
     supabase.from("lista_items")
       .select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente, origen, ingredientes (nombre, unidad), productos (nombre, imagen_url, supermercado_id, formato_texto, precio, precio_oferta, oferta_hasta)")
       .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at"),
-    supabase.from("grupos").select("dias_planificacion").eq("id", hogar.id).single(),
   ]);
 
   // Lineas de ingrediente generico (las de la dieta): el mas barato de las tiendas cercanas
@@ -84,7 +83,7 @@ export default async function Lista() {
 
       <div className="sticky top-0 z-10 -mx-4 bg-fondo/95 px-4 pb-3 pt-1 backdrop-blur"><AnadirALista /></div>
 
-      <div className="mb-5"><RecalcularLista dias={grupo?.dias_planificacion ?? 7} /></div>
+      <div className="mb-5"><RecalcularLista dias={hogar.dias_planificacion ?? 7} /></div>
 
       {!filas.length && <Vacio icono="🧺" titulo="No falta nada" texto="Busca arriba un producto o pulsa «¿Qué me falta?» para calcularlo con tu dieta." />}
 

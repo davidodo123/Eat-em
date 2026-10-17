@@ -16,7 +16,7 @@ const REGLAS: [RegExp, string][] = [
   [/\beroski\b/, "eroski"],
   [/\blidl\b/, "lidl"],
   [/\baldi\b/, "aldi"],
-  [/^dia\b|\bdia\s*(%|market|maxi)|\bsupermercados? dia\b|\bla plaza de dia\b/, "dia"],
+  [/^dia\b|\bdia\s*(%|market|maxi)|\bmaxi dia\b|\bsupermercados? dia\b|\bla plaza de dia\b/, "dia"],
 ];
 
 const plano = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase().trim();

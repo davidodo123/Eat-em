@@ -32,7 +32,7 @@ export default async function Ajustes() {
     hogarActual(supabase),
     supabase.from("perfiles_salud").select("consentimiento_salud_en").eq("usuario_id", u.user!.id).maybeSingle(),
   ]);
-  const zona = hogar ? await zonaDelHogar(supabase, hogar.id) : null;
+  const zona = hogar ? zonaDelHogar(hogar) : null;
   const clave = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 
   return (

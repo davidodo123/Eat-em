@@ -32,13 +32,14 @@ export async function guardarUbicacion(_previo: EstadoUbicacion, datos: FormData
       lugar = await nombreDelSitio(punto).catch(() => null);
     } else return { error: "Activa la ubicación o escribe tu código postal." };
 
-    const { tiendas, cadenas } = await supermercadosCerca(punto, radio);
+    const { tiendas, cadenas } = await supermercadosCerca(supabase, punto, radio);
     const { error } = await supabase.rpc("fijar_ubicacion", {
       p_grupo_id: hogar.id, p_lat: punto.lat, p_lon: punto.lon, p_lugar: lugar ?? "Tu zona",
       p_radio_km: radio, p_cadenas: cadenas, p_tiendas: tiendas,
     });
     if (error) return { error: "No se pudo guardar la ubicación." };
-  } catch {
+  } catch (e) {
+    console.error("ubicacion:", e);
     return { error: "El servicio de mapas no responde ahora. Inténtalo en un momento." };
   }
   revalidatePath("/", "layout");

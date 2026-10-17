@@ -11,7 +11,7 @@ export default async function Ubicacion() {
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
   if (!hogar) return <Pantalla><Cabecera titulo="Ubicación" volver={{ href: "/ajustes", texto: "Ajustes" }} /><SinHogar que="La ubicación" /></Pantalla>;
-  const zona = await zonaDelHogar(supabase, hogar.id);
+  const zona = zonaDelHogar(hogar);
 
   return (
     <Pantalla>

@@ -285,5 +285,18 @@ assert.equal((await como(X, () => q("SELECT * FROM despensa"))).length, 0);
 await assert.rejects(como(X, () => q("INSERT INTO despensa (grupo_id, nombre) VALUES ($1, 'intruso')", [grupo.id])));
 console.log("OK ubicacion del hogar y despensa por producto");
 
+// 16. Supermercados cercanos desde la copia de OpenStreetMap
+await db.exec(`INSERT INTO tiendas_osm (osm_id, cadena, nombre, lat, lon) VALUES
+  ('n1', 'mercadona', 'Mercadona', 36.7250, -3.5220),
+  ('n2', 'lidl', 'Lidl', 36.7400, -3.5200),
+  ('n3', NULL, 'Covirán', 36.7300, -3.5300),
+  ('n4', 'carrefour', 'Carrefour Granada', 37.1773, -3.5986)`);
+const cerca = await como(A, () => q("SELECT cadena, nombre, km::float FROM tiendas_cerca(36.7238, -3.5221, 5)"));
+assert.deepEqual(cerca.map((t) => t.nombre), ["Mercadona", "Covirán", "Lidl"]);   // Granada (~55 km) fuera
+assert.ok(cerca[0].km < 0.2 && cerca[2].km > 1.5 && cerca[2].km < 2);
+assert.equal((await como(A, () => q("SELECT * FROM tiendas_cerca(36.7238, -3.5221, 100)"))).length, 4);
+await assert.rejects(como(A, () => q("INSERT INTO tiendas_osm (osm_id, nombre, lat, lon) VALUES ('x', 'x', 0, 0)")));
+console.log("OK supermercados cercanos (OpenStreetMap)");
+
 console.log("\nTODO OK");
 await db.close();

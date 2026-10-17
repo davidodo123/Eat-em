@@ -1,4 +1,5 @@
 import "server-only";
+import { after } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cruzaUmbral } from "@/lib/dominio/inventario";
 import { avisar, otrosMiembros } from "@/lib/push";
@@ -27,10 +28,13 @@ export async function revisarStockBajo(supabase: SupabaseClient, grupoId: string
   for (const id of bajos) {
     await supabase.from("lista_items").insert({ grupo_id: grupoId, ingrediente_id: id, origen: "auto", anadido_por: usuarioId });
   }
-  const { data: nombres } = await supabase.from("ingredientes").select("nombre").in("id", bajos);
-  await avisar(await otrosMiembros(grupoId, usuarioId), {
-    tipo: "stock_bajo", grupoId, url: "/lista", titulo: "Queda poco",
-    cuerpo: `${(nombres ?? []).map((n) => n.nombre).join(", ")}: añadido a la lista de la compra.`,
+  // El aviso push sale despues de responder: no hace esperar a quien ha tocado el boton
+  after(async () => {
+    const { data: nombres } = await supabase.from("ingredientes").select("nombre").in("id", bajos);
+    await avisar(await otrosMiembros(grupoId, usuarioId), {
+      tipo: "stock_bajo", grupoId, url: "/lista", titulo: "Queda poco",
+      cuerpo: `${(nombres ?? []).map((n) => n.nombre).join(", ")}: añadido a la lista de la compra.`,
+    });
   });
   return bajos;
 }

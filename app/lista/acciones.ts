@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { avisar, otrosMiembros } from "@/lib/push";
@@ -17,12 +18,14 @@ async function contexto() {
   return { supabase, usuario: u.user, hogar };
 }
 
-// Aviso a los demas del hogar (si lo tienen activado)
-async function avisarAnadido(supabase: Awaited<ReturnType<typeof crearClienteServidor>>, grupoId: string, usuarioId: string, que: string) {
-  const { data: yo } = await supabase.from("perfiles").select("nombre").eq("id", usuarioId).single();
-  await avisar(await otrosMiembros(grupoId, usuarioId), {
-    tipo: "item_anadido", grupoId, url: "/lista", titulo: "Lista de la compra",
-    cuerpo: `${yo?.nombre || "Alguien"} ha añadido ${que.toLowerCase()}`,
+// Aviso a los demas del hogar (si lo tienen activado), despues de responder
+function avisarAnadido(supabase: Awaited<ReturnType<typeof crearClienteServidor>>, grupoId: string, usuarioId: string, que: string) {
+  after(async () => {
+    const { data: yo } = await supabase.from("perfiles").select("nombre").eq("id", usuarioId).single();
+    await avisar(await otrosMiembros(grupoId, usuarioId), {
+      tipo: "item_anadido", grupoId, url: "/lista", titulo: "Lista de la compra",
+      cuerpo: `${yo?.nombre || "Alguien"} ha añadido ${que.toLowerCase()}`,
+    });
   });
 }
 
@@ -40,7 +43,7 @@ export async function anadirProducto(productoId: number, nombre: string): Promis
       });
   if (error) return "No se pudo añadir.";
   revalidatePath("/lista");
-  if (!previo) await avisarAnadido(supabase, hogar.id, usuario.id, nombre);
+  if (!previo) avisarAnadido(supabase, hogar.id, usuario.id, nombre);
 }
 
 // Algo escrito tal cual (papel de cocina, pilas...)
@@ -52,7 +55,7 @@ export async function anadirTexto(texto: string): Promise<string | void> {
   const { error } = await supabase.from("lista_items").insert({ grupo_id: hogar.id, texto_libre: t, origen: "manual", anadido_por: usuario.id });
   if (error) return "No se pudo añadir.";
   revalidatePath("/lista");
-  await avisarAnadido(supabase, hogar.id, usuario.id, t);
+  avisarAnadido(supabase, hogar.id, usuario.id, t);
 }
 
 export async function cambiarPaquetes(itemId: number, paquetes: number): Promise<{ error?: string }> {

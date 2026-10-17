@@ -1,6 +1,5 @@
 import "server-only";
-import { cache } from "react";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Hogar } from "@/lib/grupo";
 import type { TiendaCerca } from "@/lib/dominio/cadenas";
 
 // Cadenas de las que tenemos catalogo (las demas aparecen como "cerca, sin datos")
@@ -19,13 +18,13 @@ export interface Zona {
   buscarEn: string[] | null;
 }
 
-export const zonaDelHogar = cache(async (supabase: SupabaseClient, grupoId: string): Promise<Zona> => {
-  const { data } = await supabase.from("grupos").select("lugar, radio_km, cadenas_cerca, tiendas_cerca").eq("id", grupoId).single();
-  const cerca: string[] = data?.cadenas_cerca ?? [];
+// Sin consultas: sale de los datos del hogar que ya trae hogarActual()
+export function zonaDelHogar(hogar: Hogar): Zona {
+  const cerca = hogar.cadenas_cerca ?? [];
   const conDatos = cerca.filter((c) => CON_CATALOGO.includes(c));
   return {
-    lugar: data?.lugar ?? null, radioKm: data?.radio_km ?? 5, cadenasCerca: cerca,
-    tiendas: (data?.tiendas_cerca as TiendaCerca[] | null) ?? [],
+    lugar: hogar.lugar ?? null, radioKm: hogar.radio_km ?? 5, cadenasCerca: cerca,
+    tiendas: (hogar.tiendas_cerca as TiendaCerca[] | null) ?? [],
     buscarEn: conDatos.length ? conDatos : null,
   };
-});
+}

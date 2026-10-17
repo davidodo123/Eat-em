@@ -8,6 +8,7 @@ test("cadena desde las etiquetas de OpenStreetMap", () => {
   assert.equal(cadenaDe({ brand: "Ahorramás" }), "ahorramas");
   assert.equal(cadenaDe({ name: "Dia %" }), "dia");
   assert.equal(cadenaDe({ name: "Supermercados Dia" }), "dia");
+  assert.equal(cadenaDe({ name: "Maxi Dia" }), "dia");
   assert.equal(cadenaDe({ name: "Supermercado Medina" }), null);   // "medina" no es Dia
   assert.equal(cadenaDe({ name: "Coviran" }), null);
   assert.equal(cadenaDe({ brand: "Lidl", name: "Lidl Motril" }), "lidl");

@@ -10,7 +10,7 @@ export async function buscar(q: string): Promise<{ resultados: ResultadoProducto
   if (texto.length < 2) return { resultados: [] };
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
-  const zona = hogar ? await zonaDelHogar(supabase, hogar.id) : null;
+  const zona = hogar ? zonaDelHogar(hogar) : null;
   try {
     return { resultados: await buscarCatalogo(supabase, texto, zona?.buscarEn ?? null) };
   } catch {
