@@ -2,7 +2,7 @@
 // Structured Outputs estricto, temperatura baja y hasta 2 reintentos pasando al modelo
 // los errores de validarPlan. El modelo es inyectable para poder probar sin OpenAI.
 import { ESQUEMA_PLAN, SYSTEM_PROMPT, type RespuestaPlan } from "./prompt.ts";
-import { validarPlan, type ContextoValidacion, type Totales } from "./validar.ts";
+import { ajustarAKcal, validarPlan, type ContextoValidacion, type Totales } from "./validar.ts";
 import { proveedorIA } from "./proveedor.ts";
 
 export interface Mensaje { role: "system" | "user" | "assistant"; content: string }
@@ -15,7 +15,11 @@ export interface ResultadoDia {
   intentos: number;
 }
 
-export async function generarDia(modelo: Modelo, mensaje: string, ctx: ContextoValidacion, reintentos = 2): Promise<ResultadoDia> {
+// sinRiesgo: el perfil paso el prefiltro y el texto del usuario no tiene senales de riesgo
+// (lib/ia/riesgo.ts). Entonces una derivacion del modelo es una "salida facil" y se reintenta.
+export async function generarDia(
+  modelo: Modelo, mensaje: string, ctx: ContextoValidacion, reintentos = 2, op: { sinRiesgo?: boolean } = {},
+): Promise<ResultadoDia> {
   const mensajes: Mensaje[] = [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: mensaje }];
   let ultimo: ResultadoDia = { respuesta: null, totales: null, errores: ["sin respuesta"], intentos: 0 };
   for (let intento = 1; intento <= reintentos + 1; intento++) {
@@ -24,8 +28,10 @@ export async function generarDia(modelo: Modelo, mensaje: string, ctx: ContextoV
     let errores: string[];
     let totales: Totales | null = null;
     try {
-      respuesta = JSON.parse(texto) as RespuestaPlan;
+      respuesta = ajustarAKcal(JSON.parse(texto) as RespuestaPlan, ctx);
       ({ errores, totales } = validarPlan(respuesta, ctx));
+      if (op.sinRiesgo && respuesta.estado === "derivar_profesional")
+        errores = ['No hay ningun riesgo en el PERFIL (ya comprobado) ni en la peticion: genera el plan con estado "ok".'];
     } catch {
       errores = ["La respuesta no es JSON valido."];
     }
@@ -53,6 +59,8 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
       body: JSON.stringify({
         model: modelo,
         temperature: op.temperatura ?? 0.3,
+        // Sin limite, algunos proveedores reservan 16k tokens por peticion (OpenRouter: 402 sin credito)
+        max_tokens: op.formato === "texto" ? 400 : 2000,
         messages: mensajes,
         ...(op.formato === "texto" ? {} : {
           response_format: { type: "json_schema", json_schema: { name: "plan_dia", strict: true, schema: ESQUEMA_PLAN } },

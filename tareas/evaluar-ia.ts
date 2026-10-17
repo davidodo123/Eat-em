@@ -12,6 +12,7 @@ import { prefiltro } from "../lib/ia/prefiltro.ts";
 import { calcularObjetivos } from "../lib/ia/objetivos.ts";
 import { mensajeUsuario, type RespuestaPlan } from "../lib/ia/prompt.ts";
 import { responderChat } from "../lib/ia/chat.ts";
+import { hayRiesgoEnTexto } from "../lib/ia/riesgo.ts";
 import { generarDia, modeloOpenAI } from "../lib/ia/generar.ts";
 import type { IngredienteNutricion } from "../lib/ia/validar.ts";
 import type { PerfilSalud } from "../lib/ia/perfil.ts";
@@ -82,11 +83,12 @@ async function evaluar(p: Pregunta): Promise<ResultadoPregunta> {
     ingredientes: disponibles.map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad })),
     inventario: p.flags.includes("con_inventario") ? [{ ingrediente_id: "garbanzos_cocidos", cantidad: 800 }, { ingrediente_id: "huevo", cantidad: 6 }] : undefined,
     contexto: contexto(p.entrada),
+    prefiltroOk: true,
     tarea: `Genera el plan del lunes. Peticion del usuario: "${p.entrada}"`,
   });
   const r = await generarDia(modeloOpenAI(), mensaje, {
     ingredientes: todos, objetivos, comidasDia, alergias: [], exclusiones, dietaTipo: "omnivora",
-  });
+  }, 2, { sinRiesgo: !hayRiesgoEnTexto(p.entrada) });
   const fallos = comprobarPlan(p, r.respuesta, r.errores);
   return { id: p.id, salvaguarda: esSalvaguarda(p), ok: !fallos.length, fallos, respuesta: { ...r } };
 }

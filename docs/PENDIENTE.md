@@ -109,7 +109,11 @@
 - [x] Embeddings de `fichas` (`npm run ia:embeddings`, 16 fichas el 2026-10-17) y chat con `buscar_fichas()` (híbrida), con texto completo como respaldo.
 - [x] IA por **OpenRouter** (la clave es `sk-or-…`): `lib/ia/proveedor.ts` detecta la clave, usa `https://openrouter.ai/api/v1` y `openai/gpt-4o-mini`. Con una clave de OpenAI funciona igual. `OPENAI_BASE_URL` fuerza otra URL.
 - [x] `npm run eval:ia [-- --solo 23,24]` (`tareas/evaluar-ia.ts` + `lib/ia/evaluacion.ts`): mismo flujo que la app (prefiltro → IA → `validarPlan`), comprobaciones automáticas por tipo de respuesta, RAG por palabras clave para la prueba e informe en `data/eval/`. Criterio: 100 % en salvaguardas, ≥ 90 % en el resto, 0 inventados.
-- [ ] Ejecutar la batería completa en cuanto haya `OPENAI_API_KEY` y revisar a mano las de tono.
+- [ ] **Batería (2026-10-17, OpenRouter + gpt-4o-mini):** 1ª pasada 37/50 (salvaguardas 94 %, resto 64 %). Causas y arreglos:
+  - el modelo derivaba en casos sanos (alergia, ingrediente no disponible, cambio de formato) → bloque `VERIFICACION_PREVIA` en el mensaje y detector de riesgo en código (`lib/ia/riesgo.ts`): si deriva sin señal de riesgo, se le devuelve como error;
+  - se quedaba corto de kcal → `ajustarAKcal()` escala las cantidades en código antes de validar; proteína como mínimo (−15 % / +30 %);
+  - falsos positivos de la comprobación automática del modo chat, corregidos.
+  La 2ª pasada se cortó en la pregunta 34: **la cuenta de OpenRouter no tiene crédito** (402). Falta repetir la batería completa (~0,03 $) tras recargar y revisar a mano las de tono.
 
 ### Fases 7 y 8
 - [ ] Pantallas: Hoy, Inventario, Lista, Dieta, Grupo, Nutri-em, Ajustes. Modo oscuro (los tokens ya están en `app/globals.css`) y offline básico.

@@ -27,6 +27,37 @@ export interface ContextoValidacion {
 
 export interface Totales { kcal: number; proteina_g: number; grasa_g: number; hidratos_g: number }
 
+// El codigo hace las cuentas: escala las cantidades del dia para acercar las kcal al objetivo
+// (el modelo pequeno se queda corto o se pasa). Factor limitado a 0,7-1,8; g y ml se redondean
+// a 5 y las unidades a entero (minimo 1). Devuelve una copia.
+export function ajustarAKcal(r: RespuestaPlan, c: ContextoValidacion): RespuestaPlan {
+  if (r.estado !== "ok" || !r.plan) return r;
+  let kcal = 0;
+  for (const comida of r.plan.comidas) for (const x of comida.ingredientes) {
+    const ing = c.ingredientes.get(x.ingrediente_id);
+    const g = ing ? aGramos(x.cantidad, x.unidad, ing) : null;
+    if (ing && g !== null) kcal += ((ing.kcal_100 ?? 0) * g) / 100;
+  }
+  if (kcal <= 0) return r;
+  const factor = Math.min(1.8, Math.max(0.7, c.objetivos.kcal / kcal));
+  if (Math.abs(factor - 1) < 0.03) return r;
+  return {
+    ...r,
+    plan: {
+      ...r.plan,
+      comidas: r.plan.comidas.map((m) => ({
+        ...m,
+        ingredientes: m.ingredientes.map((x) => ({
+          ...x,
+          cantidad: x.unidad === "unidad"
+            ? Math.max(1, Math.round(x.cantidad * factor))
+            : Math.min(1000, Math.max(5, Math.round((x.cantidad * factor) / 5) * 5)),
+        })),
+      })),
+    },
+  };
+}
+
 export function validarPlan(r: RespuestaPlan, c: ContextoValidacion): { errores: string[]; totales: Totales | null } {
   const errores: string[] = [];
   if (r.estado === "falta_dato") {
@@ -81,8 +112,9 @@ export function validarPlan(r: RespuestaPlan, c: ContextoValidacion): { errores:
   const tp = c.toleranciaProteina ?? 0.15;
   if (Math.abs(t.kcal - o.kcal) > o.kcal * tk)
     errores.push(`El dia suma ${t.kcal} kcal y el objetivo es ${o.kcal} (±${Math.round(tk * 100)} %). Ajusta las cantidades.`);
-  if (Math.abs(t.proteina_g - o.proteina_g) > o.proteina_g * tp)
-    errores.push(`El dia suma ${t.proteina_g} g de proteina y el objetivo es ${o.proteina_g} g (±${Math.round(tp * 100)} %).`);
+  // La proteina es un minimo (ficha 003): se exige no quedarse corto y se tolera un exceso razonable
+  if (t.proteina_g < o.proteina_g * (1 - tp) || t.proteina_g > o.proteina_g * 1.3)
+    errores.push(`El dia suma ${t.proteina_g} g de proteina y el objetivo es ${o.proteina_g} g (minimo -${Math.round(tp * 100)} %, maximo +30 %).`);
   return { errores, totales: t };
 }
 

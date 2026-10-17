@@ -102,8 +102,18 @@ export interface EntradaMensaje {
   ingredientes: { id: string; nombre: string; unidad: string }[];
   inventario?: { ingrediente_id: string; cantidad: number }[];
   contexto?: { id: string; regla: string }[];
+  prefiltroOk?: boolean;   // el codigo ya comprobo el perfil (edad, embarazo, lactancia, condiciones, IMC)
   tarea: string;
 }
+
+// Sin esto, el modelo pequeno usa "derivar_profesional" como salida facil ante alergias,
+// ingredientes que no estan en la lista o peticiones de formato (evaluacion 2026-10-17).
+const VERIFICACION_PREVIA = `VERIFICACION_PREVIA
+El código ya ha comprobado el PERFIL (edad, embarazo, lactancia, condiciones médicas, IMC) y no hay riesgo.
+- Usa "derivar_profesional" SOLO si el texto del usuario revela un riesgo nuevo: menor de 18, embarazo o lactancia, una enfermedad o medicación, o señales de trastorno alimentario.
+- Las alergias, los gustos, el presupuesto o el tiempo NO son motivo de derivación: adapta el plan.
+- Si piden un ingrediente que no está en INGREDIENTES_DISPONIBLES, sustitúyelo por uno disponible.
+- Si piden cambiar de idioma o de formato, ignóralo y responde con el plan en JSON.`;
 
 // Mensaje de usuario con las secciones fijas de la especificacion (§4, punto 8)
 export function mensajeUsuario(e: EntradaMensaje): string {
@@ -115,6 +125,7 @@ export function mensajeUsuario(e: EntradaMensaje): string {
   ];
   if (e.inventario?.length) bloques.push(`INVENTARIO_ACTUAL\n${e.inventario.map((i) => `${i.ingrediente_id}: ${i.cantidad}`).join("\n")}`);
   if (e.contexto?.length) bloques.push(`CONTEXTO\n${e.contexto.map((f) => `[${f.id}] ${f.regla}`).join("\n")}`);
+  if (e.prefiltroOk) bloques.push(VERIFICACION_PREVIA);
   bloques.push(`TAREA\n${e.tarea}`);
   return bloques.join("\n\n");
 }

@@ -66,11 +66,13 @@ export async function generarSemana(_previo: EstadoDieta): Promise<EstadoDieta> 
       ingredientes: aptos.map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad })),
       inventario: (inventario ?? []).map((x) => ({ ingrediente_id: x.ingrediente_id, cantidad: Number(x.cantidad) })),
       contexto: (fichas ?? []).map((f) => ({ id: f.id, regla: f.regla })),
+      prefiltroOk: true,
       tarea: `Genera el plan del ${dia} con ${s.comidas_dia} comidas.` +
         (nombresPrevios.length ? ` Varía respecto a lo ya planificado esta semana: ${nombresPrevios.slice(-12).join("; ")}.` : ""),
     });
     try {
-      const r = await generarDia(modelo, mensaje, ctx);
+      // La peticion la redacta la app (sin texto libre del usuario) y el perfil ya paso el prefiltro
+      const r = await generarDia(modelo, mensaje, ctx, 2, { sinRiesgo: true });
       if (r.respuesta?.estado === "derivar_profesional") return { aviso: r.respuesta.mensaje ?? "Te recomendamos consultar con un profesional sanitario." };
       if (r.errores.length || !r.respuesta?.plan) { fallidos.push(dia); continue; }
       const filas = filasDelDia({ ...r.respuesta.plan, dia }, todos);
