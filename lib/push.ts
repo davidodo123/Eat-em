@@ -1,6 +1,7 @@
 import "server-only";
 import webpush from "web-push";
 import { crearClienteAdmin } from "@/lib/supabase/server";
+import { endpointPushValido } from "@/lib/dominio/push";
 
 export interface AvisoPush {
   tipo: "item_anadido" | "stock_bajo" | "recordatorio_comida" | "recordatorio_compra";
@@ -40,7 +41,8 @@ export async function avisar(usuarios: string[], aviso: AvisoPush): Promise<numb
     const carga = JSON.stringify({ titulo: aviso.titulo, cuerpo: aviso.cuerpo, url: aviso.url ?? "/", etiqueta: aviso.tipo });
     let enviadas = 0;
     const caducadas: number[] = [];
-    await Promise.all((subs ?? []).map(async (s) => {
+    // Doble control: aunque alguien inserte un endpoint raro en la tabla, no se le envia nada
+    await Promise.all((subs ?? []).filter((s) => endpointPushValido(s.endpoint)).map(async (s) => {
       try {
         await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, carga, { TTL: 60 * 60 * 12 });
         enviadas++;

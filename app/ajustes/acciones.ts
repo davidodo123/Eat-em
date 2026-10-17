@@ -3,11 +3,12 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { avisar } from "@/lib/push";
+import { endpointPushValido } from "@/lib/dominio/push";
 
 interface SuscripcionJSON { endpoint: string; keys: { p256dh: string; auth: string } }
 
 export async function guardarSuscripcion(sub: SuscripcionJSON): Promise<{ error?: string }> {
-  if (!sub?.endpoint?.startsWith("https://") || !sub.keys?.p256dh || !sub.keys?.auth) return { error: "Suscripción no válida." };
+  if (!sub?.endpoint || !endpointPushValido(sub.endpoint) || !sub.keys?.p256dh || !sub.keys?.auth) return { error: "Suscripción no válida." };
   const supabase = await crearClienteServidor();
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) return { error: "Tu sesión ha caducado." };
