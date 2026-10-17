@@ -3,6 +3,7 @@
 // los errores de validarPlan. El modelo es inyectable para poder probar sin OpenAI.
 import { ESQUEMA_PLAN, SYSTEM_PROMPT, type RespuestaPlan } from "./prompt.ts";
 import { validarPlan, type ContextoValidacion, type Totales } from "./validar.ts";
+import { proveedorIA } from "./proveedor.ts";
 
 export interface Mensaje { role: "system" | "user" | "assistant"; content: string }
 export type Modelo = (mensajes: Mensaje[]) => Promise<string>;
@@ -38,17 +39,17 @@ export async function generarDia(modelo: Modelo, mensaje: string, ctx: ContextoV
   return ultimo;
 }
 
-// Modelo real: OpenAI Chat Completions con Structured Outputs (json_schema, strict).
+// Modelo real: Chat Completions con Structured Outputs (json_schema, strict), en OpenAI o en
+// OpenRouter segun la clave (lib/ia/proveedor.ts).
 // El nombre del modelo sale de OPENAI_MODELO_CHAT: comprobar el vigente en la documentacion.
 // formato "texto" es el MODO CHAT (respuesta libre, sin esquema).
 export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?: number; formato?: "plan" | "texto" } = {}): Modelo {
-  const clave = op.clave ?? process.env.OPENAI_API_KEY;
-  const modelo = op.modelo ?? process.env.OPENAI_MODELO_CHAT ?? "gpt-4o-mini";
-  if (!clave) throw new Error("Falta OPENAI_API_KEY");
+  const p = proveedorIA(op.clave);
+  const modelo = p.modelo(op.modelo ?? process.env.OPENAI_MODELO_CHAT ?? "gpt-4o-mini");
   return async (mensajes) => {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    const r = await fetch(`${p.url}/chat/completions`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${clave}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${p.clave}`, "Content-Type": "application/json", ...p.cabeceras },
       body: JSON.stringify({
         model: modelo,
         temperature: op.temperatura ?? 0.3,
@@ -59,7 +60,7 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
       }),
       signal: AbortSignal.timeout(60_000),
     });
-    if (!r.ok) throw new Error(`OpenAI ${r.status}: ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw new Error(`IA ${r.status}: ${(await r.text()).slice(0, 300)}`);
     const j = await r.json();
     const contenido = j.choices?.[0]?.message;
     if (contenido?.refusal) throw new Error(`OpenAI rechazo la peticion: ${contenido.refusal}`);

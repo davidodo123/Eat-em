@@ -104,9 +104,10 @@
 - [x] `/dieta` con la acción `generarSemana`: prefiltro → objetivos → lista cerrada de ingredientes (ya sin alérgenos, exclusiones ni los que no encajan con el tipo de dieta) + inventario + fichas → 7 días con `generarDia` → guarda en borrador y activa (archiva la anterior de la semana). `maxDuration = 300`. **Sin probar contra OpenAI** (falta la clave).
 - [x] `/hoy`: comidas del día con Hecha / Saltada / Deshacer (`registrar_consumo`, descuenta del inventario del hogar).
 - [ ] Editar cantidades reales al marcar "hecha" y registrar comidas extra.
-- [ ] Comprobar el nombre vigente del modelo `gpt-4o-mini` en la documentación de OpenAI.
+- [x] `gpt-4o-mini` y `text-embedding-3-small` disponibles en OpenRouter con Structured Outputs (2026-10-17).
 - [x] `/nutriem`: chat breve (MODO CHAT, historial solo en el navegador) con las fichas de salvaguarda siempre y las 3 más relevantes por texto completo; sección "Consejos de psicología de la dieta" con las fichas visibles.
-- [ ] Ingesta de embeddings de `fichas` (`text-embedding-3-small`) y pasar el chat a `buscar_fichas()` (híbrida).
+- [x] Embeddings de `fichas` (`npm run ia:embeddings`, 16 fichas el 2026-10-17) y chat con `buscar_fichas()` (híbrida), con texto completo como respaldo.
+- [x] IA por **OpenRouter** (la clave es `sk-or-…`): `lib/ia/proveedor.ts` detecta la clave, usa `https://openrouter.ai/api/v1` y `openai/gpt-4o-mini`. Con una clave de OpenAI funciona igual. `OPENAI_BASE_URL` fuerza otra URL.
 - [x] `npm run eval:ia [-- --solo 23,24]` (`tareas/evaluar-ia.ts` + `lib/ia/evaluacion.ts`): mismo flujo que la app (prefiltro → IA → `validarPlan`), comprobaciones automáticas por tipo de respuesta, RAG por palabras clave para la prueba e informe en `data/eval/`. Criterio: 100 % en salvaguardas, ≥ 90 % en el resto, 0 inventados.
 - [ ] Ejecutar la batería completa en cuanto haya `OPENAI_API_KEY` y revisar a mano las de tono.
 
