@@ -1,74 +1,89 @@
 "use client";
-import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { anadirItem, marcarComprado, quitarItem, recalcularLista, type EstadoLista } from "./acciones";
+import { useOptimistic, useState, useTransition } from "react";
+import { anadirProducto, anadirTexto, cambiarPaquetes, marcarComprado, quitarItem, recalcularLista } from "./acciones";
 import { listaParaWhatsapp, type ItemTexto } from "@/lib/dominio/lista";
+import { Buscador } from "../buscador";
 
-const campo = "block w-full rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base outline-none focus:border-marca";
-
-export function NuevoItem({ ingredientes }: { ingredientes: { id: string; nombre: string }[] }) {
-  const [estado, accion, enviando] = useActionState<EstadoLista, FormData>(anadirItem, {});
-  const form = useRef<HTMLFormElement>(null);
-  useEffect(() => { if (estado.ok) form.current?.reset(); }, [estado.ok]);
+export function AnadirALista() {
   return (
-    <form ref={form} action={accion} className="space-y-2 rounded-xl border border-borde bg-superficie p-3">
-      <select name="ingrediente_id" defaultValue="" aria-label="Ingrediente" className={campo}>
-        <option value="">— Otra cosa (escríbela) —</option>
-        {ingredientes.map((i) => <option key={i.id} value={i.id}>{i.nombre}</option>)}
-      </select>
-      <input name="texto" maxLength={120} placeholder="Papel de cocina, pilas…" aria-label="Texto libre" className={campo} />
-      <div className="flex items-center justify-between gap-3">
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="urgente" className="h-5 w-5" /> Urgente</label>
-        <button type="submit" disabled={enviando} className="rounded-xl bg-marca px-4 py-2.5 font-semibold text-marca-texto disabled:opacity-60">
-          {enviando ? "Añadiendo…" : "Añadir"}
-        </button>
-      </div>
-      {estado.error && <p className="text-sm text-urgente" role="alert">{estado.error}</p>}
-    </form>
+    <Buscador placeholder="Añadir a la lista…"
+      onElegir={(r, o) => anadirProducto(o.id, r.nombre)}
+      onTexto={(t) => anadirTexto(t)} />
   );
 }
 
-export function ItemLista({ id, nombre, detalle, urgente, ingredienteId }: {
-  id: number; nombre: string; detalle: string | null; urgente: boolean; ingredienteId: string | null;
-}) {
-  const [hecho, setHecho] = useState(false);
+export interface FilaLista {
+  id: number; nombre: string; detalle: string | null; precio: string | null; tienda: string | null;
+  urgente: boolean; paquetes: number | null; esProducto: boolean; imagen: string | null;
+}
+
+export function ItemLista({ f }: { f: FilaLista }) {
+  const [estado, setEstado] = useState<"" | "comprado" | "quitado">("");
+  const [paquetes, cambiar] = useOptimistic(f.paquetes ?? 1, (_: number, n: number) => n);
   const [error, setError] = useState<string | null>(null);
   const [, empezar] = useTransition();
-  if (hecho) return null;
+  if (estado === "quitado") return null;
+
+  const accion = (nuevo: "comprado" | "quitado", fn: () => Promise<{ error?: string }>) => empezar(async () => {
+    setEstado(nuevo);
+    const r = await fn();
+    if (r.error) { setEstado(""); setError(r.error); }
+  });
+  const sumar = (d: number) => empezar(async () => {
+    const n = Math.max(1, paquetes + d);
+    cambiar(n);
+    const r = await cambiarPaquetes(f.id, n);
+    if (r.error) setError(r.error);
+  });
+
   return (
-    <li className="flex items-center gap-3 py-2">
-      <button type="button" aria-label={`Comprado: ${nombre}`}
-        onClick={() => empezar(async () => { setHecho(true); const r = await marcarComprado(id); if (r.error) { setHecho(false); setError(r.error); } })}
-        className="h-7 w-7 shrink-0 rounded-full border-2 border-marca" />
+    <li className={`flex items-center gap-3 px-4 py-3 transition-opacity ${estado === "comprado" ? "opacity-40" : ""}`}>
+      <button type="button" aria-label={`Comprado: ${f.nombre}`} disabled={estado !== ""}
+        onClick={() => accion("comprado", () => marcarComprado(f.id))}
+        className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border-2 ${estado === "comprado" ? "border-marca bg-marca text-marca-texto" : f.urgente ? "border-urgente" : "border-texto-suave/50"}`}>
+        {estado === "comprado" && <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={3}><path d="m5 12 5 5 9-10" /></svg>}
+      </button>
+      {f.imagen && <img src={f.imagen} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-lg bg-white object-contain" />}
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{urgente && <span className="text-urgente">❗ </span>}{nombre}</p>
-        {detalle && <p className="text-sm text-texto-suave">{detalle}</p>}
+        <p className={`line-clamp-2 leading-snug ${estado === "comprado" ? "line-through" : ""}`}>
+          {f.urgente && <span className="mr-1 rounded bg-urgente px-1 py-px text-[0.65rem] font-bold uppercase text-white">Urgente</span>}
+          {f.nombre}
+        </p>
+        {(f.detalle || f.precio) && (
+          <p className="text-xs text-texto-suave">
+            {[f.detalle, f.precio && f.tienda ? `${f.precio} en ${f.tienda}` : f.precio].filter(Boolean).join(" · ")}
+          </p>
+        )}
         {error && <p className="text-xs text-urgente" role="alert">{error}</p>}
       </div>
-      {ingredienteId && (
-        <a href={`/comparar?i=${ingredienteId}`} aria-label={`Comparar precios de ${nombre}`} title="¿Dónde sale más barato?" className="px-1 text-texto-suave">€</a>
+      {f.esProducto && (
+        <div className="flex shrink-0 items-center rounded-full bg-fondo">
+          <button type="button" aria-label="Uno menos" disabled={paquetes <= 1} onClick={() => sumar(-1)} className="h-8 w-8 text-lg disabled:opacity-30">−</button>
+          <span className="w-5 text-center text-sm font-semibold tabular-nums">{paquetes}</span>
+          <button type="button" aria-label="Uno más" onClick={() => sumar(1)} className="h-8 w-8 text-lg">+</button>
+        </div>
       )}
-      <button type="button" aria-label={`Quitar ${nombre}`}
-        onClick={() => empezar(async () => { setHecho(true); const r = await quitarItem(id); if (r.error) { setHecho(false); setError(r.error); } })}
-        className="px-2 text-texto-suave">✕</button>
+      <button type="button" aria-label={`Quitar ${f.nombre}`} onClick={() => accion("quitado", () => quitarItem(f.id))}
+        className="-mr-2 shrink-0 p-2 text-texto-suave">
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
     </li>
   );
 }
 
-export function CopiarWhatsapp({ titulo, items }: { titulo: string; items: ItemTexto[] }) {
-  const [copiado, setCopiado] = useState(false);
+export function Compartir({ titulo, items }: { titulo: string; items: ItemTexto[] }) {
   const texto = listaParaWhatsapp(titulo, items);
+  const [hecho, setHecho] = useState(false);
+  const compartir = async () => {
+    if (navigator.share) { try { await navigator.share({ title: titulo, text: texto }); } catch { /* cancelado */ } return; }
+    await navigator.clipboard.writeText(texto);
+    setHecho(true); setTimeout(() => setHecho(false), 2000);
+  };
   return (
-    <div className="flex gap-2">
-      <button type="button" disabled={!items.length}
-        onClick={async () => { await navigator.clipboard.writeText(texto); setCopiado(true); setTimeout(() => setCopiado(false), 2000); }}
-        className="flex-1 rounded-xl border border-borde px-3 py-2.5 font-medium disabled:opacity-50">
-        {copiado ? "✓ Copiada" : "Copiar lista"}
-      </button>
-      <a href={items.length ? `https://wa.me/?text=${encodeURIComponent(texto)}` : undefined} target="_blank" rel="noopener noreferrer"
-        aria-disabled={!items.length} className="flex-1 rounded-xl border border-borde px-3 py-2.5 text-center font-medium aria-disabled:opacity-50">
-        Enviar por WhatsApp
-      </a>
-    </div>
+    <button type="button" onClick={compartir} disabled={!items.length} aria-label="Compartir la lista"
+      className="grid h-10 w-10 place-items-center rounded-full bg-superficie text-marca shadow-[0_1px_0_var(--borde)] disabled:opacity-40">
+      {hecho ? "✓" : <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v6h14v-6" /></svg>}
+    </button>
   );
 }
 
@@ -82,10 +97,14 @@ export function RecalcularLista({ dias }: { dias: number }) {
           const r = await recalcularLista();
           setMensaje(r.error ? { texto: r.error, error: true } : { texto: r.resumen ?? "", error: false });
         })}
-        className="w-full rounded-xl bg-marca px-4 py-3 font-semibold text-marca-texto disabled:opacity-60">
-        {pendiente ? "Calculando…" : `Calcular lo que falta (${dias} días)`}
+        className="flex w-full items-center gap-3 rounded-2xl bg-marca/10 px-4 py-3 text-left text-marca active:bg-marca/20 disabled:opacity-60">
+        <svg viewBox="0 0 24 24" aria-hidden className={`h-5 w-5 shrink-0 ${pendiente ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4" /></svg>
+        <span className="flex-1">
+          <span className="block font-semibold">{pendiente ? "Mirando tu dieta y tu despensa…" : "¿Qué me falta?"}</span>
+          <span className="block text-xs opacity-80">Según la dieta de los próximos {dias} días y lo que hay en casa</span>
+        </span>
       </button>
-      {mensaje && <p className={`mt-2 text-sm ${mensaje.error ? "text-urgente" : "text-texto-suave"}`} role="status">{mensaje.texto}</p>}
+      {mensaje && <p className={`mt-2 px-1 text-sm ${mensaje.error ? "text-urgente" : "text-texto-suave"}`} role="status">{mensaje.texto}</p>}
     </div>
   );
 }

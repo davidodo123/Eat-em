@@ -195,10 +195,14 @@ async function aplicar(db: SupabaseClient) {
   const { data } = await db.from("productos").select("id").order("id", { ascending: false }).limit(1);
   const max = data?.[0]?.id ?? 0;
   const tramos = (paso: number) => Array.from({ length: Math.ceil(max / paso) }, (_, k) => ({ p_desde: k * paso + 1, p_hasta: (k + 1) * paso }));
+  // Los cortes de red ("fetch failed") se reintentan; los errores de la base de datos no
   const rpc = async (fn: string, args: Record<string, unknown>) => {
-    const { data: n, error } = await db.rpc(fn, args);
-    if (error) throw new Error(`${fn}: ${error.message}`);
-    return (n as number) ?? 0;
+    for (let intento = 1; ; intento++) {
+      const { data: n, error } = await db.rpc(fn, args);
+      if (!error) return (n as number) ?? 0;
+      if (!/fetch failed|ECONNRESET|ETIMEDOUT|socket/i.test(error.message) || intento === 4) throw new Error(`${fn}: ${error.message}`);
+      await new Promise((r) => setTimeout(r, 5000 * intento));
+    }
   };
 
   // Si un tramo supera el statement_timeout de la API, se parte en dos y se reintenta (hasta 25 ids)

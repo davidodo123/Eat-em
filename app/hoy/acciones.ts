@@ -24,8 +24,8 @@ export async function marcarComida(comidaId: number, estado: "hecha" | "saltada"
   });
   if (error) return { error: "No se pudo registrar." };
   if (u.user && antes.size) await revisarStockBajo(supabase, hogar.id, u.user.id, antes);
-  revalidatePath("/hoy");
-  revalidatePath("/inventario");
+  revalidatePath("/dieta");
+  revalidatePath("/despensa");
   revalidatePath("/lista");
   return {};
 }
@@ -46,8 +46,8 @@ export async function registrarExtra(nombre: string, tipo: string, ingredientes:
   });
   if (error) return { error: "No se pudo registrar." };
   if (u.user && antes.size) await revisarStockBajo(supabase, hogar.id, u.user.id, antes);
-  revalidatePath("/hoy");
-  revalidatePath("/inventario");
+  revalidatePath("/dieta");
+  revalidatePath("/despensa");
   return {};
 }
 
@@ -55,7 +55,7 @@ export async function deshacerComida(consumoId: number): Promise<{ error?: strin
   const supabase = await crearClienteServidor();
   const { error } = await supabase.rpc("deshacer_consumo", { p_consumo_id: consumoId });
   if (error) return { error: "No se pudo deshacer." };
-  revalidatePath("/hoy");
-  revalidatePath("/inventario");
+  revalidatePath("/dieta");
+  revalidatePath("/despensa");
   return {};
 }

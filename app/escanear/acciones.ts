@@ -1,4 +1,6 @@
 "use server";
+import { revalidatePath } from "next/cache";
+import { meterEnDespensa } from "@/lib/despensa";
 import { crearClienteAdmin, crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { normalizarEan } from "@/lib/dominio/ean";
@@ -107,7 +109,8 @@ async function altaDesdeOff(ean: string): Promise<ProductoEscaneado | null> {
 
 export type ResultadoGuardar = { ok: true; mensaje: string } | { ok: false; mensaje: string };
 
-// Apunta una compra: precio visto (para todos) y entrada en el inventario del hogar
+// Apunta una compra: precio visto (para todos) y entrada en la despensa del hogar
+// (y en el inventario por ingrediente si cuenta para la dieta)
 export async function registrarCompra(datos: FormData): Promise<ResultadoGuardar> {
   const ean = normalizarEan(String(datos.get("ean") ?? ""));
   const productoId = Number(datos.get("producto_id"));
@@ -115,9 +118,9 @@ export async function registrarCompra(datos: FormData): Promise<ResultadoGuardar
   const supermercado = String(datos.get("supermercado") ?? "");
   const precio = numero(String(datos.get("precio") ?? "").replace(",", "."));
   const cantidad = numero(String(datos.get("cantidad") ?? "").replace(",", "."));
+  const unidades = Math.min(99, Math.max(1, Math.round(Number(datos.get("unidades")) || 1)));
   if (!ean || !productoId) return { ok: false, mensaje: "Falta el producto." };
-  if (!ingredienteId) return { ok: false, mensaje: "Elige qué es para tu despensa." };
-  if (!cantidad) return { ok: false, mensaje: "Indica cuánto has comprado." };
+  if (ingredienteId && !cantidad) return { ok: false, mensaje: "Indica cuánto has comprado." };
 
   const supabase = await crearClienteServidor();
   const { data: u } = await usuarioActual();
@@ -131,6 +134,15 @@ export async function registrarCompra(datos: FormData): Promise<ResultadoGuardar
     });
     if (error) return { ok: false, mensaje: "No se pudo guardar el precio." };
   }
+  const { data: prod } = await supabase.from("productos").select("nombre").eq("id", productoId).single();
+  try {
+    await meterEnDespensa(supabase, hogar.id, u.user.id, ingredienteId
+      ? { productoId, nombre: prod?.nombre ?? "Producto", unidades, ingredienteId, cantidadPorUnidad: Math.round((cantidad! / unidades) * 100) / 100, apuntarInventario: false }
+      : { productoId, nombre: prod?.nombre ?? "Producto", unidades });
+  } catch { return { ok: false, mensaje: "No se pudo añadir a la despensa." }; }
+  revalidatePath("/despensa");
+  if (!ingredienteId) return { ok: true, mensaje: "Guardado en la despensa." };
+
   const { error } = await supabase.from("inventario_movimientos").insert({
     grupo_id: hogar.id, ingrediente_id: ingredienteId, tipo: "compra", delta: cantidad, usuario_id: u.user.id,
     producto_id: productoId, precio_pagado: precio, supermercado_id: supermercado || null,
@@ -148,7 +160,7 @@ export async function registrarCompra(datos: FormData): Promise<ResultadoGuardar
       { onConflict: "ingrediente_id,producto_id" },
     );
   }
-  return { ok: true, mensaje: "Añadido al inventario." };
+  return { ok: true, mensaje: "Guardado en la despensa." };
 }
 
 // Producto que no esta en ninguna fuente: alta del usuario, pendiente de revision

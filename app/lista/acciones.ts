@@ -8,53 +8,103 @@ import { cantidadComprada, type FormatoProducto } from "@/lib/dominio/inventario
 import { DIAS } from "@/lib/ia/prompt";
 import { diaDe, lunesDe } from "@/lib/ia/semana";
 
-export interface EstadoLista { error?: string; ok?: number }
+import { meterEnDespensa } from "@/lib/despensa";
 
-export async function anadirItem(_previo: EstadoLista, datos: FormData): Promise<EstadoLista> {
-  const ingredienteId = String(datos.get("ingrediente_id") ?? "") || null;
-  const texto = String(datos.get("texto") ?? "").trim().slice(0, 120) || null;
-  const urgente = datos.get("urgente") === "on";
-  if (!ingredienteId && !texto) return { error: "Elige un ingrediente o escribe qué falta." };
-
+async function contexto() {
   const supabase = await crearClienteServidor();
   const { data: u } = await usuarioActual();
-  if (!u.user) return { error: "Tu sesión ha caducado." };
-  const hogar = await hogarActual(supabase);
-  if (!hogar) return { error: "No tienes hogar." };
-
-  const { error } = await supabase.from("lista_items").insert({
-    grupo_id: hogar.id, ingrediente_id: ingredienteId, texto_libre: ingredienteId ? null : texto,
-    urgente, origen: "manual", anadido_por: u.user.id,
-  });
-  if (error) return { error: error.code === "23505" ? "Ya está en la lista." : "No se pudo añadir." };
-  revalidatePath("/lista");
-
-  // Aviso a los demas del hogar (si lo tienen activado)
-  const [{ data: yo }, { data: ing }] = await Promise.all([
-    supabase.from("perfiles").select("nombre").eq("id", u.user.id).single(),
-    ingredienteId ? supabase.from("ingredientes").select("nombre").eq("id", ingredienteId).single() : Promise.resolve({ data: null }),
-  ]);
-  const que = (ing?.nombre ?? texto ?? "algo").toLowerCase();
-  await avisar(await otrosMiembros(hogar.id, u.user.id), {
-    tipo: "item_anadido", grupoId: hogar.id, url: "/lista",
-    titulo: urgente ? "❗ Urgente en la lista" : "Lista de la compra",
-    cuerpo: `${yo?.nombre || "Alguien"} ha añadido ${que}`,
-  });
-  return { ok: Date.now() };
+  const hogar = u.user ? await hogarActual(supabase) : null;
+  return { supabase, usuario: u.user, hogar };
 }
 
-// Comprado: si es un ingrediente, marcar_comprado() lo mete tambien en el inventario
+// Aviso a los demas del hogar (si lo tienen activado)
+async function avisarAnadido(supabase: Awaited<ReturnType<typeof crearClienteServidor>>, grupoId: string, usuarioId: string, que: string) {
+  const { data: yo } = await supabase.from("perfiles").select("nombre").eq("id", usuarioId).single();
+  await avisar(await otrosMiembros(grupoId, usuarioId), {
+    tipo: "item_anadido", grupoId, url: "/lista", titulo: "Lista de la compra",
+    cuerpo: `${yo?.nombre || "Alguien"} ha añadido ${que.toLowerCase()}`,
+  });
+}
+
+// Un producto concreto del catalogo. Si ya estaba pendiente, suma un envase.
+export async function anadirProducto(productoId: number, nombre: string): Promise<string | void> {
+  if (!Number.isInteger(productoId) || productoId <= 0) return "Producto no válido.";
+  const { supabase, usuario, hogar } = await contexto();
+  if (!usuario || !hogar) return "Necesitas un hogar para tener lista.";
+  const { data: previo } = await supabase.from("lista_items").select("id, paquetes")
+    .eq("grupo_id", hogar.id).eq("producto_id", productoId).eq("comprado", false).maybeSingle();
+  const { error } = previo
+    ? await supabase.from("lista_items").update({ paquetes: (previo.paquetes ?? 1) + 1 }).eq("id", previo.id)
+    : await supabase.from("lista_items").insert({
+        grupo_id: hogar.id, producto_id: productoId, texto_libre: nombre.slice(0, 120), paquetes: 1, origen: "manual", anadido_por: usuario.id,
+      });
+  if (error) return "No se pudo añadir.";
+  revalidatePath("/lista");
+  if (!previo) await avisarAnadido(supabase, hogar.id, usuario.id, nombre);
+}
+
+// Algo escrito tal cual (papel de cocina, pilas...)
+export async function anadirTexto(texto: string): Promise<string | void> {
+  const t = String(texto ?? "").trim().slice(0, 120);
+  if (!t) return "Escribe qué falta.";
+  const { supabase, usuario, hogar } = await contexto();
+  if (!usuario || !hogar) return "Necesitas un hogar para tener lista.";
+  const { error } = await supabase.from("lista_items").insert({ grupo_id: hogar.id, texto_libre: t, origen: "manual", anadido_por: usuario.id });
+  if (error) return "No se pudo añadir.";
+  revalidatePath("/lista");
+  await avisarAnadido(supabase, hogar.id, usuario.id, t);
+}
+
+export async function cambiarPaquetes(itemId: number, paquetes: number): Promise<{ error?: string }> {
+  if (!Number.isInteger(paquetes) || paquetes < 1 || paquetes > 99) return { error: "Cantidad no válida." };
+  const { supabase } = await contexto();
+  const { error } = await supabase.from("lista_items").update({ paquetes }).eq("id", itemId).eq("comprado", false);
+  if (error) return { error: "No se pudo cambiar." };
+  revalidatePath("/lista");
+  return {};
+}
+
+export async function marcarUrgente(itemId: number, urgente: boolean): Promise<{ error?: string }> {
+  const { supabase } = await contexto();
+  const { error } = await supabase.from("lista_items").update({ urgente }).eq("id", itemId);
+  if (error) return { error: "No se pudo cambiar." };
+  revalidatePath("/lista");
+  return {};
+}
+
+// Comprado: pasa a la despensa. Si es un ingrediente, marcar_comprado() ya lo suma al inventario.
 export async function marcarComprado(itemId: number): Promise<{ error?: string }> {
-  const supabase = await crearClienteServidor();
+  const { supabase, usuario, hogar } = await contexto();
+  if (!usuario || !hogar) return { error: "Tu sesión ha caducado." };
+  const { data: item } = await supabase.from("lista_items")
+    .select("id, ingrediente_id, producto_id, texto_libre, cantidad, paquetes, comprado, ingredientes (nombre)").eq("id", itemId).single();
+  if (!item || item.comprado) return {};
   const { error } = await supabase.rpc("marcar_comprado", { p_item_id: itemId });
   if (error) return { error: "No se pudo marcar." };
+
+  const unidades = item.paquetes ?? 1;
+  const nombreIng = (item.ingredientes as unknown as { nombre: string } | null)?.nombre;
+  try {
+    if (item.producto_id) {
+      await meterEnDespensa(supabase, hogar.id, usuario.id, {
+        productoId: item.producto_id, nombre: item.texto_libre ?? nombreIng ?? "Producto", unidades,
+        ingredienteId: item.ingrediente_id, apuntarInventario: !item.ingrediente_id,
+      });
+    } else if (item.ingrediente_id) {
+      const total = item.cantidad ? Number(item.cantidad) : null;
+      await meterEnDespensa(supabase, hogar.id, usuario.id, {
+        ingredienteId: item.ingrediente_id, nombre: nombreIng ?? item.ingrediente_id, unidades,
+        cantidadPorUnidad: total ? Math.round((total / unidades) * 100) / 100 : null, apuntarInventario: false,
+      });
+    }
+  } catch { /* la compra ya esta marcada; la despensa se puede ajustar a mano */ }
   revalidatePath("/lista");
-  revalidatePath("/inventario");
+  revalidatePath("/despensa");
   return {};
 }
 
 export async function quitarItem(itemId: number): Promise<{ error?: string }> {
-  const supabase = await crearClienteServidor();
+  const { supabase } = await contexto();
   const { error } = await supabase.from("lista_items").delete().eq("id", itemId).eq("comprado", false);
   if (error) return { error: "No se pudo quitar." };
   revalidatePath("/lista");
@@ -80,7 +130,7 @@ export async function recalcularLista(): Promise<{ error?: string; resumen?: str
 
   const { data: dietas } = await supabase.from("dietas").select("id, semana_inicio")
     .eq("grupo_id", hogar.id).eq("estado", "activa").in("semana_inicio", semanas);
-  if (!dietas?.length) return { error: "Nadie del hogar tiene dieta activa para estos días: genera la semana en «Mi semana»." };
+  if (!dietas?.length) return { error: "Nadie del hogar tiene dieta activa para estos días: planifica comidas en «Dieta»." };
   const [{ data: comidas }, { data: hechas }, { data: stock }, { data: ings }] = await Promise.all([
     supabase.from("dieta_comidas").select("id, dieta_id, dia, dieta_comida_ingredientes (ingrediente_id, cantidad)").in("dieta_id", dietas.map((d) => d.id)),
     supabase.from("consumos").select("dieta_comida_id").eq("grupo_id", hogar.id).eq("fecha", hoy).not("dieta_comida_id", "is", null),

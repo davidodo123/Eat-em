@@ -21,7 +21,7 @@ export default async function Grupo() {
 
   return (
     <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
+      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
       <h1 className="mt-2 mb-4 text-2xl font-bold">Hogar</h1>
       {!hogar ? (
         <>

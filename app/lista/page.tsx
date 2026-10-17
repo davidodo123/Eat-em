@@ -2,81 +2,110 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
+import { NOMBRE_CADENA, zonaDelHogar } from "@/lib/zona";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
-import { CopiarWhatsapp, ItemLista, NuevoItem, RecalcularLista } from "./componentes";
+import { AnadirALista, Compartir, ItemLista, RecalcularLista, type FilaLista } from "./componentes";
 import { TiempoReal } from "../tiempo-real";
+import { Cabecera, Pantalla, Seccion, SinHogar, Tarjeta, Vacio, euros } from "../ui";
 
-export const metadata: Metadata = { title: "Lista de la compra · Eat-em" };
+export const metadata: Metadata = { title: "Lista · Eat-em" };
+
+interface Prod { nombre: string; imagen_url: string | null; supermercado_id: string | null; formato_texto: string | null; precio: number | null; precio_oferta: number | null; oferta_hasta: string | null }
+
+const precioDe = (p: Prod) => {
+  const oferta = p.precio_oferta !== null && (!p.oferta_hasta || p.oferta_hasta >= new Date().toISOString().slice(0, 10));
+  const v = oferta ? p.precio_oferta : p.precio;
+  return v === null ? null : Number(v);
+};
 
 export default async function Lista() {
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
-  if (!hogar) {
-    return (
-      <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-        <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
-        <h1 className="mt-2 mb-4 text-2xl font-bold">Lista de la compra</h1>
-        <p className="rounded-xl border border-borde bg-superficie p-4">
-          La lista es del hogar. <Link href="/grupo" className="font-semibold text-marca">Crea uno o únete</Link>.
-        </p>
-      </main>
-    );
-  }
+  if (!hogar) return <Pantalla><Cabecera titulo="Lista" /><SinHogar que="La lista de la compra" /></Pantalla>;
 
-  const [{ data: items }, { data: ingredientes }, { data: categorias }, { data: grupo }, { data: preferidos }] = await Promise.all([
-    supabase.from("lista_items").select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente")
+  const [zona, { data: items }, { data: grupo }] = await Promise.all([
+    zonaDelHogar(supabase, hogar.id),
+    supabase.from("lista_items")
+      .select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente, origen, ingredientes (nombre, unidad), productos (nombre, imagen_url, supermercado_id, formato_texto, precio, precio_oferta, oferta_hasta)")
       .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at"),
-    supabase.from("ingredientes").select("id, nombre, unidad, categoria_id").eq("activo", true).order("nombre"),
-    supabase.from("categorias").select("id, nombre"),
     supabase.from("grupos").select("dias_planificacion").eq("id", hogar.id).single(),
-    supabase.from("inventario").select("ingrediente_id, productos:producto_preferido_id (nombre, supermercado_id, precio, precio_oferta)")
-      .eq("grupo_id", hogar.id).not("producto_preferido_id", "is", null),
   ]);
-  const pref = new Map((preferidos ?? []).map((p) => [p.ingrediente_id, p.productos as unknown as { nombre: string; supermercado_id: string | null; precio: number | null; precio_oferta: number | null } | null]));
-  const ing = new Map((ingredientes ?? []).map((i) => [i.id, i]));
-  const cat = new Map((categorias ?? []).map((c) => [c.id, c.nombre]));
 
-  const filas = (items ?? []).map((it) => {
-    const i = it.ingrediente_id ? ing.get(it.ingrediente_id) : undefined;
+  // Lineas de ingrediente generico (las de la dieta): el mas barato de las tiendas cercanas
+  const genericos = [...new Set((items ?? []).filter((i) => i.ingrediente_id && !i.productos).map((i) => i.ingrediente_id as string))];
+  const masBarato = new Map(await Promise.all(genericos.map(async (id) => {
+    const { data } = await supabase.rpc("comparar_precios", { p_ingrediente: id });
+    const filas = ((data ?? []) as { supermercado_id: string; nombre: string; precio: number }[])
+      .filter((f) => !zona.buscarEn || zona.buscarEn.includes(f.supermercado_id));
+    const mejor = filas.sort((a, b) => Number(a.precio) - Number(b.precio))[0];
+    return [id, mejor ? { precio: Number(mejor.precio), tienda: mejor.supermercado_id, nombre: mejor.nombre } : null] as const;
+  })));
+
+  let total = 0;
+  const filas: (FilaLista & { auto: boolean })[] = (items ?? []).map((it) => {
+    const p = it.productos as unknown as Prod | null;
+    const ing = it.ingredientes as unknown as { nombre: string; unidad: UnidadBase } | null;
+    const n = it.paquetes ?? 1;
+    if (p) {
+      const precio = precioDe(p);
+      if (precio !== null) total += precio * n;
+      return {
+        id: it.id, nombre: p.nombre, detalle: p.formato_texto, precio: precio !== null ? euros(precio) : null,
+        tienda: p.supermercado_id ? NOMBRE_CADENA[p.supermercado_id] ?? p.supermercado_id : null,
+        urgente: it.urgente, paquetes: n, esProducto: true, imagen: p.imagen_url, auto: it.origen === "auto",
+      };
+    }
+    const barato = it.ingrediente_id ? masBarato.get(it.ingrediente_id) : null;
+    if (barato && it.paquetes) total += barato.precio * it.paquetes;
     const cantidad = it.paquetes ? `${it.paquetes} ${it.paquetes === 1 ? "paquete" : "paquetes"}`
-      : it.cantidad && i ? formatearCantidad(Number(it.cantidad), i.unidad as UnidadBase) : null;
-    const p = it.ingrediente_id ? pref.get(it.ingrediente_id) : null;
-    const precio = p ? Number(p.precio_oferta ?? p.precio) || null : null;
-    const producto = p ? `${p.nombre}${p.supermercado_id ? ` · ${p.supermercado_id}` : ""}${precio ? ` · ${precio.toFixed(2)} €` : ""}` : null;
-    const detalle = [cantidad, producto].filter(Boolean).join(" · ") || null;
+      : it.cantidad && ing ? formatearCantidad(Number(it.cantidad), ing.unidad) : null;
     return {
-      id: it.id, nombre: i?.nombre ?? it.texto_libre ?? "?", detalle, urgente: it.urgente, ingredienteId: it.ingrediente_id,
-      categoria: (i?.categoria_id && cat.get(i.categoria_id)) || "Otros",
+      id: it.id, nombre: ing?.nombre ?? it.texto_libre ?? "?", detalle: cantidad,
+      precio: barato ? `desde ${euros(barato.precio)}` : null, tienda: barato ? NOMBRE_CADENA[barato.tienda] ?? barato.tienda : null,
+      urgente: it.urgente, paquetes: it.paquetes, esProducto: false, imagen: null, auto: it.origen === "auto",
     };
   });
-  const porCategoria = [...new Set(filas.map((f) => f.categoria))].sort((a, b) => (a === "Otros" ? 1 : b === "Otros" ? -1 : a.localeCompare(b, "es")));
+  const orden = (a: FilaLista, b: FilaLista) => Number(b.urgente) - Number(a.urgente);
+  const dieta = filas.filter((f) => f.auto).sort(orden);
+  const manual = filas.filter((f) => !f.auto).sort(orden);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">Lista de la compra</h1>
+    <Pantalla>
       <TiempoReal grupoId={hogar.id} tablas={["lista_items"]} />
-      <div className="mb-4"><RecalcularLista dias={grupo?.dias_planificacion ?? 7} /></div>
+      <Cabecera titulo="Lista"
+        accion={<Compartir titulo={`Lista de ${hogar.nombre}`} items={filas.map((f) => ({ nombre: f.nombre, detalle: f.detalle, urgente: f.urgente }))} />}
+        sub={
+          <Link href="/ubicacion" className="inline-flex items-center gap-1 text-marca">
+            <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4}><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /></svg>
+            {zona.lugar ? `${zona.lugar} · ${zona.buscarEn ? zona.buscarEn.map((c) => NOMBRE_CADENA[c]).join(", ") : "todas las tiendas"}` : "Pon tu ubicación para ver tus supermercados"}
+          </Link>
+        } />
 
-      <NuevoItem ingredientes={(ingredientes ?? []).map(({ id, nombre }) => ({ id, nombre }))} />
+      <div className="sticky top-0 z-10 -mx-4 bg-fondo/95 px-4 pb-3 pt-1 backdrop-blur"><AnadirALista /></div>
 
-      <div className="my-4">
-        <CopiarWhatsapp titulo={`Lista de ${hogar.nombre}`} items={filas} />
-      </div>
+      <div className="mb-5"><RecalcularLista dias={grupo?.dias_planificacion ?? 7} /></div>
 
-      {!filas.length && <p className="text-center text-texto-suave">No falta nada. 🎉</p>}
-      {porCategoria.map((c) => (
-        <section key={c} className="mb-4">
-          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-texto-suave">{c}</h2>
-          <ul className="divide-y divide-borde rounded-xl border border-borde bg-superficie px-3">
-            {filas.filter((f) => f.categoria === c).map((f) => (
-              <ItemLista key={f.id} id={f.id} nombre={f.nombre} detalle={f.detalle} urgente={f.urgente} ingredienteId={f.ingredienteId} />
-            ))}
-          </ul>
-        </section>
-      ))}
-      <p className="mt-6 text-xs text-texto-suave">Al marcar un ingrediente como comprado se suma a la despensa del hogar.</p>
-    </main>
+      {!filas.length && <Vacio icono="🧺" titulo="No falta nada" texto="Busca arriba un producto o pulsa «¿Qué me falta?» para calcularlo con tu dieta." />}
+
+      {manual.length > 0 && (
+        <Seccion titulo="Añadido por vosotros">
+          <Tarjeta><ul className="divide-y divide-borde">{manual.map((f) => <ItemLista key={f.id} f={f} />)}</ul></Tarjeta>
+        </Seccion>
+      )}
+      {dieta.length > 0 && (
+        <Seccion titulo="Te falta para la dieta">
+          <Tarjeta><ul className="divide-y divide-borde">{dieta.map((f) => <ItemLista key={f.id} f={f} />)}</ul></Tarjeta>
+        </Seccion>
+      )}
+
+      {total > 0 && (
+        <div className="flex items-baseline justify-between px-1 text-sm">
+          <span className="text-texto-suave">Estimado</span>
+          <span className="text-lg font-bold tabular-nums">{euros(total)}</span>
+        </div>
+      )}
+      <p className="mt-4 px-1 text-xs text-texto-suave">Lo que marcas como comprado pasa a la despensa.</p>
+    </Pantalla>
   );
 }

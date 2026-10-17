@@ -64,7 +64,7 @@ export function Escaner({ ingredientes, supermercados, superPorDefecto }: {
           <div className="space-y-3">
             <p className="rounded-xl border border-marca/40 bg-superficie p-4 font-medium text-marca" role="status">✓ {guardado.mensaje}</p>
             <button onClick={reiniciar} className={botonPrincipal}>Escanear otro</button>
-            <Link href="/inventario" className={`${botonSecundario} block text-center`}>Ver inventario</Link>
+            <Link href="/despensa" className={`${botonSecundario} block text-center`}>Ver despensa</Link>
           </div>
         ) : (
           <FormularioCompra
@@ -125,9 +125,9 @@ function FormularioCompra({ resultado, ingredientes, supermercados, superPorDefe
       <input type="hidden" name="producto_id" value={producto.id} />
 
       <label className="block">
-        <span className="text-sm font-medium">¿Qué es para tu despensa?</span>
-        <select name="ingrediente_id" required value={ingredienteId} onChange={(e) => { setIngredienteId(e.target.value); setCantidadEditada(null); }} className={campo}>
-          <option value="" disabled>Elige un ingrediente</option>
+        <span className="text-sm font-medium">¿Cuenta para la dieta como…?</span>
+        <select name="ingrediente_id" value={ingredienteId} onChange={(e) => { setIngredienteId(e.target.value); setCantidadEditada(null); }} className={campo}>
+          <option value="">No, solo guardarlo en la despensa</option>
           {ordenados.map((i) => <option key={i.id} value={i.id}>{candidatos.has(i.id) ? "★ " : ""}{i.nombre}</option>)}
         </select>
       </label>
@@ -135,11 +135,11 @@ function FormularioCompra({ resultado, ingredientes, supermercados, superPorDefe
       <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <span className="text-sm font-medium">Envases</span>
-          <input type="number" min={1} max={99} value={unidades} onChange={(e) => { setUnidades(Math.max(1, Number(e.target.value) || 1)); setCantidadEditada(null); }} className={campo} />
+          <input type="number" name="unidades" min={1} max={99} value={unidades} onChange={(e) => { setUnidades(Math.max(1, Number(e.target.value) || 1)); setCantidadEditada(null); }} className={campo} />
         </label>
         <label className="block">
           <span className="text-sm font-medium">Cantidad{ingrediente ? ` (${UNIDAD[ingrediente.unidad]})` : ""}</span>
-          <input name="cantidad" inputMode="decimal" required value={cantidadEditada ?? (sugerida ? String(sugerida) : "")}
+          <input name="cantidad" inputMode="decimal" required={Boolean(ingrediente)} disabled={!ingrediente} value={cantidadEditada ?? (sugerida ? String(sugerida) : "")}
             onChange={(e) => setCantidadEditada(e.target.value)} className={campo} />
         </label>
       </div>

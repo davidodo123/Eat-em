@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
       const { data: platos } = await db.from("dieta_comidas").select("nombre").eq("dieta_id", d.id).eq("dia", hoy).order("orden");
       if (!platos?.length) continue;
       comidas += await avisar([d.usuario_id], {
-        tipo: "recordatorio_comida", url: "/hoy", titulo: "Tu día en Eat-em",
+        tipo: "recordatorio_comida", url: "/dieta", titulo: "Tu día en Eat-em",
         cuerpo: `Hoy: ${platos.map((p) => p.nombre).slice(0, 3).join(" · ")}${platos.length > 3 ? "…" : ""}`,
       });
     }

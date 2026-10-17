@@ -22,7 +22,7 @@ export async function ajustarStock(ingredienteId: string, delta: number, tipo: "
   });
   if (error) return { error: "No se pudo guardar." };
   const bajos = delta < 0 ? await revisarStockBajo(supabase, hogar.id, u.user.id, antes) : [];
-  revalidatePath("/inventario");
+  revalidatePath("/despensa");
   if (bajos.length) revalidatePath("/lista");
   return { aLista: bajos.length > 0 };
 }
@@ -36,6 +36,6 @@ export async function fijarUmbral(ingredienteId: string, umbral: number | null):
   const { error } = await supabase.from("inventario").update({ umbral_cantidad: umbral })
     .eq("grupo_id", hogar.id).eq("ingrediente_id", ingredienteId);
   if (error) return { error: "No se pudo guardar." };
-  revalidatePath("/inventario");
+  revalidatePath("/despensa");
   return {};
 }
