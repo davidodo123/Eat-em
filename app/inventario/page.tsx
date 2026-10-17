@@ -68,7 +68,7 @@ export default async function Inventario() {
           <ul className="divide-y divide-borde rounded-xl border border-borde bg-superficie px-3">
             {g.filas.map((f) => (
               <FilaInventario key={f.ingrediente_id} id={f.ingrediente_id} nombre={f.i!.nombre} cantidad={f.cantidad}
-                unidad={f.i!.unidad as UnidadBase} bajo={f.umbral !== null && f.cantidad < f.umbral} />
+                unidad={f.i!.unidad as UnidadBase} bajo={f.umbral !== null && f.cantidad < f.umbral} umbral={f.umbral} />
             ))}
           </ul>
         </section>

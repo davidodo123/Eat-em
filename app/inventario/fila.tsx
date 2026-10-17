@@ -1,11 +1,11 @@
 "use client";
 import { useOptimistic, useState, useTransition } from "react";
-import { ajustarStock } from "./acciones";
+import { ajustarStock, fijarUmbral } from "./acciones";
 import { formatearCantidad, pasoAjuste } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
 
-export function FilaInventario({ id, nombre, cantidad, unidad, bajo }: {
-  id: string; nombre: string; cantidad: number; unidad: UnidadBase; bajo: boolean;
+export function FilaInventario({ id, nombre, cantidad, unidad, bajo, umbral }: {
+  id: string; nombre: string; cantidad: number; unidad: UnidadBase; bajo: boolean; umbral: number | null;
 }) {
   const [optimista, aplicar] = useOptimistic(cantidad, (actual: number, delta: number) => Math.max(0, actual + delta));
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +16,15 @@ export function FilaInventario({ id, nombre, cantidad, unidad, bajo }: {
     empezar(async () => {
       aplicar(delta);
       const r = await ajustarStock(id, delta, tipo);
-      setError(r.error ?? null);
+      setError(r.error ?? (r.aLista ? "Queda poco: añadido a la lista." : null));
     });
+  const cambiarUmbral = () => {
+    const unidadTexto = unidad === "unidad" ? "unidades" : unidad;
+    const valor = prompt(`Avisar y añadir a la lista cuando queden menos de… (${unidadTexto}). Vacío para quitar el aviso.`, umbral ? String(umbral) : "");
+    if (valor === null) return;
+    const n = valor.trim() ? Number(valor.replace(",", ".")) : null;
+    empezar(async () => setError((await fijarUmbral(id, n)).error ?? null));
+  };
 
   return (
     <li className="flex items-center gap-2 py-2">
@@ -25,6 +32,9 @@ export function FilaInventario({ id, nombre, cantidad, unidad, bajo }: {
         <p className="truncate font-medium">{nombre}</p>
         <p className={`text-sm ${bajo ? "text-aviso" : "text-texto-suave"}`}>
           {formatearCantidad(optimista, unidad)}{bajo ? " · queda poco" : ""}
+          <button type="button" onClick={cambiarUmbral} className="ml-2 text-xs underline" aria-label={`Aviso de stock bajo de ${nombre}`}>
+            {umbral ? `aviso < ${formatearCantidad(umbral, unidad)}` : "poner aviso"}
+          </button>
         </p>
         {error && <p className="text-xs text-urgente" role="alert">{error}</p>}
       </div>

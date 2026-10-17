@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cantidadComprada } from "./inventario.ts";
+import { cantidadComprada, cruzaUmbral } from "./inventario.ts";
 
 const g = { unidad: "g" as const, gramos_por_unidad: null };
 const ml = { unidad: "ml" as const, gramos_por_unidad: null };
@@ -24,4 +24,12 @@ test("cantidad comprada para el inventario", () => {
   assert.equal(cantidadComprada({ cantidad_neta: null, unidad: null, unidades_pack: 1 }, huevo, 3), 3);
   assert.equal(cantidadComprada({ cantidad_neta: null, unidad: null, unidades_pack: 1 }, g), null);
   assert.equal(cantidadComprada({ cantidad_neta: 1000, unidad: "g", unidades_pack: 1 }, g, 0), null);
+});
+
+test("cruce del umbral de stock bajo", () => {
+  assert.equal(cruzaUmbral(600, 400, 500), true);
+  assert.equal(cruzaUmbral(400, 300, 500), false); // ya estaba por debajo: no se repite el aviso
+  assert.equal(cruzaUmbral(600, 550, 500), false);
+  assert.equal(cruzaUmbral(600, 400, null), false);
+  assert.equal(cruzaUmbral(500, 0, 500), true);
 });

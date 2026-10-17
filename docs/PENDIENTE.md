@@ -89,13 +89,14 @@
 - [x] `/perfil`: nombre y datos de salud (solo con consentimiento explícito; retirarlo los borra junto con los pesajes), alergias, situaciones médicas y objetivos estimados.
 - [ ] Flujo de primer uso guiado (nombre → hogar → perfil) en vez de pantallas sueltas.
 - [x] `/inventario`: stock del hogar por categoría, +/− y "tirar" (movimientos `ajuste`/`desperdicio`) con actualización optimista, aviso de "queda poco" si hay umbral y últimos movimientos con quién los hizo.
-- [ ] Editar umbrales y producto preferido por ingrediente.
+- [x] Umbral de "queda poco" por ingrediente (`fijarUmbral`). Al cruzarlo (ajuste manual o comida hecha) entra solo en la lista (`origen = 'auto'`) y se avisa a los demás del hogar (`lib/stock.ts`).
+- [ ] Producto preferido por ingrediente.
 - [x] `/lista` manual compartida: añadir ingrediente o texto libre (urgente opcional), marcar comprado (`marcar_comprado`, suma al inventario), quitar, copiar o enviar por WhatsApp (`listaParaWhatsapp`, con test).
 - [x] Lista e inventario en tiempo real (`app/tiempo-real.tsx`: Supabase Realtime filtrado por hogar y `router.refresh()`). Probar con dos sesiones a la vez.
 - [x] Comparador `/comparar` (`comparar_precios()`, migración `20261016000008`): por ingrediente, el producto más barato de cada tienda por kg/l/ud con la oferta aplicada; para Mercadona, el último precio apuntado con el escáner (90 días). Enlace "€" en cada ingrediente de la lista.
 - [ ] Lista automática: stock bajo + necesidades de los próximos 3/7/14 días de **todos** los miembros, paquetes según el formato real y urgente si no llega a la próxima comida. Texto para WhatsApp. Comparador de precios.
 - [x] Web Push: `public/sw.js` (con las cabeceras de la guía de PWA de Next), `/ajustes` para activar o desactivar en cada dispositivo, preferencias y aviso de prueba, `lib/push.ts` (respeta `notificacion_prefs`, guarda el historial en `notificaciones` y borra suscripciones caducadas). Primer aviso real: lo que se añade a la lista llega a los demás del hogar. Las claves VAPID están en `.env.local` (generadas el 2026-10-17): **copiarlas a Vercel**. En iPhone solo funciona con la app añadida a la pantalla de inicio.
-- [ ] Aviso de stock bajo y recordatorios (comidas, día de compra) con Vercel Cron.
+- [ ] Recordatorios (comidas, día de compra) con Vercel Cron.
 
 ### Fase 6: IA (Nutri-em)
 - [x] `lib/ia/prefiltro.ts` (datos ausentes → `falta_dato`; menores, embarazo, lactancia, condiciones médicas e IMC < 18,5 → derivar) y `lib/ia/objetivos.ts` (Mifflin-St Jeor, ajuste, mínimos 1.500/1.200, macros), con tests.

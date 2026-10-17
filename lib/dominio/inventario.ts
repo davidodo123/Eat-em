@@ -29,3 +29,8 @@ export function cantidadComprada(p: FormatoProducto, ing: UnidadIngrediente, uni
 }
 
 const redondear = (n: number) => Math.round(n * 100) / 100;
+
+// ¿Este movimiento hace que el stock pase por debajo del umbral? (solo al cruzarlo, para no repetir avisos)
+export function cruzaUmbral(antes: number, despues: number, umbral: number | null): boolean {
+  return umbral !== null && umbral > 0 && antes >= umbral && despues < umbral;
+}
