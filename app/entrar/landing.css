@@ -1,0 +1,261 @@
+/* Pagina publica de Eat-em (/entrar): la pagina es el ticket de la compra.
+   Direccion "The page is the object" (tasteskill, seed 1059507523): tabaco y oliva,
+   Imbue para rotular, Albert Sans para leer. Todo va dentro de .lp para no tocar la app. */
+
+.lp {
+  --bg: #472913;
+  --surface: #55321a;
+  --ink: #e4e0cf;
+  --muted: #b39f84;
+  --accent: #525e1b;
+  --accent-ink: #e4e0cf;
+  --field-1: #c79a3e;
+  --field-1-ink: #2b170a;
+  --paper: #e4e0cf;
+  --paper-ink: #2b170a;
+  --paper-soft: #5c4430;
+  --step-small: 15px;
+  --step-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --step-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --step-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --margen: clamp(16px, 2.2vw, 32px);
+  --step-display: clamp(64px, 7.2vw, 104px);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-text), system-ui, sans-serif;
+  font-size: var(--step-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.lp *, .lp *::before, .lp *::after { box-sizing: border-box; }
+.lp a { color: inherit; }
+.lp :focus-visible { outline: 3px solid var(--field-1); outline-offset: 3px; }
+.lp ::selection { background: var(--field-1); color: var(--field-1-ink); }
+.lp h1, .lp h2, .lp h3 { margin: 0; font-weight: 400; text-wrap: balance; }
+.lp p { margin: 0; text-wrap: pretty; }
+.lp .rotulo { font-family: var(--f-display), serif; text-transform: uppercase; letter-spacing: -0.01em; line-height: 0.9; font-optical-sizing: auto; }
+.lp .cifra { font-variant-numeric: tabular-nums; }
+.lp .solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Botones: planos, esquinas rectas ---------- */
+.lp .boton {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 22px; border: 0; border-radius: 0; cursor: pointer;
+  background: var(--ink); color: var(--bg); font: 500 var(--step-body)/1 var(--f-text), sans-serif; text-decoration: none;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+.lp .boton:hover { background: var(--field-1); color: var(--field-1-ink); }
+.lp .boton:active { transform: translateY(2px); }
+.lp .boton.oliva { background: var(--accent); color: var(--accent-ink); }
+.lp .boton.oliva:hover { background: var(--field-1); color: var(--field-1-ink); }
+
+/* ---------- Cabecera sobre el campo ---------- */
+.lp .cabecera {
+  position: absolute; inset: 0 0 auto 0; z-index: 2;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 28px var(--margen);
+}
+.lp .marca { font-size: var(--step-lead); text-decoration: none; }
+.lp .cabecera nav { display: flex; gap: 28px; font-size: var(--step-body); }
+.lp .cabecera nav a { text-decoration: none; color: var(--ink); transition: color 160ms; }
+.lp .cabecera nav a:hover { color: var(--field-1); }
+.lp .cabecera .boton { justify-self: end; }
+
+/* ---------- Hero: el ticket saliendo de la impresora ---------- */
+.lp .hero { position: relative; min-height: 100svh; padding: 150px var(--margen) 0; display: flex; justify-content: center; }
+.lp .ticket {
+  position: relative; width: min(500px, 100%);
+  background: var(--paper); color: var(--paper-ink);
+  padding: 64px 40px 72px;
+  /* borde superior dentado como papel cortado: el poligono lo genera la pagina */
+  clip-path: var(--dientes);
+}
+.lp .ticket .titular { font-size: var(--step-display); text-align: center; }
+.lp .ticket .apoyo { margin: 22px auto 0; max-width: 34ch; text-align: center; }
+.lp .ticket .cabeza { margin-top: 28px; text-align: center; font-size: var(--step-small); color: var(--paper-soft); }
+.lp .perforado { border: 0; border-top: 5px dotted var(--paper-soft); margin: 26px 0; height: 0; }
+.lp .lineas { list-style: none; margin: 0; padding: 0; }
+.lp .linea {
+  display: grid; grid-template-columns: 1fr auto; gap: 4px 16px; width: 100%;
+  padding: 10px 12px; margin: 0 -12px; width: calc(100% + 24px);
+  background: none; border: 0; text-align: left; cursor: pointer; color: inherit; font: inherit;
+  transition: background-color 160ms, color 160ms, opacity 200ms;
+}
+.lp .linea .que { font-weight: 500; }
+.lp .linea .donde { grid-column: 1; font-size: var(--step-small); color: var(--paper-soft); }
+.lp .linea .importe { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-weight: 500; }
+.lp .lineas:hover .linea:not(:hover):not([aria-pressed="true"]) { opacity: 0.55; }
+.lp .linea[aria-pressed="true"] { background: var(--paper-ink); color: var(--paper); }
+.lp .linea[aria-pressed="true"] .donde { color: var(--muted); }
+.lp .totales { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; }
+.lp .totales .grande { font-family: var(--f-display), serif; text-transform: uppercase; font-size: var(--step-head); line-height: 1; }
+.lp .totales .nota { grid-column: 1 / -1; font-size: var(--step-small); color: var(--paper-soft); }
+
+/* La vista previa de la linea elegida (la "cosa viva") */
+.lp .vista { background: var(--paper-ink); color: var(--paper); padding: 22px 24px; margin-top: 18px; }
+.lp .vista h3 { font-size: var(--step-body); font-weight: 500; }
+.lp .vista .producto { font-size: var(--step-small); color: var(--muted); margin-top: 2px; }
+.lp .barras { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 8px; }
+.lp .barra { display: grid; grid-template-columns: 7.5em 1fr auto; align-items: center; gap: 12px; font-size: var(--step-small); }
+.lp .barra .relleno { height: 14px; background: var(--muted); transform-origin: left; animation: lp-crece 420ms cubic-bezier(.2,.7,.2,1) both; }
+.lp .barra.mejor .relleno { background: var(--field-1); }
+.lp .barra.mejor { font-weight: 500; }
+@keyframes lp-crece { from { transform: scaleX(0); } }
+
+/* ---------- Escaparate: la app haciendo su trabajo ---------- */
+.lp .escaparate { background: var(--accent); color: var(--accent-ink); display: grid; grid-template-columns: 1fr 1fr; min-height: 88svh; margin-top: 160px; }
+.lp .escaparate .placa { display: grid; place-items: center; padding: 40px; }
+.lp .escaparate .lado { display: flex; flex-direction: column; justify-content: space-between; gap: 40px; padding: 56px var(--margen) 56px 24px; }
+.lp .pestanas { display: flex; gap: 28px; font-size: var(--step-body); }
+.lp .pestanas button { background: none; border: 0; padding: 6px 0 10px; color: #d6d0bb; font: inherit; cursor: pointer; transition: color 160ms; }
+.lp .pestanas button { position: relative; }
+.lp .pestanas button[aria-selected="true"] { color: var(--accent-ink); font-weight: 500; }
+.lp .pestanas button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--field-1); }
+.lp .pestanas button:hover { color: var(--accent-ink); }
+.lp .escaparate h2 { font-size: var(--step-head); font-family: var(--f-display), serif; text-transform: uppercase; line-height: 0.95; }
+.lp .escaparate .descripcion { max-width: 34ch; margin-top: 28px; font-size: var(--step-lead); line-height: 1.4; }
+.lp .celdas { display: grid; grid-template-columns: 1fr 1fr; }
+.lp .celdas a { display: flex; align-items: center; padding: 0 20px; min-height: 72px; text-decoration: none; font-weight: 500; transition: background-color 160ms, color 160ms; }
+.lp .celdas a:first-child { background: var(--accent-ink); color: var(--accent); }
+.lp .celdas a:last-child { background: #45501a; color: var(--accent-ink); }
+.lp .celdas a:hover { background: var(--field-1); color: var(--field-1-ink); }
+
+/* Fragmento de la interfaz real (data-ui): papel con las filas de la app */
+.lp .ui { width: min(100%, 560px); aspect-ratio: 1; background: var(--paper); color: var(--paper-ink); padding: 32px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+.lp .ui .ui-titulo { font: 400 var(--step-head)/0.9 var(--f-display), serif; text-transform: uppercase; }
+.lp .ui .ui-sub { font-size: var(--step-small); color: var(--paper-soft); }
+.lp .ui .ui-fila { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 14px 16px; background: #d6d0bb; }
+.lp .ui .ui-fila b { font-weight: 500; }
+.lp .ui .ui-fila span { font-size: var(--step-small); color: var(--paper-soft); }
+.lp .ui .ui-fila em { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-style: normal; font-weight: 500; }
+.lp .ui .ui-fila.hecha { background: var(--accent); color: var(--accent-ink); }
+.lp .ui .ui-fila.hecha span { color: #cfd4b0; }
+.lp .ui .ui-fila.urgente em { color: #8a2a12; }
+
+/* ---------- Precios: la palabra enorme y las barras ---------- */
+.lp .precios { width: min(640px, 100% - 2 * var(--margen)); margin: 200px auto 0; container-type: inline-size; }
+.lp .precios .gigante { font-size: 26cqw; line-height: 0.8; text-align: center; }
+.lp .precios .intro { margin: 28px 0 24px; max-width: 46ch; }
+.lp .cajon { background: var(--surface); margin-bottom: 6px; }
+.lp .cajon summary { display: flex; justify-content: space-between; align-items: center; min-height: 56px; padding: 0 18px; font-weight: 500; cursor: pointer; list-style: none; transition: background-color 160ms; }
+.lp .cajon summary::-webkit-details-marker { display: none; }
+.lp .cajon summary:hover { background: #613a1e; }
+.lp .cajon summary .mas { font-size: var(--step-lead); transition: transform 200ms; }
+.lp .cajon[open] summary .mas { transform: rotate(45deg); }
+.lp .cajon ul { list-style: none; margin: 0; padding: 4px 20px 20px; display: grid; gap: 14px; }
+.lp .cajon li { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; }
+.lp .cajon li span { font-size: var(--step-small); color: var(--muted); }
+.lp .cajon li b { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-weight: 500; }
+.lp .cajon li.mejor b { color: var(--field-1); }
+.lp .precios .letra-pequena { margin-top: 18px; font-size: var(--step-small); color: var(--muted); }
+
+/* ---------- El sitio: foto real a todo el ancho ---------- */
+.lp .sitio { margin-top: 200px; }
+.lp .sitio figure { margin: 0; overflow: hidden; height: min(88svh, 900px); }
+.lp .sitio img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 88%; animation: lp-deriva 40s ease-in-out infinite alternate; }
+@keyframes lp-deriva { from { transform: scale(1.02) translateY(0); } to { transform: scale(1.12) translateY(-2%); } }
+.lp .sitio .pie { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 28px var(--margen) 0; }
+.lp .sitio h2 { font-size: var(--step-head); }
+.lp .sitio .pie p { max-width: 46ch; }
+.lp .sitio small { display: block; margin-top: 12px; font-size: var(--step-small); color: var(--muted); }
+
+/* ---------- La carta (con la tira para entrar) ---------- */
+.lp .carta-campo { background: var(--field-1); color: var(--field-1-ink); padding: 160px var(--margen); margin-top: 200px; }
+.lp .carta {
+  width: min(680px, 100%); margin: 0 auto; background: var(--paper); color: var(--paper-ink); padding: 60px;
+  clip-path: var(--festones);
+  padding-bottom: 96px;
+}
+.lp .carta p + p { margin-top: 1em; }
+.lp .carta .firma { margin-top: 28px; font-size: var(--step-lead); font-style: italic; }
+.lp .carta .cargo { font-size: var(--step-small); color: var(--paper-soft); }
+.lp .laminas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 32px 0; }
+.lp .laminas figure { margin: 0; }
+.lp .laminas img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; transition: transform 300ms ease; }
+.lp .laminas figure:hover img { transform: scale(1.03); }
+.lp .laminas figcaption { margin-top: 6px; font-size: var(--step-small); color: var(--paper-soft); }
+.lp .tira { width: min(680px, 100%); margin: 0 auto; background: var(--paper); color: var(--paper-ink); padding: 28px 60px 36px; border-top: 5px dotted var(--paper-soft); }
+.lp .tira h2 { font-size: var(--step-head); }
+.lp .tira .ayuda { font-size: var(--step-small); color: var(--paper-soft); margin: 8px 0 18px; }
+.lp .tira form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.lp .tira input[type=email] { min-height: 52px; padding: 0 16px; border: 0; border-radius: 0; background: #d6d0bb; color: var(--paper-ink); font: inherit; }
+.lp .tira input[type=email]:focus { outline: 3px solid var(--accent); }
+.lp .tira .boton { background: var(--paper-ink); color: var(--paper); min-height: 52px; }
+.lp .tira .boton:hover { background: var(--accent); color: var(--accent-ink); }
+.lp .tira .estado { margin-top: 12px; font-size: var(--step-small); }
+.lp .tira .estado.error { color: #8a2a12; }
+
+/* ---------- Preguntas como texto de lectura ---------- */
+.lp .preguntas { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; padding: 200px var(--margen) 160px; }
+.lp .preguntas .izq { grid-column: 1 / span 3; }
+.lp .preguntas h2 { font-size: var(--step-head); font-family: var(--f-display), serif; text-transform: uppercase; }
+.lp .preguntas .izq figure { margin: 28px 0 0; }
+.lp .preguntas .izq img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 62% 40%; display: block; }
+.lp .preguntas .izq figcaption { margin-top: 8px; font-size: var(--step-small); color: var(--muted); }
+.lp .preguntas .texto { grid-column: 5 / span 8; columns: 2; column-gap: 56px; }
+.lp .preguntas .texto p { break-inside: avoid; margin-bottom: 20px; }
+.lp .preguntas .texto b { font-weight: 500; color: var(--ink); }
+
+/* ---------- Pie: el dorso del ticket ---------- */
+.lp .pie-pagina {
+  position: sticky; bottom: 0; z-index: 0; min-height: 100svh;
+  background: var(--ink); color: var(--paper-ink);
+  display: grid; grid-template-rows: auto 1fr auto; padding: 40px var(--margen) 20px;
+}
+.lp .contenido { position: relative; z-index: 1; background: var(--bg); }
+.lp .pie-pagina .columnas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; font-size: var(--step-small); }
+.lp .pie-pagina .columnas p:first-child { font-weight: 500; }
+.lp .pie-pagina .columnas p + p, .lp .pie-pagina .columnas li { color: var(--paper-soft); }
+.lp .pie-pagina ul { list-style: none; margin: 0; padding: 0; }
+.lp .pie-pagina .nombre { width: 100%; height: auto; display: block; margin-top: 40px; fill: var(--paper-ink); }
+.lp .pie-pagina .legal { margin-top: 20px; font-size: var(--step-small); color: var(--paper-soft); }
+
+/* ---------- Entradas al hacer scroll ---------- */
+.lp [data-entra] > * { opacity: 0; transform: translateY(24px); transition: opacity 560ms cubic-bezier(.2,.7,.2,1), transform 560ms cubic-bezier(.2,.7,.2,1); }
+.lp [data-entra].dentro > * { opacity: 1; transform: none; }
+.lp [data-entra].dentro > *:nth-child(2) { transition-delay: 80ms; }
+.lp [data-entra].dentro > *:nth-child(3) { transition-delay: 160ms; }
+.lp [data-entra].dentro > *:nth-child(4) { transition-delay: 240ms; }
+.lp [data-entra].dentro > *:nth-child(5) { transition-delay: 320ms; }
+.lp .ticket-entra { animation: lp-imprime 900ms cubic-bezier(.2,.7,.2,1) both; }
+@keyframes lp-imprime { from { transform: translateY(-60px); opacity: 0; } }
+html:not(.js) .lp [data-entra] > * { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
+  .lp [data-entra] > * { opacity: 1; transform: none; }
+}
+
+/* ---------- Telefono: su propia composicion ---------- */
+@media (max-width: 760px) {
+  .lp .cabecera { grid-template-columns: 1fr auto; padding: 20px 12px; }
+  .lp .cabecera nav { display: none; }
+  .lp .hero { padding: 96px 12px 0; }
+  .lp .ticket { padding: 48px 22px 56px; }
+  .lp .ticket .titular { font-size: 15vw; }
+  .lp .escaparate { grid-template-columns: 1fr; margin-top: 120px; }
+  .lp .escaparate .placa { padding: 16px; }
+  .lp .escaparate .lado { padding: 32px 16px 40px; }
+  .lp .escaparate h2 { font-size: var(--step-head); }
+  .lp .celdas { grid-template-columns: 1fr; }
+  .lp .celdas a { min-height: 60px; }
+  .lp .ui { padding: 20px; gap: 10px; }
+
+  .lp .precios { margin-top: 140px; }
+  .lp .sitio { margin-top: 140px; }
+  .lp .sitio figure { height: 62svh; }
+  .lp .sitio .pie { grid-template-columns: 1fr; }
+  .lp .carta-campo { padding: 96px 0; margin-top: 140px; }
+  .lp .carta { padding: 32px 24px 72px; }
+  .lp .tira { padding: 24px; }
+  .lp .tira form { grid-template-columns: 1fr; }
+  .lp .preguntas { grid-template-columns: 1fr; padding: 140px 20px 120px; }
+  .lp .preguntas .izq, .lp .preguntas .texto { grid-column: 1; }
+  .lp .preguntas .texto { columns: 1; }
+  .lp .preguntas .izq img { aspect-ratio: 4 / 3; }
+  .lp .pie-pagina .columnas { grid-template-columns: 1fr 1fr; row-gap: 32px; }
+}
+.lp .tira .estado { grid-column: 1 / -1; }
+
+/* La app pone fondo oscuro y hueco para su barra inferior en el body: aqui no hacen falta */
+body:has(.lp) { background: #e4e0cf; padding-bottom: 0; }
