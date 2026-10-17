@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
-import { FormulariosHogar } from "./formularios";
+import { DiasLista, FormulariosHogar } from "./formularios";
 
 export const metadata: Metadata = { title: "Hogar · Eat-em" };
 
@@ -34,6 +34,9 @@ export default async function Grupo() {
             <p className="text-lg font-semibold">{hogar.nombre}</p>
             <p className="mt-3 text-sm text-texto-suave">Código para invitar</p>
             <p className="font-mono text-2xl tracking-widest select-all">{hogar.codigo_invitacion}</p>
+          </div>
+          <div className="rounded-xl border border-borde bg-superficie p-4">
+            <DiasLista dias={(await supabase.from("grupos").select("dias_planificacion").eq("id", hogar.id).single()).data?.dias_planificacion ?? 7} />
           </div>
           <div className="rounded-xl border border-borde bg-superficie p-4">
             <p className="mb-2 font-semibold">Miembros</p>

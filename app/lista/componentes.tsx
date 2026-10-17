@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
-import { anadirItem, marcarComprado, quitarItem, type EstadoLista } from "./acciones";
+import { anadirItem, marcarComprado, quitarItem, recalcularLista, type EstadoLista } from "./acciones";
 import { listaParaWhatsapp, type ItemTexto } from "@/lib/dominio/lista";
 
 const campo = "block w-full rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base outline-none focus:border-marca";
@@ -68,6 +68,24 @@ export function CopiarWhatsapp({ titulo, items }: { titulo: string; items: ItemT
         aria-disabled={!items.length} className="flex-1 rounded-xl border border-borde px-3 py-2.5 text-center font-medium aria-disabled:opacity-50">
         Enviar por WhatsApp
       </a>
+    </div>
+  );
+}
+
+export function RecalcularLista({ dias }: { dias: number }) {
+  const [pendiente, empezar] = useTransition();
+  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null);
+  return (
+    <div>
+      <button type="button" disabled={pendiente}
+        onClick={() => empezar(async () => {
+          const r = await recalcularLista();
+          setMensaje(r.error ? { texto: r.error, error: true } : { texto: r.resumen ?? "", error: false });
+        })}
+        className="w-full rounded-xl bg-marca px-4 py-3 font-semibold text-marca-texto disabled:opacity-60">
+        {pendiente ? "Calculando…" : `Calcular lo que falta (${dias} días)`}
+      </button>
+      {mensaje && <p className={`mt-2 text-sm ${mensaje.error ? "text-urgente" : "text-texto-suave"}`} role="status">{mensaje.texto}</p>}
     </div>
   );
 }

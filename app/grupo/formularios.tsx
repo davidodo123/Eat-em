@@ -1,6 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import { crearHogar, unirseHogar, type EstadoGrupo } from "./acciones";
+import { cambiarDias, crearHogar, unirseHogar, type EstadoGrupo } from "./acciones";
 
 const campo = "mt-1 block w-full rounded-xl border border-borde bg-superficie px-4 py-3 text-base outline-none focus:border-marca";
 const boton = "w-full rounded-xl bg-marca px-4 py-3 font-semibold text-marca-texto disabled:opacity-60";
@@ -31,5 +31,19 @@ export function FormulariosHogar() {
         <button type="submit" disabled={uniendo} className={boton}>{uniendo ? "Uniendo…" : "Unirme"}</button>
       </form>
     </div>
+  );
+}
+
+export function DiasLista({ dias }: { dias: number }) {
+  const [estado, accion, guardando] = useActionState<EstadoGrupo, FormData>(cambiarDias, {});
+  return (
+    <form action={accion} className="flex flex-wrap items-center gap-2 text-sm">
+      <span>La lista automática cubre</span>
+      <select name="dias" defaultValue={String(dias)} className="rounded-lg border border-borde bg-superficie px-2 py-1.5">
+        <option value="3">3 días</option><option value="7">7 días</option><option value="14">14 días</option>
+      </select>
+      <button type="submit" disabled={guardando} className="rounded-lg border border-borde px-3 py-1.5 font-medium">Guardar</button>
+      {estado.error && <span className="w-full text-urgente" role="alert">{estado.error}</span>}
+    </form>
   );
 }

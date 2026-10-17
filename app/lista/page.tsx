@@ -4,7 +4,7 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
-import { CopiarWhatsapp, ItemLista, NuevoItem } from "./componentes";
+import { CopiarWhatsapp, ItemLista, NuevoItem, RecalcularLista } from "./componentes";
 import { TiempoReal } from "../tiempo-real";
 
 export const metadata: Metadata = { title: "Lista de la compra · Eat-em" };
@@ -24,11 +24,12 @@ export default async function Lista() {
     );
   }
 
-  const [{ data: items }, { data: ingredientes }, { data: categorias }, { data: preferidos }] = await Promise.all([
+  const [{ data: items }, { data: ingredientes }, { data: categorias }, { data: grupo }, { data: preferidos }] = await Promise.all([
     supabase.from("lista_items").select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente")
       .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at"),
     supabase.from("ingredientes").select("id, nombre, unidad, categoria_id").eq("activo", true).order("nombre"),
     supabase.from("categorias").select("id, nombre"),
+    supabase.from("grupos").select("dias_planificacion").eq("id", hogar.id).single(),
     supabase.from("inventario").select("ingrediente_id, productos:producto_preferido_id (nombre, supermercado_id, precio, precio_oferta)")
       .eq("grupo_id", hogar.id).not("producto_preferido_id", "is", null),
   ]);
@@ -56,6 +57,7 @@ export default async function Lista() {
       <Link href="/" className="text-sm text-texto-suave">← Inicio</Link>
       <h1 className="mt-2 mb-4 text-2xl font-bold">Lista de la compra</h1>
       <TiempoReal grupoId={hogar.id} tablas={["lista_items"]} />
+      <div className="mb-4"><RecalcularLista dias={grupo?.dias_planificacion ?? 7} /></div>
 
       <NuevoItem ingredientes={(ingredientes ?? []).map(({ id, nombre }) => ({ id, nombre }))} />
 
