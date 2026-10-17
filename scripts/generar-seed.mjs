@@ -30,7 +30,7 @@ sql.push(catalogo.categorias.map((c) => fila([c.slug, c.nombre, c.orden])).join(
 sql.push("ON CONFLICT (slug) DO UPDATE SET nombre = EXCLUDED.nombre, orden = EXCLUDED.orden;\n");
 
 sql.push(
-  "INSERT INTO ingredientes (id, nombre, categoria_id, unidad, gramos_por_unidad, sinonimos, etiquetas, alergenos,\n" +
+  "INSERT INTO ingredientes (id, nombre, categoria_id, unidad, gramos_por_unidad, sinonimos, excluir, etiquetas, alergenos,\n" +
   "  perecedero, dias_conservacion, kcal_100, proteinas_100, grasas_100, hidratos_100, fibra_100, nutricion_fuente)\nVALUES"
 );
 sql.push(
@@ -41,7 +41,7 @@ sql.push(
         lit(i.id), lit(i.nombre),
         `(SELECT id FROM categorias WHERE slug = ${lit(i.categoria)})`,
         lit(i.unidad) + "::unidad_base", lit(i.gramos_por_unidad ?? null),
-        lit(i.sinonimos), lit(i.etiquetas), lit(i.alergenos),
+        lit(i.sinonimos), lit(i.excluir ?? []), lit(i.etiquetas), lit(i.alergenos),
         lit(i.perecedero), lit(i.dias ?? null),
         lit(i.kcal), lit(i.p), lit(i.g), lit(i.h), lit(i.f), lit("aprox_referencia"),
       ].join(", ") +
@@ -51,7 +51,7 @@ sql.push(
 );
 sql.push(
   "ON CONFLICT (id) DO UPDATE SET nombre = EXCLUDED.nombre, categoria_id = EXCLUDED.categoria_id, unidad = EXCLUDED.unidad,\n" +
-  "  gramos_por_unidad = EXCLUDED.gramos_por_unidad, sinonimos = EXCLUDED.sinonimos, etiquetas = EXCLUDED.etiquetas,\n" +
+  "  gramos_por_unidad = EXCLUDED.gramos_por_unidad, sinonimos = EXCLUDED.sinonimos, excluir = EXCLUDED.excluir, etiquetas = EXCLUDED.etiquetas,\n" +
   "  alergenos = EXCLUDED.alergenos, perecedero = EXCLUDED.perecedero, dias_conservacion = EXCLUDED.dias_conservacion,\n" +
   "  kcal_100 = EXCLUDED.kcal_100, proteinas_100 = EXCLUDED.proteinas_100, grasas_100 = EXCLUDED.grasas_100,\n" +
   "  hidratos_100 = EXCLUDED.hidratos_100, fibra_100 = EXCLUDED.fibra_100;\n"

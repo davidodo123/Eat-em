@@ -180,7 +180,8 @@ console.log("OK Open Food Facts por EAN y clusters");
 await db.exec(`
   INSERT INTO productos (supermercado_id, id_origen, nombre, categoria_id) VALUES
     ('carrefour','l1','Leche semidesnatada Asturiana 1 l', (SELECT id FROM categorias WHERE slug='lacteos')),
-    ('carrefour','l2','Leche entera Pascual 1 l',          (SELECT id FROM categorias WHERE slug='lacteos')),
+    ('carrefour','l2','Leche semi Pascual 1 l',            (SELECT id FROM categorias WHERE slug='lacteos')),
+    ('carrefour','l5','Leche entera Pascual 1 l',          (SELECT id FROM categorias WHERE slug='lacteos')),
     ('carrefour','l3','Chocolate con leche Milka',          (SELECT id FROM categorias WHERE slug='despensa')),
     ('carrefour','l4','Platanos de Canarias',               (SELECT id FROM categorias WHERE slug='fruta'));
 `);
@@ -189,7 +190,8 @@ const conf = async (ing, nombre) => (await uno(
   [ing, nombre]));
 assert.ok((await uno("SELECT enlazar_ingredientes('carrefour', 1, 100000) n")).n >= 3);
 assert.equal((await conf("leche_semidesnatada", "Leche semidesnatada Asturiana 1 l")).c, 1);
-assert.equal((await conf("leche_semidesnatada", "Leche entera Pascual 1 l")).c, 0.8);   // por el sinonimo "leche"
+assert.equal((await conf("leche_semidesnatada", "Leche semi Pascual 1 l")).c, 0.8);     // por el sinonimo "leche semi"
+assert.equal(await conf("leche_semidesnatada", "Leche entera Pascual 1 l"), undefined);   // "entera" esta excluida
 assert.equal(await conf("leche_semidesnatada", "Chocolate con leche Milka"), undefined); // otra categoria
 assert.equal((await conf("platano", "Platanos de Canarias")).c, 1);                      // plural por stemming
 await db.exec("SELECT enlazar_ingredientes('mercadona', 1, 100000)");                    // sin categoria: x0.7
@@ -200,7 +202,14 @@ await db.exec(`UPDATE ingrediente_productos SET metodo='manual', confianza=1
 await db.exec("UPDATE productos SET nombre='Bebida de avena Oatly' WHERE id_origen='l1'");
 await db.exec("SELECT enlazar_ingredientes('carrefour', 1, 100000)");
 assert.equal(await conf("leche_semidesnatada", "Bebida de avena Oatly"), undefined);
-assert.deepEqual(await conf("leche_semidesnatada", "Leche entera Pascual 1 l"), { c: 1, metodo: "manual" });
+assert.deepEqual(await conf("leche_semidesnatada", "Leche semi Pascual 1 l"), { c: 1, metodo: "manual" });
+// Las palabras excluidas descartan el producto aunque el nombre case
+await db.exec(`INSERT INTO productos (supermercado_id, id_origen, nombre, categoria_id) VALUES
+  ('carrefour','hv1','Huevos frescos L Carrefour 12 ud', (SELECT id FROM categorias WHERE slug='huevos')),
+  ('carrefour','hv2','Huevos de codorniz 18 ud',          (SELECT id FROM categorias WHERE slug='huevos'))`);
+await db.exec("SELECT enlazar_ingredientes('carrefour', 1, 100000)");
+assert.ok(await conf("huevo", "Huevos frescos L Carrefour 12 ud"));
+assert.equal(await conf("huevo", "Huevos de codorniz 18 ud"), undefined);
 console.log("OK enlace automatico de ingredientes");
 
 // 12. Emparejar por nombre los productos sin EAN (Mercadona) con OFF y con otras tiendas
