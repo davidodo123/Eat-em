@@ -260,5 +260,30 @@ assert.deepEqual(precios.map((p) => [p.supermercado_id, p.ppu, p.fuente]),
   [["carrefour", 6.8, "web"], ["mercadona", 6.95, "usuario"], ["ahorramas", 7.2, "web"]]);
 console.log("OK comparador de precios por ingrediente");
 
+// 14. Busqueda en el catalogo de las tiendas cercanas (prefijo, filtro por cadena, erratas)
+await como(A, async () => {
+  const nombres = async (sql) => (await q(sql)).map((r) => r.nombre);
+  assert.ok((await nombres("SELECT nombre FROM buscar_en_tiendas('aove carb')")).includes("AOVE Carbonell 1 l"));
+  assert.deepEqual(await nombres("SELECT nombre FROM buscar_en_tiendas('aove', ARRAY['ahorramas'])"), ["AOVE Alipende 1 l"]);
+  assert.deepEqual(await nombres("SELECT nombre FROM buscar_en_tiendas('aove', '{}')"), await nombres("SELECT nombre FROM buscar_en_tiendas('aove')"));
+  assert.equal((await nombres("SELECT nombre FROM buscar_en_tiendas('a')")).length, 0);
+  assert.equal((await uno("SELECT precio::float FROM buscar_en_tiendas('carbonell')")).precio, 8.95);   // oferta
+  assert.ok((await nombres("SELECT nombre FROM buscar_en_tiendas('platno canarias')")).includes("Plátano de Canarias")); // errata
+});
+console.log("OK busqueda en las tiendas cercanas");
+
+// 15. Ubicacion del hogar (cualquier miembro, redondeada) y despensa por producto (RLS)
+await como(B, () => q("SELECT fijar_ubicacion($1, 36.7238, -3.5221, 'Motril', 5::smallint, ARRAY['mercadona','carrefour'], '[]')", [grupo.id]));
+const g = await uno("SELECT lat::float, lon::float, cadenas_cerca FROM grupos WHERE id = $1", [grupo.id]);
+assert.deepEqual([g.lat, g.lon, g.cadenas_cerca], [36.72, -3.52, ["mercadona", "carrefour"]]);
+await assert.rejects(como(X, () => q("SELECT fijar_ubicacion($1, 40, -3, 'Madrid', 5::smallint, '{}', '[]')", [grupo.id])));
+const carb = await uno("SELECT id FROM productos WHERE id_origen = 'ac1'");
+await como(A, () => q("INSERT INTO despensa (grupo_id, producto_id, ingrediente_id, cantidad_por_unidad, nombre, unidades) VALUES ($1, $2, 'aceite_oliva', 1000, 'AOVE Carbonell 1 l', 2)", [grupo.id, carb.id]));
+await assert.rejects(como(A, () => q("INSERT INTO despensa (grupo_id, producto_id, nombre) VALUES ($1, $2, 'otra vez')", [grupo.id, carb.id])));
+assert.equal((await como(B, () => q("SELECT * FROM despensa"))).length, 1);
+assert.equal((await como(X, () => q("SELECT * FROM despensa"))).length, 0);
+await assert.rejects(como(X, () => q("INSERT INTO despensa (grupo_id, nombre) VALUES ($1, 'intruso')", [grupo.id])));
+console.log("OK ubicacion del hogar y despensa por producto");
+
 console.log("\nTODO OK");
 await db.close();
