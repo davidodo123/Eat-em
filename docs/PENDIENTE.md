@@ -103,7 +103,7 @@
 - [x] `lib/ia/prompt.ts` (`SYSTEM_PROMPT` literal, `ESQUEMA_PLAN`, `mensajeUsuario` con las secciones PERFIL/OBJETIVOS_CALCULADOS/…), `lib/ia/validar.ts` (`validarPlan`: ids, cantidades, alérgenos, tipo de dieta, exclusiones, nº de comidas, kcal ±10 % y proteína ±15 %) y `lib/ia/generar.ts` (`generarDia` con hasta 2 reintentos devolviendo los errores al modelo; `modeloOpenAI` con `json_schema` estricto). Con tests y un modelo falso.
 - [x] `/dieta` con la acción `generarSemana`: prefiltro → objetivos → lista cerrada de ingredientes (ya sin alérgenos, exclusiones ni los que no encajan con el tipo de dieta) + inventario + fichas → 7 días con `generarDia` → guarda en borrador y activa (archiva la anterior de la semana). `maxDuration = 300`. **Sin probar contra OpenAI** (falta la clave).
 - [x] `/hoy`: comidas del día con Hecha / Saltada / Deshacer (`registrar_consumo`, descuenta del inventario del hogar).
-- [ ] Editar cantidades reales al marcar "hecha" y registrar comidas extra.
+- [x] "Hecha con cambios" (cantidades reales por ingrediente) y comidas fuera del plan en `/hoy`; ambas descuentan del inventario y revisan el stock bajo.
 - [x] `gpt-4o-mini` y `text-embedding-3-small` disponibles en OpenRouter con Structured Outputs (2026-10-17).
 - [x] `/nutriem`: chat breve (MODO CHAT, historial solo en el navegador) con las fichas de salvaguarda siempre y las 3 más relevantes por texto completo; sección "Consejos de psicología de la dieta" con las fichas visibles.
 - [x] Embeddings de `fichas` (`npm run ia:embeddings`, 16 fichas el 2026-10-17) y chat con `buscar_fichas()` (híbrida), con texto completo como respaldo.

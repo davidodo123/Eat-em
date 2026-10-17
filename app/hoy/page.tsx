@@ -4,7 +4,7 @@ import { crearClienteServidor } from "@/lib/supabase/server";
 import { diaDe, lunesDe } from "@/lib/ia/semana";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
-import { BotonesComida } from "./comida";
+import { BotonesComida, NuevaExtra } from "./comida";
 
 export const metadata: Metadata = { title: "Hoy · Eat-em" };
 
@@ -19,7 +19,7 @@ export default async function Hoy() {
   const [{ data: comidas }, { data: consumos }, { data: ings }] = await Promise.all([
     dieta ? supabase.from("dieta_comidas").select("id, tipo, nombre, preparacion, dieta_comida_ingredientes (ingrediente_id, cantidad)")
       .eq("dieta_id", dieta.id).eq("dia", diaDe()).order("orden") : Promise.resolve({ data: [] }),
-    supabase.from("consumos").select("id, dieta_comida_id, estado").eq("usuario_id", u.user!.id).eq("fecha", hoy),
+    supabase.from("consumos").select("id, dieta_comida_id, estado, nombre, tipo").eq("usuario_id", u.user!.id).eq("fecha", hoy),
     supabase.from("ingredientes").select("id, nombre, unidad"),
   ]);
   const ing = new Map((ings ?? []).map((i) => [i.id, i]));
@@ -53,11 +53,29 @@ export default async function Hoy() {
                   return <li key={x.ingrediente_id}>{i?.nombre ?? x.ingrediente_id}: {formatearCantidad(Number(x.cantidad), (i?.unidad ?? "g") as UnidadBase)}</li>;
                 })}
               </ul>
-              <BotonesComida comidaId={c.id} consumo={k ? { id: k.id, estado: k.estado } : null} />
+              <BotonesComida comidaId={c.id} consumo={k ? { id: k.id, estado: k.estado } : null}
+                ingredientes={(c.dieta_comida_ingredientes as { ingrediente_id: string; cantidad: number }[]).map((x) => ({
+                  id: x.ingrediente_id, nombre: ing.get(x.ingrediente_id)?.nombre ?? x.ingrediente_id,
+                  cantidad: Number(x.cantidad), unidad: ing.get(x.ingrediente_id)?.unidad ?? "g",
+                }))} />
             </li>
           );
         })}
       </ul>
+
+      {(consumos ?? []).some((c) => c.estado === "extra") && (
+        <section className="mt-4">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-texto-suave">Fuera del plan</h2>
+          <ul className="space-y-1 text-sm">
+            {(consumos ?? []).filter((c) => c.estado === "extra").map((c) => (
+              <li key={c.id} className="flex justify-between rounded-lg border border-borde bg-superficie px-3 py-2">
+                <span>{c.nombre ?? "Extra"}</span><span className="text-texto-suave">{NOMBRE_TIPO[c.tipo] ?? c.tipo}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <div className="mt-4"><NuevaExtra ingredientes={(ings ?? []).map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad }))} /></div>
       <p className="mt-6 text-xs text-texto-suave">Un día distinto no arruina nada: retoma en la siguiente comida, sin compensar.</p>
     </main>
   );
