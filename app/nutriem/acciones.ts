@@ -1,5 +1,5 @@
 "use server";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { consultaFichas, responderChat } from "@/lib/ia/chat";
 import { mensajeErrorIA, modeloOpenAI, type Mensaje } from "@/lib/ia/generar";
 import { embeddings } from "@/lib/ia/proveedor";
@@ -24,7 +24,7 @@ export async function preguntar(pregunta: string, historial: Mensaje[]): Promise
   if (!texto) return { error: "Escribe tu pregunta." };
   if (!process.env.OPENAI_API_KEY) return { error: "Nutri-em aún no está configurado (falta la clave de la IA)." };
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { error: "Tu sesión ha caducado." };
 
   // RAG: las de salvaguarda siempre + las 3-4 mas relevantes (busqueda hibrida con embeddings;

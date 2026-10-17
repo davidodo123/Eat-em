@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { fotoStock, revisarStockBajo } from "@/lib/stock";
 
@@ -10,7 +10,7 @@ export async function ajustarStock(ingredienteId: string, delta: number, tipo: "
   if (!ingredienteId || !Number.isFinite(delta) || delta === 0) return { error: "Ajuste no válido." };
   if (tipo === "desperdicio" && delta > 0) return { error: "Ajuste no válido." };
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { error: "Tu sesión ha caducado." };
   const hogar = await hogarActual(supabase);
   if (!hogar) return { error: "No tienes hogar." };

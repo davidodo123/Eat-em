@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { avisar, otrosMiembros } from "@/lib/push";
 import { calcularFaltas, paquetesPara } from "@/lib/dominio/necesidades";
@@ -17,7 +17,7 @@ export async function anadirItem(_previo: EstadoLista, datos: FormData): Promise
   if (!ingredienteId && !texto) return { error: "Elige un ingrediente o escribe qué falta." };
 
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { error: "Tu sesión ha caducado." };
   const hogar = await hogarActual(supabase);
   if (!hogar) return { error: "No tienes hogar." };
@@ -66,7 +66,7 @@ export async function quitarItem(itemId: number): Promise<{ error?: string }> {
 // Solo toca las lineas automaticas: las anadidas a mano se respetan.
 export async function recalcularLista(): Promise<{ error?: string; resumen?: string }> {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { error: "Tu sesión ha caducado." };
   const hogar = await hogarActual(supabase);
   if (!hogar) return { error: "No tienes hogar." };

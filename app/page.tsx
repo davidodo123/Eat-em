@@ -1,12 +1,12 @@
 // Portada: accesos a las pantallas y avisos de primer uso.
 import Link from "next/link";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { supabaseConfigurado } from "@/lib/env";
 import { hogarActual } from "@/lib/grupo";
 
 export default async function Inicio() {
   const supabase = supabaseConfigurado ? await crearClienteServidor() : null;
-  const usuario = supabase ? (await supabase.auth.getUser()).data.user : null;
+  const usuario = supabase ? (await usuarioActual()).data.user : null;
   const [hogar, salud] = supabase && usuario
     ? await Promise.all([
         hogarActual(supabase),

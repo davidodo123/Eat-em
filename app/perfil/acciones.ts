@@ -1,13 +1,13 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { leerFormularioSalud } from "@/lib/ia/formulario";
 
 export interface EstadoPerfil { ok?: boolean; errores?: string[] }
 
 export async function guardarPerfil(_previo: EstadoPerfil, d: FormData): Promise<EstadoPerfil> {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { errores: ["Tu sesión ha caducado."] };
 
   const nombre = String(d.get("nombre") ?? "").trim().slice(0, 60);
@@ -35,7 +35,7 @@ export async function guardarPerfil(_previo: EstadoPerfil, d: FormData): Promise
 // Retirar el consentimiento borra los datos de salud (vuelven a los valores por defecto)
 export async function retirarConsentimiento(): Promise<EstadoPerfil> {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { errores: ["Tu sesión ha caducado."] };
   const { error } = await supabase.from("perfiles_salud").update({
     sexo: null, fecha_nacimiento: null, altura_cm: null, peso_kg: null, actividad: null, objetivo: null,

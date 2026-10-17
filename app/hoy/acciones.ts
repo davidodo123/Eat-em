@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { fotoStock, revisarStockBajo } from "@/lib/stock";
 
@@ -15,7 +15,7 @@ export async function marcarComida(comidaId: number, estado: "hecha" | "saltada"
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
   if (!hogar) return { error: "Necesitas un hogar para registrar comidas." };
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const { data: ings } = await supabase.from("dieta_comida_ingredientes").select("ingrediente_id").eq("comida_id", comidaId);
   const antes = estado === "hecha" ? await fotoStock(supabase, hogar.id, (ings ?? []).map((i) => i.ingrediente_id)) : new Map();
   const { error } = await supabase.rpc("registrar_consumo", {
@@ -39,7 +39,7 @@ export async function registrarExtra(nombre: string, tipo: string, ingredientes:
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
   if (!hogar) return { error: "Necesitas un hogar para registrar comidas." };
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const antes = await fotoStock(supabase, hogar.id, validos.map((i) => i.ingrediente_id));
   const { error } = await supabase.rpc("registrar_consumo", {
     p_grupo_id: hogar.id, p_estado: "extra", p_tipo: tipo, p_fecha: hoyMadrid(), p_nombre: n, p_ingredientes: validos,

@@ -64,3 +64,10 @@ test("EAN", () => {
   assert.equal(normalizarEan("123"), null);
   assert.equal(normalizarEan("036000291452"), "0036000291452"); // UPC-A
 });
+
+test("separador de miles y cantidades cero", () => {
+  assert.deepEqual(parsearFormato("1 000 ml"), { cantidad: 1000, unidad: "ml", pack: 1, aproximado: false });
+  assert.deepEqual(parsearFormato("Arroz 1.000 g"), { cantidad: 1000, unidad: "g", pack: 1, aproximado: false });
+  assert.equal(parsearFormato("1,5 kg")?.cantidad, 1500); // la coma decimal no se toca
+  assert.equal(parsearFormato("0 ml"), null);
+});

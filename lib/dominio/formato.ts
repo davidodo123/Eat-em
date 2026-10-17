@@ -29,7 +29,8 @@ const aNumero = (s: string) => Number(s.replace(",", "."));
 
 export function parsearFormato(texto: string | null | undefined): Formato | null {
   if (!texto) return null;
-  const t = texto.toLowerCase().replace(/\s+/g, " ");
+  // "1 000 ml" / "1.000 g" (separador de miles) -> "1000 ml" / "1000 g"
+  const t = texto.toLowerCase().replace(/\s+/g, " ").replace(/\b(\d{1,3})[ .](\d{3})(?=\s*[a-z])/g, "$1$2");
   const aproximado = /\baprox/.test(t) || /\bpeso variable\b/.test(t);
 
   // "6x125 g", "pack 12 x 33 cl", "2 x 1 l"
@@ -48,7 +49,8 @@ export function parsearFormato(texto: string | null | undefined): Formato | null
   if (simples.length) {
     const [, num, uni] = simples[simples.length - 1];
     const [unidad, factor] = FACTORES[uni.replace(/\.$/, "")];
-    return { cantidad: redondear(aNumero(num) * factor), unidad, pack: 1, aproximado };
+    const cantidad = redondear(aNumero(num) * factor);
+    if (cantidad > 0) return { cantidad, unidad, pack: 1, aproximado }; // "0,0 %" o "0 ml" no son formato
   }
 
   // "1 docena", "media docena", "2 docenas"

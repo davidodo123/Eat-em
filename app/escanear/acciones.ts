@@ -1,5 +1,5 @@
 "use server";
-import { crearClienteAdmin, crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteAdmin, crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { normalizarEan } from "@/lib/dominio/ean";
 import { parsearFormato, type UnidadBase } from "@/lib/dominio/formato";
@@ -33,7 +33,7 @@ export async function buscarCodigo(codigo: string): Promise<ResultadoBusqueda> {
   const ean = normalizarEan(codigo);
   if (!ean) return { estado: "error", mensaje: "Ese código no es un EAN válido. Revisa los números." };
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { estado: "error", mensaje: "Tu sesión ha caducado. Vuelve a entrar." };
 
   let { data: productos } = await supabase.from("productos").select(CAMPOS).eq("ean", ean).limit(20);
@@ -120,7 +120,7 @@ export async function registrarCompra(datos: FormData): Promise<ResultadoGuardar
   if (!cantidad) return { ok: false, mensaje: "Indica cuánto has comprado." };
 
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { ok: false, mensaje: "Tu sesión ha caducado. Vuelve a entrar." };
   const hogar = await hogarActual(supabase);
   if (!hogar) return { ok: false, mensaje: "Primero crea un hogar o únete a uno." };
@@ -160,7 +160,7 @@ export async function altaManual(datos: FormData): Promise<ResultadoBusqueda> {
   if (!ean || nombre.length < 3) return { estado: "error", mensaje: "Escribe al menos el nombre del producto." };
 
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { estado: "error", mensaje: "Tu sesión ha caducado. Vuelve a entrar." };
 
   const f = parsearFormato(formato) ?? parsearFormato(nombre);

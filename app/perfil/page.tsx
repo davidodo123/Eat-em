@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { prefiltro } from "@/lib/ia/prefiltro";
 import { calcularObjetivos } from "@/lib/ia/objetivos";
 import type { PerfilSalud } from "@/lib/ia/perfil";
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Perfil · Eat-em" };
 
 export default async function Perfil() {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const [{ data: perfil }, { data: salud }] = await Promise.all([
     supabase.from("perfiles").select("nombre").eq("id", u.user!.id).single(),
     supabase.from("perfiles_salud").select("*").eq("usuario_id", u.user!.id).single(),

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { diaDe, lunesDe } from "@/lib/ia/semana";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
@@ -12,7 +12,7 @@ const NOMBRE_TIPO: Record<string, string> = { desayuno: "Desayuno", media_manana
 
 export default async function Hoy() {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Madrid" });
   const { data: dieta } = await supabase.from("dietas").select("id")
     .eq("usuario_id", u.user!.id).eq("semana_inicio", lunesDe()).eq("estado", "activa").maybeSingle();

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 
 export interface EstadoGrupo {
@@ -33,7 +33,7 @@ export async function cambiarDias(_previo: EstadoGrupo, datos: FormData): Promis
   const dias = Number(datos.get("dias"));
   if (![3, 7, 14].includes(dias)) return { error: "Elige 3, 7 o 14 días." };
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const hogar = await hogarActual(supabase);
   if (!u.user || !hogar) return { error: "No tienes hogar." };
   const { data: yo } = await supabase.from("grupo_miembros").select("rol")

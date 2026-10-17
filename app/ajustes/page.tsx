@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { ActivarNotificaciones, Preferencias } from "./notificaciones";
 import { SelectorTema } from "./tema";
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: "Ajustes · Eat-em" };
 
 export default async function Ajustes() {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const { data: prefs } = await supabase.from("notificacion_prefs").select("*").eq("usuario_id", u.user!.id).maybeSingle();
   const clave = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "";
 

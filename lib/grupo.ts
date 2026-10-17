@@ -1,5 +1,7 @@
 import "server-only";
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { usuarioActual } from "@/lib/supabase/server";
 
 export interface Hogar {
   id: string;
@@ -8,8 +10,9 @@ export interface Hogar {
 }
 
 // Hogar (grupo) del usuario actual. De momento uno por persona: el primero al que se unio.
-export async function hogarActual(supabase: SupabaseClient): Promise<Hogar | null> {
-  const { data: u } = await supabase.auth.getUser();
+// cache(): una sola consulta por peticion (el cliente de Supabase tambien se reutiliza).
+export const hogarActual = cache(async (supabase: SupabaseClient): Promise<Hogar | null> => {
+  const { data: u } = await usuarioActual();
   if (!u.user) return null;
   const { data } = await supabase
     .from("grupo_miembros")
@@ -20,4 +23,4 @@ export async function hogarActual(supabase: SupabaseClient): Promise<Hogar | nul
     .maybeSingle();
   const g = data?.grupos as unknown as Hogar | Hogar[] | null | undefined;
   return (Array.isArray(g) ? g[0] : g) ?? null;
-}
+});

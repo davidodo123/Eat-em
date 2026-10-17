@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { prefiltro } from "@/lib/ia/prefiltro";
 import { calcularObjetivos } from "@/lib/ia/objetivos";
@@ -18,7 +18,7 @@ const FICHAS_PLAN = ["FICHA-003", "FICHA-012", "FICHA-013"];
 export async function generarSemana(_previo: EstadoDieta): Promise<EstadoDieta> {
   if (!process.env.OPENAI_API_KEY) return { error: "La IA aún no está configurada (falta OPENAI_API_KEY)." };
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   if (!u.user) return { error: "Tu sesión ha caducado." };
 
   const { data: s } = await supabase.from("perfiles_salud").select("*").eq("usuario_id", u.user.id).single();

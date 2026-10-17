@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { DIAS } from "@/lib/ia/prompt";
 import { diaDe, lunesDe } from "@/lib/ia/semana";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
@@ -16,7 +16,7 @@ const NOMBRE_TIPO: Record<string, string> = { desayuno: "Desayuno", media_manana
 
 export default async function Dieta() {
   const supabase = await crearClienteServidor();
-  const { data: u } = await supabase.auth.getUser();
+  const { data: u } = await usuarioActual();
   const { data: dieta } = await supabase.from("dietas").select("id, objetivos, semana_inicio")
     .eq("usuario_id", u.user!.id).eq("semana_inicio", lunesDe()).eq("estado", "activa").maybeSingle();
   const [{ data: comidas }, { data: ings }] = await Promise.all([

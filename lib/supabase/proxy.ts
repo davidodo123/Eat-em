@@ -16,7 +16,8 @@ export async function actualizarSesion(request: NextRequest) {
       },
     },
   });
-  // getUser valida el token contra Supabase (getSession solo lee la cookie)
-  const { data } = await supabase.auth.getUser();
-  return { respuesta, usuario: data.user };
+  // getClaims refresca la sesion si hace falta y verifica la firma del token en local con
+  // las claves publicas del proyecto (ES256): sin ir a Supabase en cada clic, como getUser()
+  const { data, error } = await supabase.auth.getClaims();
+  return { respuesta, usuario: !error && data?.claims?.sub ? { id: data.claims.sub } : null };
 }
