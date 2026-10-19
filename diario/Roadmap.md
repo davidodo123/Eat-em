@@ -32,11 +32,12 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Corregir 1.187 formatos de Carrefour (la API trae a veces el factor x10) y que el scraper prefiera el texto del envase
 - [ ] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
-- [/] Acceso con Google como en StatsRun (código hecho; falta activar Google en Supabase) → [[Decisiones#Acceso con Google, como en StatsRun]]
+- [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
 - [ ] Quitar la protección de Vercel (pide iniciar sesión en Vercel en el móvil)
-- [ ] David prueba la app en el móvil
+- [/] David prueba la app en el móvil (entrar con Google ya funciona)
 
 ## Fase 3 · Publicar
 - [x] Desplegar en Vercel con las variables de [[Configuración]] (https://eat-em.vercel.app)
-- [ ] URL de redirección del login en Supabase
+- [-] ~~URL de redirección del login en Supabase~~ (no hace falta: Google vuelve a la propia app)
+- [x] README con la explicación de la web
 - [ ] Evaluación completa de la IA gratuita (50 peticiones al día, en dos tandas)

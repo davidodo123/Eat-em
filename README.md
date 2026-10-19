@@ -1,17 +1,48 @@
 # Eat-em
 
-Planifica la lista de la compra a partir de la dieta de cada persona del hogar: controla el stock real, descuenta lo que se come y propone qué comprar y dónde sale más barato. La dieta la genera una IA ("Nutri-em") con salvaguardas de salud: el código hace las cuentas y los controles, la IA solo redacta.
+**La compra, la despensa y la dieta, en el bolsillo.**
+App web para el móvil (se instala como una app) que te dice qué te falta, guarda lo que tienes en casa y organiza tus comidas, con los productos y precios de los supermercados que tienes cerca. Se comparte con quien vive contigo.
+
+**Web:** https://eat-em.vercel.app
 
 > Eat-em no sustituye a un profesional sanitario.
 
-- Arquitectura y decisiones: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md)
-- Especificación completa: [docs/Eat-em_super_prompt.md](docs/Eat-em_super_prompt.md)
-- Scrapers, Open Food Facts y emparejado de productos: [docs/SCRAPERS.md](docs/SCRAPERS.md)
-- Estado y pendientes (traspaso entre sesiones): [docs/PENDIENTE.md](docs/PENDIENTE.md)
+## Qué hace
 
-## Stack
+| Sección | Para qué sirve |
+|---|---|
+| **Lista** | Lo que falta, compartida con tu hogar en tiempo real. Buscas cualquier producto de tus supermercados (unos 80.000) o escribes lo que sea ("pilas"). El botón **¿Qué me falta?** lo calcula a partir de la dieta y de lo que hay en casa. Muestra dónde sale más barato y un total estimado, y se comparte por WhatsApp. Lo que marcas como comprado pasa a la despensa. |
+| **Despensa** | Todo lo que tenéis en casa, por producto: nevera, congelador o despensa, unidades y fecha de caducidad. Lo que caduca pronto sale arriba y se avisa por la mañana. Cuando algo se acaba, entra solo en la lista. También se añade escaneando el código de barras. |
+| **Dieta** | Tus comidas en vista **semana** o **mes**. Las añades a mano o dejas que la IA rellene la semana según tu perfil y tus objetivos; puedes repetir una semana en todo el mes. El día de hoy sale arriba para marcar cada comida como hecha, y eso descuenta los ingredientes de la despensa. |
+| **Ajustes** | Ubicación y supermercados, hogar (invitación con código), perfil de salud, Nutri-em (chat de dudas de alimentación), comparador de precios, notificaciones y tema claro/oscuro. |
 
-Next.js 16 (PWA) en **Vercel** · **Supabase** (Postgres + pgvector, Auth, Realtime, Storage) · scrapers en **GitHub Actions** · IA por OpenAI u **OpenRouter** (se detecta por la clave; vale un modelo gratuito) · Web Push.
+### Supermercados cercanos
+Pones tu ubicación (GPS o código postal) y la distancia a la que compras. La app busca los supermercados de alrededor en una copia de **OpenStreetMap** (~18.900 en España) y te enseña solo las cadenas que tienes cerca.
+
+Hay catálogo de **Carrefour, Ahorramás, Gadis y Caprabo** (con precios, actualizados a diario) y de **Mercadona** (catálogo; su web no permite leer precios, así que llegan de lo que se escanea).
+
+### Acceso
+Con **Google** ("Continuar con Google"): Google verifica el email y la primera vez se crea la cuenta. Quien tenga contraseña puesta en Ajustes también puede entrar con email y contraseña.
+
+### IA con salvaguardas
+La dieta y el chat usan un modelo de IA (OpenRouter, modelo gratuito). **El código hace las cuentas y los controles; la IA solo redacta.** Antes de pedir nada a la IA se calculan los objetivos y se comprueba el perfil: ante embarazo, enfermedad, medicación o señales de riesgo no propone dieta y recomienda un profesional. Los datos de salud se guardan solo con consentimiento y se borran al retirarlo.
+
+## Cómo está hecho
+
+- **App:** Next.js 16 (App Router, Server Actions) con React 19 y TypeScript, Tailwind CSS. PWA con notificaciones push (Web Push).
+- **Datos:** Supabase (PostgreSQL con seguridad por filas, Auth y tiempo real). Toda la lógica de datos está en `supabase/migrations/`.
+- **Precios:** scrapers en TypeScript que corren cada día en GitHub Actions, despacio y respetando el `robots.txt` de cada tienda. Los productos se cruzan con **Open Food Facts** (nutrición) y se enlazan con ingredientes genéricos para la dieta.
+- **Despliegue:** Vercel (cada push a `main` se publica solo) y un cron diario para los avisos.
+
+```
+app/          pantallas y acciones del servidor (lista, despensa, dieta, ajustes, entrar…)
+lib/          lógica: dominio (formatos, cantidades, calendario…), IA, catálogo, ubicación
+scrapers/     un scraper por supermercado + Open Food Facts
+supabase/     migraciones SQL y datos iniciales
+scripts/      validación del SQL, carga de supermercados de OSM, seed
+diario/       diario del proyecto en Obsidian (roadmap, decisiones, pendientes)
+docs/         arquitectura y scrapers
+```
 
 ## En local
 
@@ -19,52 +50,27 @@ Requisitos: Node 20.9 o superior.
 
 ```bash
 npm install
-cp .env.example .env.local     # rellena las claves de Supabase
-npm run db:validar             # valida migraciones + seed en Postgres embebido (sin Docker)
-npm run dev                    # http://localhost:3000  ·  /api/salud
+cp .env.example .env.local     # rellena las claves (Supabase, Google, IA, VAPID)
+npm run dev                    # http://localhost:3000
 npm test                       # tests unitarios
+npm run db:validar             # valida migraciones + seed en Postgres embebido (sin Docker)
 ```
 
 Otros comandos:
 
 ```bash
-npm run scraper -- <carrefour|mercadona|ahorramas|gadis|caprabo> [--seco] [--rapido] [--max-peticiones N] [--cargar respaldo]
-npm run off                    # Open Food Facts: nutricion por EAN y emparejado por nombre
-npm run ia:embeddings          # embeddings de las fichas de Nutri-em
-npm run eval:ia [-- --solo 1,2] # bateria de 50 preguntas de Nutri-em
+npm run scraper -- <carrefour|mercadona|ahorramas|gadis|caprabo> [--seco] [--rapido]
+npm run off                    # Open Food Facts: nutrición por EAN y emparejado por nombre
+npm run tiendas                # supermercados de OpenStreetMap
 ```
 
-## Pantallas
+### Configuración
+- **Supabase:** aplica `supabase/migrations/*.sql` (con `npx supabase db push` o pegándolas en el SQL Editor) y `supabase/seed.sql`.
+- **Google:** un cliente OAuth web con estas vueltas autorizadas: `https://<tu-dominio>/api/auth/google/callback`, `http://localhost:3000/api/auth/google/callback` y `https://<proyecto>.supabase.co/auth/v1/callback`. El mismo ID y secreto van en Supabase (proveedor Google) y en `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+- **Vercel:** las variables de `.env.example`. Comprueba `https://<tu-app>/api/salud`.
+- **GitHub Actions** (scrapers): secretos `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`.
 
-`/hoy` (comidas del día) · `/dieta` (semana generada con IA) · `/escanear` (código de barras → precio e inventario) · `/inventario` · `/lista` (compartida, WhatsApp) · `/comparar` (dónde sale más barato) · `/grupo` (hogar) · `/perfil` (salud con consentimiento RGPD) · `/nutriem` (chat y consejos) · `/ajustes` (notificaciones).
+Más detalle: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) · [docs/SCRAPERS.md](docs/SCRAPERS.md) · estado y pendientes en [diario/Pendiente.md](diario/Pendiente.md).
 
-Se entra con un enlace mágico por email. En Supabase, *Authentication → URL Configuration* debe incluir `<url-de-la-app>/auth/confirmar` en *Redirect URLs*.
-
-## Base de datos (Supabase)
-
-1. Crea un proyecto en https://supabase.com (región UE).
-2. Aplica el esquema y los datos iniciales:
-   ```bash
-   npx supabase login
-   npx supabase link --project-ref <ref-del-proyecto>
-   npx supabase db push --include-seed
-   ```
-   Alternativa sin CLI: pega `supabase/migrations/*.sql` y luego `supabase/seed.sql` en el SQL Editor.
-3. Si cambias `data/*.json`, regenera el seed con `npm run db:seed`.
-
-## Despliegue en Vercel
-
-1. Importa el repositorio en Vercel (framework detectado: Next.js).
-2. Copia las variables de `.env.example` en *Settings → Environment Variables* (incluidas las VAPID de `.env.local`). `SUPABASE_SERVICE_ROLE_KEY`, `OPENAI_API_KEY` y `VAPID_PRIVATE_KEY` sin el prefijo `NEXT_PUBLIC_`.
-3. Despliega y comprueba `https://<tu-app>.vercel.app/api/salud`.
-
-## Fases
-
-1. ✅ Arquitectura, modelo de datos y estructura
-2. ✅ Scrapers: Carrefour, Mercadona (sin precios), Ahorramás, Gadis y Caprabo
-3. ✅ Open Food Facts, emparejado por EAN y por nombre, enlace ingrediente → producto (falta aplicar las migraciones en la base)
-4. ✅ Escáner de códigos de barras
-5. ✅ Usuarios, hogar, inventario, consumo, lista, comparador y notificaciones (faltan recordatorios programados)
-6. 🟡 Motor de dieta con IA y evaluación de 50 preguntas (falta una pasada completa seguida)
-7. 🟡 Pantallas funcionales; falta pulir diseño y probar en móvil
-8. ⏳ Despliegue en Vercel, monitorización
+## Datos de terceros
+Mapas y supermercados © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL). Información nutricional de [Open Food Facts](https://world.openfoodfacts.org) (ODbL). Los precios se leen de las webs públicas de cada supermercado.
