@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { crearClienteAdmin } from "@/lib/supabase/server";
 import { avisar } from "@/lib/push";
 import { diaDe, lunesDe } from "@/lib/ia/semana";
+import { sumarDias } from "@/lib/dominio/calendario";
 
 export const dynamic = "force-dynamic";
 
@@ -44,5 +45,20 @@ export async function GET(request: NextRequest) {
       });
     }
   }
-  return NextResponse.json({ ok: true, dia: hoy, avisos_compra: compra, avisos_comidas: comidas });
+  // Despensa: lo que caduca hoy, manana o pasado, a todo el hogar (preferencia de avisos de despensa)
+  let caducan = 0;
+  const fecha = new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Madrid" });
+  const { data: proximos } = await db.from("despensa").select("grupo_id, nombre, caduca")
+    .gte("caduca", fecha).lte("caduca", sumarDias(fecha, 2)).gt("unidades", 0).order("caduca");
+  const porHogar = new Map<string, { nombre: string; caduca: string }[]>();
+  for (const p of proximos ?? []) porHogar.set(p.grupo_id, [...(porHogar.get(p.grupo_id) ?? []), p]);
+  for (const [grupoId, cosas] of porHogar) {
+    const { data: miembros } = await db.from("grupo_miembros").select("usuario_id").eq("grupo_id", grupoId);
+    const hoyMismo = cosas.filter((c) => c.caduca === fecha).length;
+    caducan += await avisar((miembros ?? []).map((m) => m.usuario_id), {
+      tipo: "caduca", grupoId, url: "/despensa", titulo: hoyMismo ? "Caduca hoy" : "Caduca pronto",
+      cuerpo: `${cosas.slice(0, 3).map((c) => c.nombre).join(" · ")}${cosas.length > 3 ? ` y ${cosas.length - 3} más` : ""}`,
+    });
+  }
+  return NextResponse.json({ ok: true, dia: hoy, avisos_compra: compra, avisos_comidas: comidas, avisos_caducidad: caducan });
 }

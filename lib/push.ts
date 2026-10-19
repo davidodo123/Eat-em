@@ -4,7 +4,7 @@ import { crearClienteAdmin } from "@/lib/supabase/server";
 import { endpointPushValido } from "@/lib/dominio/push";
 
 export interface AvisoPush {
-  tipo: "item_anadido" | "stock_bajo" | "recordatorio_comida" | "recordatorio_compra";
+  tipo: "item_anadido" | "stock_bajo" | "caduca" | "recordatorio_comida" | "recordatorio_compra";
   titulo: string;
   cuerpo?: string;
   url?: string;
@@ -13,7 +13,7 @@ export interface AvisoPush {
 
 // Preferencia de notificacion_prefs que permite cada tipo de aviso
 const PREFERENCIA: Record<AvisoPush["tipo"], string> = {
-  item_anadido: "item_anadido", stock_bajo: "stock_bajo",
+  item_anadido: "item_anadido", stock_bajo: "stock_bajo", caduca: "stock_bajo",   // avisos de la despensa
   recordatorio_comida: "recordatorio_comidas", recordatorio_compra: "recordatorio_compra",
 };
 

@@ -65,7 +65,7 @@ export function Preferencias({ v, diaCompra }: { v: Record<string, boolean>; dia
   const [estado, accion, guardando] = useActionState<EstadoPrefs, FormData>(guardarPreferencias, {});
   const opciones: [string, string][] = [
     ["item_anadido", "Cosas nuevas en la lista de la compra"],
-    ["stock_bajo", "Queda poco de algo en la despensa"],
+    ["stock_bajo", "Despensa: queda poco o algo caduca pronto"],
     ["recordatorio_comidas", "Recordatorio de comidas"],
     ["recordatorio_compra", "Recordatorio del día de la compra"],
   ];
