@@ -15,6 +15,7 @@ Fase 2 · App móvil — hecha en código; pendiente de aplicar migraciones 9–
 
 ## Cómo usamos el diario
 - [[Roadmap]]: fases y tareas con casillas (de aquí sale el % del panel).
+- [[Pendiente]]: todo lo que queda, con pasos y prompt para seguir.
 - [[Ideas]]: bandeja de entrada sin ordenar.
 - [[Decisiones]]: qué se decidió, por qué y cuándo.
 - [[Configuración]]: servicios y nombres de variables (nunca valores).
