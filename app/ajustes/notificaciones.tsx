@@ -72,23 +72,23 @@ export function Preferencias({ v, diaCompra }: { v: Record<string, boolean>; dia
   return (
     <form action={accion} className="space-y-2">
       {opciones.map(([k, t]) => (
-        <label key={k} className="flex items-center gap-3 text-sm">
-          <input type="checkbox" name={k} defaultChecked={v[k]} className="h-5 w-5" /> {t}
+        <label key={k} className="opcion">
+          <input type="checkbox" name={k} defaultChecked={v[k]} /> {t}
         </label>
       ))}
-      <label className="flex items-center gap-3 text-sm">
+      <label className="flex items-center justify-between gap-3 pt-1 text-sm font-medium">
         Día de la compra
-        <select name="dia_compra" defaultValue={diaCompra ?? ""} className="rounded-lg border border-borde bg-superficie px-2 py-1.5">
-          <option value="">—</option>
+        <select name="dia_compra" defaultValue={diaCompra ?? ""} className="w-40 px-3 py-2.5 text-base">
+          <option value="">Ninguno</option>
           {[["lunes", "Lunes"], ["martes", "Martes"], ["miercoles", "Miércoles"], ["jueves", "Jueves"], ["viernes", "Viernes"], ["sabado", "Sábado"], ["domingo", "Domingo"]]
             .map(([k, t]) => <option key={k} value={k}>{t}</option>)}
         </select>
       </label>
       <p className="text-xs text-texto-suave">Los recordatorios llegan por la mañana.</p>
-      <button type="submit" disabled={guardando} className="mt-2 rounded-xl border border-borde px-4 py-2 font-medium">
+      <button type="submit" disabled={guardando} className="mt-1 rounded-xl border border-borde px-4 py-2.5 font-semibold">
         {guardando ? "Guardando…" : "Guardar"}
       </button>
-      {estado.ok && <span className="ml-2 text-sm text-marca">✓</span>}
+      {estado.ok && <span className="ml-3 text-sm font-semibold text-marca">Guardado</span>}
       {estado.error && <p className="text-sm text-urgente" role="alert">{estado.error}</p>}
     </form>
   );

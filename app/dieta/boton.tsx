@@ -10,7 +10,6 @@ export function BotonGenerar({ semana, hayPlan, iaLista }: { semana: string; hay
       <input type="hidden" name="semana" value={semana} />
       <button type="submit" disabled={generando || !iaLista}
         className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-borde/40 disabled:opacity-60">
-        <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-marca/10 text-marca">✦</span>
         <span className="flex-1">
           <span className="block font-medium">{generando ? "Preparando la semana… (≈1 min)" : hayPlan ? "Rehacer la semana con IA" : "Rellenar la semana con IA"}</span>
           <span className="block text-xs text-texto-suave">{iaLista ? "Según tu perfil, tus objetivos y lo que hay en casa" : "La IA aún no está configurada"}</span>
@@ -30,7 +29,6 @@ export function RepetirSemana({ semana }: { semana: string }) {
       <button type="button" disabled={pendiente}
         onClick={() => empezar(async () => { const r = await repetirSemana(semana, 3); setMensaje(r.error ?? r.resumen ?? null); })}
         className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-borde/40 disabled:opacity-60">
-        <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-marca/10 text-marca">↻</span>
         <span className="flex-1">
           <span className="block font-medium">{pendiente ? "Copiando…" : "Repetir esta semana todo el mes"}</span>
           <span className="block text-xs text-texto-suave">La copia en las 3 semanas siguientes que estén libres</span>
@@ -46,9 +44,7 @@ export function BorrarComida({ id, nombre }: { id: number; nombre: string }) {
   return (
     <button type="button" disabled={pendiente} aria-label={`Borrar ${nombre}`}
       onClick={() => { if (confirm(`¿Quitar «${nombre}» del plan?`)) empezar(async () => { await borrarComida(id); }); }}
-      className="-mr-2 -mt-1 p-2 text-texto-suave disabled:opacity-40">
-      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
-    </button>
+      className="-mr-2 -mt-1 p-2 text-xl leading-none text-texto-suave disabled:opacity-40">×</button>
   );
 }
 
@@ -69,8 +65,8 @@ export function NuevaComida({ fecha, ingredientes, tipoInicial }: {
   if (!abierto) {
     return (
       <button type="button" onClick={() => setAbierto(true)}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-borde py-3.5 font-medium text-texto-suave active:bg-superficie">
-        <span className="text-lg leading-none">+</span> Añadir comida
+        className="w-full rounded-2xl border border-dashed border-texto-suave/50 py-3.5 font-semibold active:bg-superficie">
+        Añadir comida
       </button>
     );
   }
@@ -81,11 +77,11 @@ export function NuevaComida({ fecha, ingredientes, tipoInicial }: {
   });
 
   return (
-    <div className="space-y-3 rounded-2xl bg-superficie p-4 shadow-[0_1px_0_var(--borde)]">
+    <div className="caja space-y-3 p-4">
       <div className="flex gap-1.5 overflow-x-auto pb-0.5">
         {MOMENTOS.map(([v, t]) => (
           <button key={v} type="button" onClick={() => setTipo(v)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium ${tipo === v ? "bg-marca text-marca-texto" : "bg-fondo text-texto-suave"}`}>{t}</button>
+            className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-semibold ${tipo === v ? "border-marca bg-marca text-marca-texto" : "border-borde text-texto-suave"}`}>{t}</button>
         ))}
       </div>
       <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={200} placeholder="¿Qué vas a comer?" aria-label="Nombre de la comida" className={campo} autoFocus />
@@ -106,12 +102,12 @@ export function NuevaComida({ fecha, ingredientes, tipoInicial }: {
       })}
       {filas.length < 8 && (
         <button type="button" onClick={() => setFilas([...filas, { id: "", cantidad: "" }])} className="text-sm font-medium text-marca">
-          + Ingrediente <span className="font-normal text-texto-suave">(para calcular la compra)</span>
+          Añadir ingrediente <span className="font-normal text-texto-suave">(para calcular la compra)</span>
         </button>
       )}
       {error && <p className="text-sm text-urgente" role="alert">{error}</p>}
       <div className="grid grid-cols-2 gap-2">
-        <button type="button" onClick={() => setAbierto(false)} className="rounded-xl bg-fondo py-3 font-medium">Cancelar</button>
+        <button type="button" onClick={() => setAbierto(false)} className="rounded-xl border border-borde py-3 font-semibold">Cancelar</button>
         <button type="button" onClick={guardar} disabled={pendiente} className="rounded-xl bg-marca py-3 font-semibold text-marca-texto disabled:opacity-60">
           {pendiente ? "Guardando…" : "Guardar"}
         </button>

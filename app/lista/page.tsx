@@ -75,8 +75,7 @@ export default async function Lista() {
       <Cabecera titulo="Lista"
         accion={<Compartir titulo={`Lista de ${hogar.nombre}`} items={filas.map((f) => ({ nombre: f.nombre, detalle: f.detalle, urgente: f.urgente }))} />}
         sub={
-          <Link href="/ubicacion" className="inline-flex items-center gap-1 text-marca">
-            <svg viewBox="0 0 24 24" aria-hidden className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2.4}><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /></svg>
+          <Link href="/ubicacion" className="font-medium text-marca underline decoration-marca/30 underline-offset-4">
             {zona.lugar ? `${zona.lugar} · ${zona.buscarEn ? zona.buscarEn.map((c) => NOMBRE_CADENA[c]).join(", ") : "todas las tiendas"}` : "Pon tu ubicación para ver tus supermercados"}
           </Link>
         } />
@@ -85,7 +84,7 @@ export default async function Lista() {
 
       <div className="mb-5"><RecalcularLista dias={hogar.dias_planificacion ?? 7} /></div>
 
-      {!filas.length && <Vacio icono="🧺" titulo="No falta nada" texto="Busca arriba un producto o pulsa «¿Qué me falta?» para calcularlo con tu dieta." />}
+      {!filas.length && <Vacio titulo="No falta nada" texto="Busca arriba un producto o pulsa «¿Qué me falta?» para calcularlo con tu dieta." />}
 
       {manual.length > 0 && (
         <Seccion titulo="Añadido por vosotros">

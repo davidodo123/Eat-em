@@ -4,7 +4,7 @@ import { deshacerComida, marcarComida, registrarExtra } from "./acciones";
 
 export interface IngredienteComida { id: string; nombre: string; cantidad: number; unidad: string }
 const UD: Record<string, string> = { g: "g", ml: "ml", unidad: "ud" };
-const campo = "rounded-lg border border-borde bg-superficie px-2 py-1.5 text-base";
+const campo = "px-3 py-2.5 text-base";
 
 export function BotonesComida({ comidaId, consumo, ingredientes }: {
   comidaId: number; consumo: { id: number; estado: string } | null; ingredientes: IngredienteComida[];
@@ -23,7 +23,7 @@ export function BotonesComida({ comidaId, consumo, ingredientes }: {
     return (
       <div className="flex items-center justify-between gap-2">
         <span className={`text-sm font-medium ${consumo.estado === "hecha" ? "text-marca" : "text-texto-suave"}`}>
-          {consumo.estado === "hecha" ? "✓ Hecha" : "Saltada"}
+          {consumo.estado === "hecha" ? "Hecha" : "Saltada"}
         </span>
         <button type="button" disabled={pendiente} onClick={() => hacer(() => deshacerComida(consumo.id))}
           className="text-sm text-texto-suave underline">Deshacer</button>
@@ -82,11 +82,11 @@ export function NuevaExtra({ ingredientes }: { ingredientes: { id: string; nombr
 
   if (!abierto) {
     return <button type="button" onClick={() => { setAbierto(true); setOk(false); }} className="w-full rounded-xl border border-dashed border-borde px-4 py-3 font-medium">
-      {ok ? "✓ Apuntado. ¿Algo más fuera del plan?" : "+ Algo fuera del plan"}
+      {ok ? "Apuntado. ¿Algo más fuera del plan?" : "Apuntar algo fuera del plan"}
     </button>;
   }
   return (
-    <div className="space-y-2 rounded-xl border border-borde bg-superficie p-4">
+    <div className="space-y-2 caja p-4">
       <p className="font-semibold">Algo fuera del plan</p>
       <p className="text-xs text-texto-suave">Sin culpa: apuntarlo sirve para que la despensa cuadre.</p>
       <div className="flex gap-2">

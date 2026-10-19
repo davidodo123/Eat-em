@@ -41,7 +41,7 @@ export function FilaDespensa({ f }: { f: FilaDespensaDatos }) {
       <div className="flex items-center gap-3 px-4 py-3">
         <button type="button" onClick={() => setAbierta(!abierta)} aria-expanded={abierta} className="flex min-w-0 flex-1 items-center gap-3 text-left">
           {f.imagen ? <img src={f.imagen} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-0.5" />
-            : <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-borde/50 text-lg" aria-hidden>{f.lugar === "nevera" ? "🧊" : f.lugar === "congelador" ? "❄️" : "🥫"}</span>}
+            : null}
           <span className="min-w-0 flex-1">
             <span className="line-clamp-2 leading-snug">{f.nombre}</span>
             <span className="flex items-center gap-1.5 text-xs text-texto-suave">
@@ -50,7 +50,7 @@ export function FilaDespensa({ f }: { f: FilaDespensaDatos }) {
             </span>
           </span>
         </button>
-        <div className="flex shrink-0 items-center rounded-full bg-fondo">
+        <div className="flex shrink-0 items-center rounded-full border border-borde">
           <button type="button" aria-label={`Gastar uno de ${f.nombre}`} onClick={() => sumar(-1)} className="h-9 w-9 text-lg">−</button>
           <span className="min-w-6 text-center font-semibold tabular-nums">{unidades.toLocaleString("es-ES")}</span>
           <button type="button" aria-label={`Uno más de ${f.nombre}`} onClick={() => sumar(1)} className="h-9 w-9 text-lg">+</button>
@@ -59,7 +59,7 @@ export function FilaDespensa({ f }: { f: FilaDespensaDatos }) {
       {mensaje && <p className="-mt-1 px-4 pb-2 text-xs text-marca" role="status">{mensaje}</p>}
       {abierta && (
         <div className="space-y-3 border-t border-borde bg-fondo/60 px-4 py-3">
-          <div className="grid grid-cols-3 gap-1 rounded-xl bg-borde/50 p-1">
+          <div className="grid grid-cols-3 gap-1 rounded-xl border border-borde bg-fondo p-1">
             {LUGARES.map(([v, t]) => (
               <button key={v} type="button" onClick={() => guardar({ lugar: v })}
                 className={`rounded-lg py-1.5 text-sm font-medium ${f.lugar === v ? "bg-superficie shadow-sm" : "text-texto-suave"}`}>{t}</button>
@@ -68,7 +68,7 @@ export function FilaDespensa({ f }: { f: FilaDespensaDatos }) {
           <label className="flex items-center justify-between gap-3 text-sm">
             <span>Caduca</span>
             <input type="date" defaultValue={f.caduca ?? ""} onChange={(e) => guardar({ caduca: e.target.value || null })}
-              className="rounded-lg border border-borde bg-superficie px-2 py-1.5 text-base" />
+              className="px-3 py-2 text-base" />
           </label>
           <button type="button" onClick={() => { if (confirm(`¿Tirar ${f.nombre}?`)) sumar(-unidades, "desperdicio"); }}
             className="w-full rounded-xl py-2 text-sm font-medium text-urgente">Se ha estropeado: tirar</button>

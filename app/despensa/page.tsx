@@ -6,7 +6,7 @@ import type { UnidadBase } from "@/lib/dominio/formato";
 import { AnadirADespensa, FilaDespensa, type FilaDespensaDatos } from "./componentes";
 import { FilaInventario } from "../inventario/fila";
 import { TiempoReal } from "../tiempo-real";
-import { Cabecera, Pantalla, Seccion, SinHogar, Tarjeta, Vacio } from "../ui";
+import { BotonTexto, Cabecera, Pantalla, Seccion, SinHogar, Tarjeta, Vacio } from "../ui";
 
 export const metadata: Metadata = { title: "Despensa · Eat-em" };
 
@@ -48,9 +48,7 @@ export default async function Despensa({ searchParams }: { searchParams: Promise
       <TiempoReal grupoId={hogar.id} tablas={["despensa", "inventario"]} />
       <Cabecera titulo="Despensa" sub={total ? `${total} ${total === 1 ? "producto" : "productos"} en casa` : "Lo que tenéis en casa"}
         accion={
-          <Link href="/escanear" aria-label="Escanear código de barras" className="grid h-10 w-10 place-items-center rounded-full bg-marca text-marca-texto">
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M4 7V4h3M17 4h3v3M20 17v3h-3M7 20H4v-3M8 8v8M11 8v8M14 8v8M17 8v8" /></svg>
-          </Link>
+          <BotonTexto href="/escanear">Escanear</BotonTexto>
         } />
 
       <div className="sticky top-0 z-10 -mx-4 bg-fondo/95 px-4 pb-3 pt-1 backdrop-blur">
@@ -58,13 +56,13 @@ export default async function Despensa({ searchParams }: { searchParams: Promise
         <nav aria-label="Filtrar por lugar" className="mt-3 flex gap-2 overflow-x-auto">
           {FILTROS.map(([v, t]) => (
             <Link key={v} href={v ? `/despensa?l=${v}` : "/despensa"} aria-current={filtro === v ? "page" : undefined}
-              className={`shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium ${filtro === v ? "bg-texto text-fondo" : "bg-superficie text-texto-suave shadow-[0_1px_0_var(--borde)]"}`}>{t}</Link>
+              className={`shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-semibold ${filtro === v ? "border-texto bg-texto text-fondo" : "border-borde bg-superficie text-texto-suave"}`}>{t}</Link>
           ))}
         </nav>
       </div>
 
       {!visibles.length && !sueltos.length && (
-        <Vacio icono="🥫" titulo={filtro ? "Aquí no hay nada" : "La despensa está vacía"}
+        <Vacio titulo={filtro ? "Aquí no hay nada" : "La despensa está vacía"}
           texto="Busca arriba lo que tienes, escanea el código de barras o marca cosas como compradas en la lista." />
       )}
 

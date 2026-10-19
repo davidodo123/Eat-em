@@ -37,30 +37,29 @@ export function Buscador({ placeholder, onElegir, onTexto, textoBoton = "Añadir
   }, [q]);
 
   const hecho = (msg: string | void, nombre: string) => {
-    setAviso(msg || `✓ ${nombre}`);
+    setAviso(msg || `Añadido: ${nombre}`);
     if (!msg) { setQ(""); setResultados(null); entrada.current?.blur(); }
     setTimeout(() => setAviso(null), 2200);
   };
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2 rounded-2xl bg-superficie px-3.5 shadow-[0_1px_0_var(--borde),0_1px_3px_rgb(0_0_0/0.05)] focus-within:ring-2 focus-within:ring-marca/40">
-        <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5 shrink-0 text-texto-suave" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+      <div className="flex items-center gap-2 rounded-2xl border border-borde bg-superficie pl-4 pr-2 transition-shadow focus-within:border-marca focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--marca)_22%,transparent)]">
         <input ref={entrada} type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} enterKeyHint="search"
-          aria-label={placeholder} className="min-w-0 flex-1 bg-transparent py-3.5 text-base outline-none placeholder:text-texto-suave" />
+          aria-label={placeholder} className="min-w-0 flex-1 !border-0 !bg-transparent py-3.5 text-base !shadow-none outline-none" />
         {buscando && <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-marca border-t-transparent" aria-label="Buscando" />}
-        {q && !buscando && <button type="button" onClick={() => setQ("")} aria-label="Borrar" className="px-1 text-texto-suave">✕</button>}
+        {q && !buscando && <button type="button" onClick={() => setQ("")} className="px-2 text-sm font-semibold text-texto-suave">Borrar</button>}
       </div>
 
       {aviso && <p role="status" className="mt-2 px-1 text-sm font-medium text-marca">{aviso}</p>}
 
       {resultados && (
-        <div className="mt-2 overflow-hidden rounded-2xl bg-superficie shadow-[0_8px_30px_rgb(0_0_0/0.12)]">
+        <div className="caja mt-2 overflow-hidden shadow-[0_12px_32px_rgb(0_0_0/0.10)]">
           {onTexto && q.trim().length >= 2 && (
             <button type="button" onClick={() => empezar(async () => hecho(await onTexto(q.trim()), q.trim()))}
               className="flex w-full items-center gap-3 border-b border-borde px-4 py-3 text-left active:bg-borde/40">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-marca/10 text-xl text-marca">+</span>
               <span className="min-w-0 flex-1"><span className="block truncate font-medium">«{q.trim()}»</span><span className="text-sm text-texto-suave">{textoBoton} tal cual</span></span>
+              <span className="text-sm font-semibold text-marca">{textoBoton}</span>
             </button>
           )}
           {!resultados.length && !buscando && <p className="px-4 py-6 text-center text-sm text-texto-suave">Nada con «{q.trim()}» en tus supermercados.</p>}
@@ -73,7 +72,7 @@ export function Buscador({ placeholder, onElegir, onTexto, textoBoton = "Añadir
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-left active:bg-borde/40">
                     {r.imagen
                       ? <img src={r.imagen} alt="" loading="lazy" className="h-11 w-11 shrink-0 rounded-xl bg-white object-contain p-0.5" />
-                      : <span className="h-11 w-11 shrink-0 rounded-xl bg-borde/50" />}
+                      : null}
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-2 text-[0.95rem] font-medium leading-snug">{r.nombre}</span>
                       <span className="block truncate text-xs text-texto-suave">

@@ -1,40 +1,53 @@
 @import "tailwindcss";
 
-/* Tokens de color. Modo oscuro automatico (sistema) o forzado con data-theme. */
+/* Tokens de color. Papel calido, tinta casi negra y verde bosque de acento.
+   Modo oscuro automatico (sistema) o forzado con data-theme. */
 :root {
-  --fondo: #f7f7f4;
-  --superficie: #ffffff;
-  --texto: #1c1f1d;
-  --texto-suave: #5c645f;
-  --borde: #e2e4df;
-  --marca: #1f7a55;
-  --marca-texto: #ffffff;
-  --aviso: #b45309;
-  --urgente: #b91c1c;
+  --fondo: #f3efe6;
+  --superficie: #fbf9f4;
+  --texto: #1a1913;
+  --texto-suave: #6a665a;
+  --borde: #dcd6c8;
+  --marca: #1f4a37;
+  --marca-texto: #f6f3ea;
+  --marca-suave: #e1e8dc;
+  --aviso: #a6550f;
+  --urgente: #b3261e;
+  --flecha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%236a665a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --marca-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8.5 3 3 6-7' fill='none' stroke='%23f6f3ea' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --fondo: #121513;
-    --superficie: #1b1f1c;
-    --texto: #e9ece9;
-    --texto-suave: #a3aba6;
-    --borde: #2c322e;
-    --marca: #3fb886;
-    --marca-texto: #08140e;
-    --aviso: #f59e0b;
-    --urgente: #f87171;
+    --fondo: #121310;
+    --superficie: #1a1b17;
+    --texto: #ece8dd;
+    --texto-suave: #a29e91;
+    --borde: #2e2f28;
+    --marca: #b5d39a;
+    --marca-texto: #121310;
+    --marca-suave: #26301f;
+    --aviso: #e9a24f;
+    --urgente: #f2877c;
+    --flecha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a29e91' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    --marca-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8.5 3 3 6-7' fill='none' stroke='%23121310' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --fondo: #121513;
-  --superficie: #1b1f1c;
-  --texto: #e9ece9;
-  --texto-suave: #a3aba6;
-  --borde: #2c322e;
-  --marca: #3fb886;
-  --marca-texto: #08140e;
-  --aviso: #f59e0b;
-  --urgente: #f87171;
+  --fondo: #121310;
+  --superficie: #1a1b17;
+  --texto: #ece8dd;
+  --texto-suave: #a29e91;
+  --borde: #2e2f28;
+  --marca: #b5d39a;
+  --marca-texto: #121310;
+  --marca-suave: #26301f;
+  --aviso: #e9a24f;
+  --urgente: #f2877c;
+  --flecha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5l5-5' fill='none' stroke='%23a29e91' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --marca-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8.5 3 3 6-7' fill='none' stroke='%23121310' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -45,8 +58,11 @@
   --color-borde: var(--borde);
   --color-marca: var(--marca);
   --color-marca-texto: var(--marca-texto);
+  --color-marca-suave: var(--marca-suave);
   --color-aviso: var(--aviso);
   --color-urgente: var(--urgente);
+  --font-sans: var(--font-texto), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-titulo: var(--font-display), var(--font-texto), system-ui, sans-serif;
 }
 
 html, body {
@@ -54,6 +70,126 @@ html, body {
   color: var(--texto);
 }
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   -webkit-tap-highlight-color: transparent;
+  font-feature-settings: "ss01", "tnum" 0;
+}
+h1, h2, h3 { font-family: var(--font-titulo); }
+
+/* --- Campos de formulario: el mismo aspecto en toda la app --- */
+@layer base {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+    font: inherit;
+    color: var(--texto);
+    background-color: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:not([type="checkbox"]):not([type="radio"]):focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    border-color: var(--marca);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 22%, transparent);
+  }
+  ::placeholder { color: var(--texto-suave); opacity: 0.8; }
+
+  /* Desplegables con flecha propia */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: var(--flecha);
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 0.75rem;
+    padding-right: 2.4rem !important;
+    cursor: pointer;
+  }
+  select:invalid, select option[value=""] { color: var(--texto-suave); }
+  option { color: var(--texto); background: var(--superficie); }
+
+  /* Fechas: icono del calendario del sistema en el color del tema */
+  input[type="date"] { min-height: 2.75rem; }
+  input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: pointer; }
+
+  /* Casillas y radios propios */
+  input[type="checkbox"], input[type="radio"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0;
+    border: 1.5px solid color-mix(in srgb, var(--texto-suave) 70%, transparent);
+    background: var(--superficie);
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  input[type="checkbox"] { border-radius: 6px; }
+  input[type="radio"] { border-radius: 999px; }
+  input[type="checkbox"]:checked {
+    background: var(--marca) var(--marca-check) center / 85% no-repeat;
+    border-color: var(--marca);
+  }
+  input[type="radio"]:checked {
+    border-color: var(--marca);
+    box-shadow: inset 0 0 0 4px var(--superficie);
+    background: var(--marca);
+  }
+  input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 25%, transparent);
+  }
+  input[type="radio"]:checked:focus-visible { box-shadow: inset 0 0 0 4px var(--superficie), 0 0 0 3px color-mix(in srgb, var(--marca) 25%, transparent); }
+  input[type="checkbox"].sr-only, input[type="radio"].sr-only { appearance: auto; }
+
+  /* Desplegables <details> con marcador propio */
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after {
+    content: "";
+    float: right;
+    width: 0.75rem;
+    height: 1.4em;
+    background: var(--flecha) center / 0.7rem no-repeat;
+    transition: transform 0.2s;
+  }
+  details[open] > summary::after { transform: rotate(180deg); }
+}
+
+/* --- Piezas reutilizables --- */
+@layer components {
+  /* Caja: contenedor con borde fino (sustituye a las sombras) */
+  .caja {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+  }
+  /* Opcion: casilla o radio dentro de una caja que se marca entera */
+  .opcion {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: var(--superficie);
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+    font-size: 0.925rem;
+  }
+  .opcion:has(input:checked) {
+    border-color: var(--marca);
+    background: var(--marca-suave);
+  }
+  .opcion:has(input:focus-visible) { box-shadow: 0 0 0 3px color-mix(in srgb, var(--marca) 22%, transparent); }
+  /* Etiqueta de seccion */
+  .rotulo {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+  }
 }

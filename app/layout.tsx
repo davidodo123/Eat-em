@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
+import { Bricolage_Grotesque, Figtree } from "next/font/google";
 import "./globals.css";
 import { Navegacion } from "./navegacion";
+
+// Titulos con caracter y texto muy legible en pantallas pequenas
+const display = Bricolage_Grotesque({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-display", display: "swap" });
+const texto = Figtree({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-texto", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Eat-em",
@@ -13,8 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7f7f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#121513" },
+    { media: "(prefers-color-scheme: light)", color: "#f3efe6" },
+    { media: "(prefers-color-scheme: dark)", color: "#121310" },
   ],
 };
 
@@ -25,7 +30,7 @@ const TEMA = `try{var t=localStorage.getItem("tema");if(t==="claro"||t==="oscuro
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning className={`${display.variable} ${texto.variable}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: TEMA }} />
       </head>

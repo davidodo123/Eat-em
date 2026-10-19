@@ -9,7 +9,7 @@ import type { UnidadBase } from "@/lib/dominio/formato";
 export interface IngredienteOpcion { id: string; nombre: string; unidad: UnidadBase; gramos_por_unidad: number | null }
 export interface SuperOpcion { id: string; nombre: string }
 
-const campo = "mt-1 block w-full rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base outline-none focus:border-marca";
+const campo = "mt-1 block w-full px-3.5 py-3 text-base";
 const botonPrincipal = "w-full rounded-xl bg-marca px-4 py-3 font-semibold text-marca-texto disabled:opacity-60";
 const botonSecundario = "w-full rounded-xl border border-borde px-4 py-3 font-medium";
 const UNIDAD: Record<UnidadBase, string> = { g: "g", ml: "ml", unidad: "uds" };
@@ -62,7 +62,7 @@ export function Escaner({ ingredientes, supermercados, superPorDefecto }: {
       {!pendiente && resultado?.estado === "encontrado" && (
         guardado?.ok ? (
           <div className="space-y-3">
-            <p className="rounded-xl border border-marca/40 bg-superficie p-4 font-medium text-marca" role="status">✓ {guardado.mensaje}</p>
+            <p className="rounded-xl border border-marca/40 bg-superficie p-4 font-medium text-marca" role="status">{guardado.mensaje}</p>
             <button onClick={reiniciar} className={botonPrincipal}>Escanear otro</button>
             <Link href="/despensa" className={`${botonSecundario} block text-center`}>Ver despensa</Link>
           </div>
@@ -106,7 +106,7 @@ function FormularioCompra({ resultado, ingredientes, supermercados, superPorDefe
       className="space-y-4"
       action={(datos) => empezar(async () => onGuardado(await registrarCompra(datos)))}
     >
-      <div className="flex gap-3 rounded-xl border border-borde bg-superficie p-3">
+      <div className="flex gap-3 caja p-3">
         {producto.imagen_url && (
           // eslint-disable-next-line @next/next/no-img-element -- imagenes de muchas tiendas distintas
           <img src={producto.imagen_url} alt="" className="h-20 w-20 shrink-0 rounded-lg bg-white object-contain" />
@@ -128,7 +128,7 @@ function FormularioCompra({ resultado, ingredientes, supermercados, superPorDefe
         <span className="text-sm font-medium">¿Cuenta para la dieta como…?</span>
         <select name="ingrediente_id" value={ingredienteId} onChange={(e) => { setIngredienteId(e.target.value); setCantidadEditada(null); }} className={campo}>
           <option value="">No, solo guardarlo en la despensa</option>
-          {ordenados.map((i) => <option key={i.id} value={i.id}>{candidatos.has(i.id) ? "★ " : ""}{i.nombre}</option>)}
+          {ordenados.map((i) => <option key={i.id} value={i.id}>{i.nombre}{candidatos.has(i.id) ? " (sugerido)" : ""}</option>)}
         </select>
       </label>
 
@@ -173,7 +173,7 @@ function AltaManual({ ean, onResultado, onCancelar }: {
   const [guardando, empezar] = useTransition();
   return (
     <form className="space-y-3" action={(datos) => empezar(async () => onResultado(await altaManual(datos)))}>
-      <p className="rounded-xl border border-borde bg-superficie p-4 text-sm">
+      <p className="caja p-4 text-sm">
         No conocemos el código <span className="font-mono">{ean}</span>. Dalo de alta y quedará pendiente de revisión.
       </p>
       <input type="hidden" name="ean" value={ean} />

@@ -71,10 +71,10 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
       <Cabecera titulo="Dieta"
         sub={objetivos ? `Objetivo: ${objetivos.kcal.toLocaleString("es-ES")} kcal · ${objetivos.proteina_g} g de proteína al día` : <Link href="/perfil" className="text-marca">Completa tu perfil para calcular tus objetivos</Link>}
         accion={
-          <nav aria-label="Vista" className="grid grid-cols-2 rounded-xl bg-borde/60 p-0.5 text-sm font-medium">
+          <nav aria-label="Vista" className="grid grid-cols-2 caja p-0.5 text-sm font-semibold">
             {(["semana", "mes"] as const).map((v) => (
               <Link key={v} href={enlace(dia, v)} aria-current={vista === v ? "page" : undefined}
-                className={`rounded-[10px] px-3 py-1.5 text-center ${vista === v ? "bg-superficie shadow-sm" : "text-texto-suave"}`}>{v === "semana" ? "Semana" : "Mes"}</Link>
+                className={`rounded-[10px] px-3 py-1.5 text-center ${vista === v ? "bg-texto text-fondo" : "text-texto-suave"}`}>{v === "semana" ? "Semana" : "Mes"}</Link>
             ))}
           </nav>
         } />
@@ -108,7 +108,7 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
       {/* Dia elegido */}
       <Seccion titulo={dia === hoy ? "Hoy" : fechaLarga(dia, { weekday: "long", day: "numeric", month: "long" })}
         extra={dia !== hoy ? <Link href={enlace(hoy)} className="text-sm font-medium text-marca">Ir a hoy</Link> : undefined}>
-        {!delDia.length && <Vacio icono="🍽️" titulo="Nada planificado" texto="Añade tus comidas a mano o deja que la IA rellene la semana." />}
+        {!delDia.length && <Vacio titulo="Nada planificado" texto="Añade tus comidas a mano o deja que la IA rellene la semana." />}
         <ul className="space-y-2.5">
           {delDia.map((c) => {
             const k = consumo.get(c.id);
@@ -121,8 +121,8 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
                 <Tarjeta className={`p-4 ${k?.estado === "hecha" ? "ring-2 ring-marca/40" : ""}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-[0.7rem] font-bold uppercase tracking-wider text-marca">{TIPO[c.tipo] ?? c.tipo}</p>
-                      <p className="font-semibold leading-snug">{c.nombre}</p>
+                      <p className="rotulo !text-marca">{TIPO[c.tipo] ?? c.tipo}</p>
+                      <p className="font-titulo text-lg font-semibold leading-snug tracking-tight">{c.nombre}</p>
                     </div>
                     {!k && <BorrarComida id={c.id} nombre={c.nombre} />}
                   </div>

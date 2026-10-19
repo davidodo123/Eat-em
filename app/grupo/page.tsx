@@ -29,15 +29,15 @@ export default async function Grupo() {
         </>
       ) : (
         <div className="space-y-4">
-          <div className="rounded-xl border border-borde bg-superficie p-4">
+          <div className="caja p-4">
             <p className="text-lg font-semibold">{hogar.nombre}</p>
             <p className="mt-3 text-sm text-texto-suave">Código para invitar</p>
             <p className="font-mono text-2xl tracking-widest select-all">{hogar.codigo_invitacion}</p>
           </div>
-          <div className="rounded-xl border border-borde bg-superficie p-4">
+          <div className="caja p-4">
             <DiasLista dias={(await supabase.from("grupos").select("dias_planificacion").eq("id", hogar.id).single()).data?.dias_planificacion ?? 7} />
           </div>
-          <div className="rounded-xl border border-borde bg-superficie p-4">
+          <div className="caja p-4">
             <p className="mb-2 font-semibold">Miembros</p>
             <ul className="space-y-1 text-sm">
               {miembros.map((m) => (

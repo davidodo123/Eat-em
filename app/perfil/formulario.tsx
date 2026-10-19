@@ -11,7 +11,7 @@ export interface ValoresPerfil {
   condiciones_medicas: string[]; embarazo: boolean; lactancia: boolean; consentimiento: boolean;
 }
 
-const campo = "mt-1 block w-full rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base outline-none focus:border-marca";
+const campo = "mt-1.5 block w-full px-3.5 py-3 text-base";
 const NOMBRE_ALERGENO: Record<string, string> = {
   gluten: "Gluten", crustaceos: "Crustáceos", huevo: "Huevo", pescado: "Pescado", cacahuetes: "Cacahuetes", soja: "Soja",
   leche: "Leche", frutos_cascara: "Frutos de cáscara", apio: "Apio", mostaza: "Mostaza", sesamo: "Sésamo",
@@ -26,25 +26,25 @@ export function FormularioPerfil({ v }: { v: ValoresPerfil }) {
 
   return (
     <form action={accion} className="space-y-5">
-      <label className="block"><span className="text-sm font-medium">Nombre</span>
+      <label className="block"><span className="rotulo">Nombre</span>
         <input name="nombre" required maxLength={60} defaultValue={v.nombre} className={campo} /></label>
 
-      <fieldset className="space-y-3 rounded-xl border border-borde bg-superficie p-4">
-        <legend className="px-1 font-semibold">Datos de salud</legend>
+      <fieldset className="caja space-y-4 p-4">
+        <legend className="rotulo px-1">Datos de salud</legend>
         <p className="text-sm text-texto-suave">Sirven para calcular tus objetivos y comprobar que es seguro proponerte una dieta. Solo los ves tú.</p>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block"><span className="text-sm font-medium">Fórmula</span>
+          <label className="block"><span className="rotulo">Fórmula</span>
             <select name="sexo" value={sexo} onChange={(e) => setSexo(e.target.value)} className={campo}>
               <option value="">—</option><option value="mujer">Mujer</option><option value="hombre">Hombre</option>
             </select></label>
-          <label className="block"><span className="text-sm font-medium">Nacimiento</span>
+          <label className="block"><span className="rotulo">Nacimiento</span>
             <input type="date" name="fecha_nacimiento" defaultValue={v.fecha_nacimiento ?? ""} className={campo} /></label>
-          <label className="block"><span className="text-sm font-medium">Altura (cm)</span>
+          <label className="block"><span className="rotulo">Altura (cm)</span>
             <input name="altura_cm" inputMode="decimal" defaultValue={v.altura_cm ?? ""} className={campo} /></label>
-          <label className="block"><span className="text-sm font-medium">Peso (kg)</span>
+          <label className="block"><span className="rotulo">Peso (kg)</span>
             <input name="peso_kg" inputMode="decimal" defaultValue={v.peso_kg ?? ""} className={campo} /></label>
         </div>
-        <label className="block"><span className="text-sm font-medium">Actividad</span>
+        <label className="block"><span className="rotulo">Actividad</span>
           <select name="actividad" defaultValue={v.actividad ?? ""} className={campo}>
             <option value="">—</option>
             <option value="sedentario">Sedentaria (casi siempre sentado)</option>
@@ -52,54 +52,54 @@ export function FormularioPerfil({ v }: { v: ValoresPerfil }) {
             <option value="moderado">Moderada (3-5 días de ejercicio)</option>
             <option value="alto">Alta (ejercicio intenso casi a diario)</option>
           </select></label>
-        <label className="block"><span className="text-sm font-medium">Objetivo</span>
+        <label className="block"><span className="rotulo">Objetivo</span>
           <select name="objetivo" defaultValue={v.objetivo ?? ""} className={campo}>
             <option value="">—</option><option value="perder_grasa">Perder grasa</option>
             <option value="mantenimiento">Mantenerme</option><option value="ganar_musculo">Ganar músculo</option>
           </select></label>
         <div className="grid grid-cols-2 gap-3">
-          <label className="block"><span className="text-sm font-medium">Comidas al día</span>
+          <label className="block"><span className="rotulo">Comidas al día</span>
             <select name="comidas_dia" defaultValue={String(v.comidas_dia)} className={campo}>
               {[2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
             </select></label>
-          <label className="block"><span className="text-sm font-medium">Tipo de dieta</span>
+          <label className="block"><span className="rotulo">Tipo de dieta</span>
             <select name="dieta_tipo" defaultValue={v.dieta_tipo} className={campo}>
               <option value="omnivora">Omnívora</option><option value="vegetariana">Vegetariana</option>
               <option value="pescetariana">Pescetariana</option><option value="vegana">Vegana</option>
             </select></label>
         </div>
 
-        <details className="rounded-lg border border-borde p-3" open={v.alergias.length > 0}>
-          <summary className="cursor-pointer text-sm font-medium">Alergias e intolerancias</summary>
-          <div className="mt-2 grid grid-cols-2 gap-1 text-sm">
+        <details className="rounded-xl border border-borde p-3.5" open={v.alergias.length > 0}>
+          <summary className="text-sm font-semibold">Alergias e intolerancias</summary>
+          <div className="mt-3 grid grid-cols-2 gap-2">
             {ALERGENOS.map((a) => (
-              <label key={a} className="flex items-center gap-2"><input type="checkbox" name="alergias" value={a} defaultChecked={v.alergias.includes(a)} className="h-4 w-4" />{NOMBRE_ALERGENO[a]}</label>
+              <label key={a} className="opcion"><input type="checkbox" name="alergias" value={a} defaultChecked={v.alergias.includes(a)} />{NOMBRE_ALERGENO[a]}</label>
             ))}
           </div>
         </details>
 
-        <details className="rounded-lg border border-borde p-3" open={v.condiciones_medicas.length > 0 || v.embarazo || v.lactancia}>
-          <summary className="cursor-pointer text-sm font-medium">Situaciones médicas</summary>
+        <details className="rounded-xl border border-borde p-3.5" open={v.condiciones_medicas.length > 0 || v.embarazo || v.lactancia}>
+          <summary className="text-sm font-semibold">Situaciones médicas</summary>
           <p className="mt-1 text-xs text-texto-suave">Si marcas alguna, Eat-em no te propondrá dieta y te recomendará un profesional.</p>
-          <div className="mt-2 space-y-1 text-sm">
+          <div className="mt-3 space-y-2">
             {Object.entries(CONDICIONES_MEDICAS).map(([k, t]) => (
-              <label key={k} className="flex items-center gap-2"><input type="checkbox" name="condiciones_medicas" value={k} defaultChecked={v.condiciones_medicas.includes(k)} className="h-4 w-4" />{t}</label>
+              <label key={k} className="opcion"><input type="checkbox" name="condiciones_medicas" value={k} defaultChecked={v.condiciones_medicas.includes(k)} />{t}</label>
             ))}
             {sexo === "mujer" && <>
-              <label className="flex items-center gap-2"><input type="checkbox" name="embarazo" defaultChecked={v.embarazo} className="h-4 w-4" />Embarazo</label>
-              <label className="flex items-center gap-2"><input type="checkbox" name="lactancia" defaultChecked={v.lactancia} className="h-4 w-4" />Lactancia</label>
+              <label className="opcion"><input type="checkbox" name="embarazo" defaultChecked={v.embarazo} />Embarazo</label>
+              <label className="opcion"><input type="checkbox" name="lactancia" defaultChecked={v.lactancia} />Lactancia</label>
             </>}
           </div>
         </details>
 
-        <label className="flex items-start gap-2 rounded-lg bg-fondo p-3 text-sm">
-          <input type="checkbox" name="consentimiento" defaultChecked={v.consentimiento} className="mt-0.5 h-5 w-5 shrink-0" />
+        <label className="opcion !items-start">
+          <input type="checkbox" name="consentimiento" defaultChecked={v.consentimiento} className="mt-0.5" />
           <span>Doy mi <strong>consentimiento explícito</strong> para que Eat-em trate estos datos de salud con el único fin de calcular mis objetivos y proponerme una dieta. Puedo retirarlo cuando quiera y se borrarán.</span>
         </label>
       </fieldset>
 
       {estado.errores?.map((e) => <p key={e} className="text-sm text-urgente" role="alert">{e}</p>)}
-      {estado.ok && !estado.errores && <p className="text-sm text-marca" role="status">✓ Guardado</p>}
+      {estado.ok && !estado.errores && <p className="text-sm font-semibold text-marca" role="status">Guardado</p>}
       <button type="submit" disabled={guardando} className="w-full rounded-xl bg-marca px-4 py-3 font-semibold text-marca-texto disabled:opacity-60">
         {guardando ? "Guardando…" : "Guardar"}
       </button>

@@ -43,7 +43,7 @@ export function Camara({ onCodigo }: { onCodigo: (codigo: string) => void }) {
     return () => { cancelado = true; controles?.stop(); };
   }, []);
 
-  if (error) return <p className="rounded-xl border border-borde bg-superficie p-4 text-sm text-texto-suave" role="alert">{error}</p>;
+  if (error) return <p className="caja p-4 text-sm text-texto-suave" role="alert">{error}</p>;
   return (
     <div className="relative overflow-hidden rounded-xl border border-borde bg-black">
       <video ref={video} className="aspect-[4/3] w-full object-cover" muted playsInline />

@@ -20,3 +20,6 @@ tags: [decisiones]
 
 ## Supermercados cercanos desde una copia de OpenStreetMap
 *2026-10-17* — La API pública de Overpass tardaba 30–40 s o fallaba. Se descargan una vez los ~18.900 supermercados de España a `tiendas_osm` (migración 11, `npm run tiendas`) y se buscan con SQL. Overpass queda de reserva.
+
+## Diseño sin iconos
+*2026-10-19* — David pidió quitar los iconos y rediseñar. Todo pasa a tipografía: Bricolage Grotesque (títulos) y Figtree (texto), papel cálido con tinta casi negra y verde bosque de acento, cajas con borde fino en vez de sombras, barra inferior solo con texto. Desplegables, casillas, radios, fechas y `<details>` tienen estilo propio en `app/globals.css`; las casillas de Perfil y Ajustes son cajas que se marcan enteras (clase `opcion`).

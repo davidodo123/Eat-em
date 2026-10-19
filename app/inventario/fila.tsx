@@ -46,7 +46,7 @@ export function FilaInventario({ id, nombre, cantidad, unidad, bajo, umbral }: {
         className="h-10 w-10 rounded-full border border-borde text-lg">+</button>
       <button type="button" aria-label={`Se ha tirado todo: ${nombre}`} title="Se ha estropeado (tirar todo)" disabled={optimista <= 0}
         onClick={() => { if (confirm(`¿Tirar ${formatearCantidad(optimista, unidad)} de ${nombre}?`)) ajustar(-optimista, "desperdicio"); }}
-        className="h-10 w-10 rounded-full border border-borde text-sm disabled:opacity-40">🗑</button>
+        className="rounded-full border border-borde px-3 py-2 text-xs font-semibold text-urgente disabled:opacity-40">Tirar</button>
     </li>
   );
 }

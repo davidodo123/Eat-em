@@ -42,7 +42,7 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
 
       <form className="mb-4 flex gap-2">
         <select name="i" defaultValue={elegido?.id ?? ""} aria-label="Ingrediente"
-          className="flex-1 rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base">
+          className="flex-1 px-3 py-2.5 text-base">
           <option value="" disabled>Elige un ingrediente</option>
           {(ingredientes ?? []).map((x) => <option key={x.id} value={x.id}>{x.nombre}</option>)}
         </select>
@@ -51,7 +51,7 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
 
       {error && <p className="rounded-xl border border-borde p-4 text-sm text-texto-suave">El comparador aún no está disponible (falta aplicar la migración de la base).</p>}
       {elegido && !error && !filas.length && (
-        <p className="rounded-xl border border-borde bg-superficie p-4 text-sm text-texto-suave">
+        <p className="caja p-4 text-sm text-texto-suave">
           Todavía no hay precios para {elegido.nombre.toLowerCase()}. Se irán llenando con las webs de las tiendas y con lo que escaneéis.
         </p>
       )}
@@ -63,7 +63,7 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
               <img src={f.imagen_url} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-white object-contain" />
             )}
             <div className="min-w-0 flex-1">
-              <p className="font-semibold">{k === 0 && "🏆 "}{nombreSuper.get(f.supermercado_id) ?? f.supermercado_id}</p>
+              <p className="font-semibold">{nombreSuper.get(f.supermercado_id) ?? f.supermercado_id}{k === 0 && <span className="ml-2 text-[0.7rem] font-bold uppercase tracking-wider text-marca">Más barato</span>}</p>
               <p className="truncate text-sm">{f.nombre}</p>
               <p className="text-xs text-texto-suave">
                 {f.fuente === "usuario"

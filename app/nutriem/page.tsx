@@ -21,7 +21,7 @@ export default async function Nutriem() {
       <ul className="space-y-2">
         {(fichas ?? []).map((f) => (
           <li key={f.id}>
-            <details className="rounded-xl border border-borde bg-superficie px-4 py-3">
+            <details className="caja px-4 py-3">
               <summary className="cursor-pointer font-medium">{f.tema}</summary>
               <p className="mt-2 text-sm">{f.regla}</p>
               {f.por_que && <p className="mt-1 text-sm text-texto-suave">{f.por_que}</p>}

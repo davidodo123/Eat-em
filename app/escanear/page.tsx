@@ -22,7 +22,7 @@ export default async function Escanear() {
     <Pantalla>
       <Cabecera titulo="Escanear" volver={{ href: "/despensa", texto: "Despensa" }} />
       {!hogar ? (
-        <p className="rounded-xl border border-borde bg-superficie p-4">
+        <p className="caja p-4">
           Para apuntar compras necesitas un hogar. <Link href="/grupo" className="font-semibold text-marca">Crea uno o únete</Link>.
         </p>
       ) : (

@@ -13,10 +13,10 @@ export function SelectorTema() {
     else document.documentElement.dataset.theme = t === "claro" ? "light" : "dark";
   };
   return (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tema">
+    <div className="grid grid-cols-3 gap-1 rounded-xl border border-borde bg-fondo p-1" role="radiogroup" aria-label="Tema">
       {[["sistema", "Sistema"], ["claro", "Claro"], ["oscuro", "Oscuro"]].map(([k, t]) => (
         <button key={k} type="button" role="radio" aria-checked={tema === k} onClick={() => elegir(k)} suppressHydrationWarning
-          className={`rounded-xl border px-3 py-2 text-sm font-medium ${tema === k ? "border-marca bg-marca text-marca-texto" : "border-borde"}`}>{t}</button>
+          className={`rounded-lg px-3 py-2 text-sm font-semibold ${tema === k ? "bg-texto text-fondo" : "text-texto-suave"}`}>{t}</button>
       ))}
     </div>
   );

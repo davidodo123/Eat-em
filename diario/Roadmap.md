@@ -29,6 +29,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Aplicar migraciones 9, 10 y 11 (desde el SQL Editor de Supabase)
 - [x] Cargar supermercados de OSM (18.895) y exclusiones de ingredientes
 - [/] Rehacer enlaces de ingredientes y Open Food Facts (`npm run off -- --solo-aplicar`)
+- [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar

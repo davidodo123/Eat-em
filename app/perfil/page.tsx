@@ -42,7 +42,7 @@ export default async function Perfil() {
         <p className="mb-5 rounded-xl border border-aviso/50 bg-superficie p-4 text-sm">{filtro.mensaje}</p>
       )}
       {filtro?.estado === "falta_dato" && (
-        <p className="mb-5 rounded-xl border border-borde bg-superficie p-4 text-sm">Para calcular tus objetivos nos falta un dato: {filtro.pregunta}</p>
+        <p className="mb-5 caja p-4 text-sm">Para calcular tus objetivos nos falta un dato: {filtro.pregunta}</p>
       )}
 
       <FormularioPerfil v={{

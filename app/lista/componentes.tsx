@@ -46,7 +46,7 @@ export function ItemLista({ f }: { f: FilaLista }) {
       {f.imagen && <img src={f.imagen} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-lg bg-white object-contain" />}
       <div className="min-w-0 flex-1">
         <p className={`line-clamp-2 leading-snug ${estado === "comprado" ? "line-through" : ""}`}>
-          {f.urgente && <span className="mr-1 rounded bg-urgente px-1 py-px text-[0.65rem] font-bold uppercase text-white">Urgente</span>}
+          {f.urgente && <span className="mr-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-urgente">Urgente</span>}
           {f.nombre}
         </p>
         {(f.detalle || f.precio) && (
@@ -57,16 +57,14 @@ export function ItemLista({ f }: { f: FilaLista }) {
         {error && <p className="text-xs text-urgente" role="alert">{error}</p>}
       </div>
       {f.esProducto && (
-        <div className="flex shrink-0 items-center rounded-full bg-fondo">
+        <div className="flex shrink-0 items-center rounded-full border border-borde">
           <button type="button" aria-label="Uno menos" disabled={paquetes <= 1} onClick={() => sumar(-1)} className="h-8 w-8 text-lg disabled:opacity-30">−</button>
           <span className="w-5 text-center text-sm font-semibold tabular-nums">{paquetes}</span>
           <button type="button" aria-label="Uno más" onClick={() => sumar(1)} className="h-8 w-8 text-lg">+</button>
         </div>
       )}
       <button type="button" aria-label={`Quitar ${f.nombre}`} onClick={() => accion("quitado", () => quitarItem(f.id))}
-        className="-mr-2 shrink-0 p-2 text-texto-suave">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
-      </button>
+        className="-mr-2 shrink-0 p-2 text-xl leading-none text-texto-suave">×</button>
     </li>
   );
 }
@@ -81,8 +79,8 @@ export function Compartir({ titulo, items }: { titulo: string; items: ItemTexto[
   };
   return (
     <button type="button" onClick={compartir} disabled={!items.length} aria-label="Compartir la lista"
-      className="grid h-10 w-10 place-items-center rounded-full bg-superficie text-marca shadow-[0_1px_0_var(--borde)] disabled:opacity-40">
-      {hecho ? "✓" : <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 13v6h14v-6" /></svg>}
+      className="rounded-full border border-borde bg-superficie px-3.5 py-1.5 text-sm font-semibold disabled:opacity-40">
+      {hecho ? "Copiada" : "Compartir"}
     </button>
   );
 }
@@ -97,12 +95,12 @@ export function RecalcularLista({ dias }: { dias: number }) {
           const r = await recalcularLista();
           setMensaje(r.error ? { texto: r.error, error: true } : { texto: r.resumen ?? "", error: false });
         })}
-        className="flex w-full items-center gap-3 rounded-2xl bg-marca/10 px-4 py-3 text-left text-marca active:bg-marca/20 disabled:opacity-60">
-        <svg viewBox="0 0 24 24" aria-hidden className={`h-5 w-5 shrink-0 ${pendiente ? "animate-spin" : ""}`} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4" /></svg>
+        className="flex w-full items-center gap-3 rounded-2xl bg-marca px-4 py-3.5 text-left text-marca-texto active:opacity-85 disabled:opacity-70">
         <span className="flex-1">
           <span className="block font-semibold">{pendiente ? "Mirando tu dieta y tu despensa…" : "¿Qué me falta?"}</span>
           <span className="block text-xs opacity-80">Según la dieta de los próximos {dias} días y lo que hay en casa</span>
         </span>
+        <span aria-hidden className="text-lg font-semibold">→</span>
       </button>
       {mensaje && <p className={`mt-2 px-1 text-sm ${mensaje.error ? "text-urgente" : "text-texto-suave"}`} role="status">{mensaje.texto}</p>}
     </div>

@@ -32,7 +32,6 @@ export function FormularioUbicacion({ radio }: { radio: number }) {
       <input type="hidden" name="lat" value={gps?.lat ?? ""} />
       <input type="hidden" name="lon" value={gps?.lon ?? ""} />
       <button type="button" onClick={usarGps} disabled={buscando || enviando} className={`${boton} flex w-full items-center justify-center gap-2`}>
-        <svg viewBox="0 0 24 24" aria-hidden className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></svg>
         {buscando ? "Buscando tu ubicación…" : enviando && gps ? "Buscando supermercados…" : "Usar mi ubicación"}
       </button>
       {errorGps && <p className="text-sm text-urgente" role="alert">{errorGps}</p>}
@@ -52,13 +51,13 @@ export function FormularioUbicacion({ radio }: { radio: number }) {
           {[2, 5, 10, 20].map((r) => (
             <label key={r} className="cursor-pointer">
               <input type="radio" name="radio" value={r} defaultChecked={r === radio} className="peer sr-only" />
-              <span className="block rounded-xl border border-borde bg-superficie py-2.5 text-center text-sm font-medium peer-checked:border-marca peer-checked:bg-marca peer-checked:text-marca-texto">{r} km</span>
+              <span className="block rounded-xl border border-borde bg-superficie py-2.5 text-center text-sm font-semibold peer-checked:border-texto peer-checked:bg-texto peer-checked:text-fondo peer-focus-visible:ring-2 peer-focus-visible:ring-marca/40">{r} km</span>
             </label>
           ))}
         </div>
       </fieldset>
       {estado.error && <p className="text-sm text-urgente" role="alert">{estado.error}</p>}
-      {estado.ok && <p className="text-sm font-medium text-marca" role="status">✓ Ubicación guardada</p>}
+      {estado.ok && <p className="text-sm font-semibold text-marca" role="status">Ubicación guardada</p>}
     </form>
   );
 }

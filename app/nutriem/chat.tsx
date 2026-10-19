@@ -25,7 +25,7 @@ export function Chat({ disponible }: { disponible: boolean }) {
   };
 
   return (
-    <div className="rounded-xl border border-borde bg-superficie p-3">
+    <div className="caja p-3">
       <div className="mb-3 max-h-96 space-y-2 overflow-y-auto" aria-live="polite">
         {!historial.length && <p className="text-sm text-texto-suave">Pregúntame por hambre entre horas, cómo retomar tras un mal día, ideas para la cena…</p>}
         {historial.map((m, i) => (
@@ -37,7 +37,7 @@ export function Chat({ disponible }: { disponible: boolean }) {
       <form onSubmit={(e) => { e.preventDefault(); enviar(); }} className="flex gap-2">
         <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={1000} disabled={!disponible}
           placeholder={disponible ? "Escribe a Nutri-em" : "Nutri-em aún no está configurado"} aria-label="Pregunta para Nutri-em"
-          className="flex-1 rounded-xl border border-borde bg-superficie px-3 py-2.5 text-base outline-none focus:border-marca" />
+          className="flex-1 px-3.5 py-3 text-base" />
         <button type="submit" disabled={!disponible || pensando || !texto.trim()}
           className="rounded-xl bg-marca px-4 font-semibold text-marca-texto disabled:opacity-60">Enviar</button>
       </form>
