@@ -1,7 +1,7 @@
 "use server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { crearClienteAdmin, crearClienteServidor } from "@/lib/supabase/server";
+import { crearClienteServidor } from "@/lib/supabase/server";
 import { rutaInterna } from "@/lib/rutas";
 
 export interface EstadoEntrar {
@@ -35,9 +35,9 @@ export async function enviarEnlace(_previo: EstadoEntrar, datos: FormData): Prom
   return { estado: "enviado", email };
 }
 
-// --- Email y contrasena, sin verificar el correo ---
+// --- Email y contrasena ---
 
-export interface EstadoAcceso { error?: string; email?: string }
+export interface EstadoAcceso { error?: string; email?: string; enviado?: boolean }
 const emailValido = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
 export async function entrarConContrasena(_previo: EstadoAcceso, datos: FormData): Promise<EstadoAcceso> {
@@ -48,12 +48,18 @@ export async function entrarConContrasena(_previo: EstadoAcceso, datos: FormData
   const { error } = await supabase.auth.signInWithPassword({ email, password: contrasena });
   if (error) {
     const limite = error.status === 429 || /rate limit/i.test(error.message);
-    return { email, error: limite ? "Demasiados intentos. Espera un minuto." : "Email o contraseña incorrectos." };
+    const sinConfirmar = /not confirmed/i.test(error.message);
+    return {
+      email,
+      error: limite ? "Demasiados intentos. Espera un minuto."
+        : sinConfirmar ? "Aún no has confirmado tu correo: abre el enlace que te enviamos al crear la cuenta."
+        : "Email o contraseña incorrectos.",
+    };
   }
   redirect(rutaInterna(String(datos.get("siguiente") ?? "")));
 }
 
-// Crea la cuenta ya confirmada (sin correo de verificacion) y entra directamente
+// Crea la cuenta y envia un correo para confirmarla. Hasta que se pulsa el enlace no se puede entrar.
 export async function crearCuenta(_previo: EstadoAcceso, datos: FormData): Promise<EstadoAcceso> {
   const email = String(datos.get("email") ?? "").trim().toLowerCase();
   const contrasena = String(datos.get("contrasena") ?? "");
@@ -61,19 +67,26 @@ export async function crearCuenta(_previo: EstadoAcceso, datos: FormData): Promi
   if (!emailValido(email)) return { error: "Escribe un email válido.", email };
   if (contrasena.length < 8) return { error: "La contraseña necesita al menos 8 caracteres.", email };
 
-  const { error: e1 } = await crearClienteAdmin().auth.admin.createUser({
-    email, password: contrasena, email_confirm: true, user_metadata: nombre ? { name: nombre } : undefined,
-  });
-  if (e1) {
-    const existe = /already|registered|exists/i.test(e1.message);
-    return {
-      email,
-      error: existe ? "Ya hay una cuenta con ese email. Entra con tu contraseña o, si no tienes, con un enlace al correo y ponla en Ajustes."
-        : "No se pudo crear la cuenta. Inténtalo de nuevo.",
-    };
-  }
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const protocolo = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
   const supabase = await crearClienteServidor();
-  const { error: e2 } = await supabase.auth.signInWithPassword({ email, password: contrasena });
-  if (e2) return { email, error: "Cuenta creada. Entra con tu email y contraseña." };
-  redirect(rutaInterna(String(datos.get("siguiente") ?? ""), "/grupo"));
+  const { data, error } = await supabase.auth.signUp({
+    email, password: contrasena,
+    options: {
+      data: nombre ? { name: nombre } : undefined,
+      emailRedirectTo: `${protocolo}://${host}/auth/confirmar?siguiente=${encodeURIComponent("/grupo")}`,
+    },
+  });
+  if (error) {
+    const limite = error.status === 429 || /rate limit/i.test(error.message);
+    return { email, error: limite ? "Se han enviado demasiados correos. Espera un rato y vuelve a intentarlo." : "No se pudo crear la cuenta. Inténtalo de nuevo." };
+  }
+  // Supabase no dice si el email ya existia (devuelve un usuario sin identidades)
+  if (data.user && !data.user.identities?.length) {
+    return { email, error: "Ya hay una cuenta con ese email. Entra con tu contraseña o con un enlace al correo." };
+  }
+  // Si en Supabase estuviera desactivada la confirmacion, ya hay sesion
+  if (data.session) redirect("/grupo");
+  return { email, enviado: true };
 }
