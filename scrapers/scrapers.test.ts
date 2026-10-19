@@ -37,6 +37,13 @@ test("carrefour: normalizar", () => {
   assert.deepEqual([pack.cantidad_neta, pack.unidad, pack.unidades_pack], [3960, "ml", 12]);
   assert.equal(pack.precio, null);
   assert.equal(pack.disponible, false);
+
+  // La API trae a veces el factor x10 ("95 g." con 0,95 kg): manda el texto del envase
+  const lata = normalizarCarrefour({
+    product_id: "R-2", display_name: "Pechuga de pollo al natural Adelís sin gluten 95 g.", measure_unit: "kg",
+    unit_conversion_factor: 0.95, recipient: "95 g.", active_price: 2.09,
+  }, AHORA);
+  assert.deepEqual([lata.cantidad_neta, lata.unidad, lata.precio_por_unidad], [95, "g", 22]);
 });
 
 test("mercadona: pagina de producto", () => {

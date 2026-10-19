@@ -145,11 +145,16 @@ const UNIDADES: Record<string, { unidad: Formato["unidad"]; factor: number }> = 
 
 export function normalizar(it: ItemCarrefour, ahora: string): ProductoNormalizado {
   const texto = it.recipient?.trim() || null;
-  // Formato: primero el factor que da la API (fiable), si no, se parsea el texto
+  // Formato: el factor que da la API, salvo que contradiga al texto del envase. La API a veces
+  // trae el factor multiplicado por 10 ("95 g." con 0,95 kg) y el precio por kilo sale 10 veces menor.
   let formato: Formato | null = null;
   const u = UNIDADES[(it.measure_unit ?? "").toLowerCase()];
   const delTexto = parsearFormato(texto) ?? parsearFormato(it.display_name);
-  if (u && it.unit_conversion_factor && it.unit_conversion_factor > 0) {
+  const deApi = u && it.unit_conversion_factor && it.unit_conversion_factor > 0 ? Math.round(it.unit_conversion_factor * u.factor * 100) / 100 : null;
+  const contradice = deApi !== null && delTexto !== null && delTexto.unidad === u!.unidad && !delTexto.aproximado
+    && Math.abs(deApi - delTexto.cantidad) / delTexto.cantidad > 0.2;
+  if (contradice) formato = delTexto;
+  else if (u && it.unit_conversion_factor && it.unit_conversion_factor > 0) {
     formato = {
       cantidad: Math.round(it.unit_conversion_factor * u.factor * 100) / 100,
       unidad: u.unidad,
