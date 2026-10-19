@@ -33,8 +33,18 @@ jobs:
          || github.event.schedule == '30 6 * * *' && 'caprabo'
          || inputs.supermercado || 'carrefour' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Comprobar secretos
+        # Sin estos secretos el job fallaria a los pocos segundos con un error poco claro
+        run: |
+          if [ -z "$URL" ] || [ -z "$CLAVE" ]; then
+            echo "::error title=Faltan secretos::Crea SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+        env:
+          URL: ${{ secrets.SUPABASE_URL }}
+          CLAVE: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
