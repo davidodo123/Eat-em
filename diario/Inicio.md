@@ -11,7 +11,7 @@ App de móvil (PWA) para la compra de casa: **Lista** de lo que falta, **Despens
 - Precios: scrapers diarios en GitHub Actions (Carrefour, Ahorramás, Gadis, Caprabo; Mercadona solo catálogo)
 
 ## Fase actual
-Fase 2 · App móvil — hecha en código; pendiente de aplicar migraciones 9–11 y de que David la pruebe. Los scrapers de GitHub fallan por falta de secretos (ver [[Configuración]]).
+Fase 2 · App móvil — hecha y con las migraciones 9–11 aplicadas; falta que David la pruebe. Los scrapers de GitHub fallan por falta de secretos (ver [[Pendiente]]).
 
 ## Cómo usamos el diario
 - [[Roadmap]]: fases y tareas con casillas (de aquí sale el % del panel).
