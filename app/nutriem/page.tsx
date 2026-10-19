@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { Chat } from "./chat";
+import { Cabecera, Pantalla } from "../ui";
 
 export const metadata: Metadata = { title: "Nutri-em · Eat-em" };
 
@@ -13,9 +13,8 @@ export default async function Nutriem() {
     .eq("visible_consejos", true).eq("prioridad", false).order("id");
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">Nutri-em</h1>
+    <Pantalla>
+      <Cabecera titulo="Nutri-em" volver={{ href: "/ajustes", texto: "Ajustes" }} />
       <Chat disponible={Boolean(process.env.OPENAI_API_KEY)} />
 
       <h2 className="mt-8 mb-2 text-lg font-bold">Consejos de psicología de la dieta</h2>
@@ -32,6 +31,6 @@ export default async function Nutriem() {
         ))}
       </ul>
       <p className="mt-8 text-xs text-texto-suave">Nutri-em es una IA: puede equivocarse. Eat-em no sustituye a un profesional sanitario.</p>
-    </main>
+    </Pantalla>
   );
 }

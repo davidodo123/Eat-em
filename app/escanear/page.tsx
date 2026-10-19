@@ -3,6 +3,7 @@ import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { Escaner, type IngredienteOpcion } from "./escaner";
+import { Cabecera, Pantalla } from "../ui";
 
 export const metadata: Metadata = { title: "Escanear · Eat-em" };
 
@@ -18,9 +19,8 @@ export default async function Escanear() {
   ]);
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">Escanear compra</h1>
+    <Pantalla>
+      <Cabecera titulo="Escanear" volver={{ href: "/despensa", texto: "Despensa" }} />
       {!hogar ? (
         <p className="rounded-xl border border-borde bg-superficie p-4">
           Para apuntar compras necesitas un hogar. <Link href="/grupo" className="font-semibold text-marca">Crea uno o únete</Link>.
@@ -35,6 +35,6 @@ export default async function Escanear() {
       <p className="mt-8 text-xs text-texto-suave">
         Datos de producto de <a href="https://world.openfoodfacts.org" className="underline">Open Food Facts</a> (licencia ODbL) y de las webs de cada tienda.
       </p>
-    </main>
+    </Pantalla>
   );
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { DiasLista, FormulariosHogar } from "./formularios";
+import { Cabecera, Pantalla } from "../ui";
 
 export const metadata: Metadata = { title: "Hogar · Eat-em" };
 
@@ -20,9 +20,8 @@ export default async function Grupo() {
   );
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">Hogar</h1>
+    <Pantalla>
+      <Cabecera titulo="Hogar" volver={{ href: "/ajustes", texto: "Ajustes" }} />
       {!hogar ? (
         <>
           <p className="mb-4 text-texto-suave">El inventario y la lista de la compra se comparten con tu hogar. Crea uno o únete con el código que te pasen.</p>
@@ -51,6 +50,6 @@ export default async function Grupo() {
           </div>
         </div>
       )}
-    </main>
+    </Pantalla>
   );
 }

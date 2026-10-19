@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
+import { zonaDelHogar } from "@/lib/zona";
 import { BotonPreferido } from "./preferido";
+import { Cabecera, Pantalla } from "../ui";
 
 export const metadata: Metadata = { title: "Comparar precios · Eat-em" };
 
@@ -24,17 +25,20 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
   const { data, error } = elegido
     ? await supabase.rpc("comparar_precios", { p_ingrediente: elegido.id })
     : { data: null, error: null };
-  const filas = ((data ?? []) as Fila[]).sort((a, b) => a.precio_por_unidad - b.precio_por_unidad);
-  const hogar = elegido ? await hogarActual(supabase) : null;
-  const preferido = hogar
+  const hogar = await hogarActual(supabase);
+  // Solo los supermercados cercanos al hogar (todos si no hay ubicacion)
+  const buscarEn = hogar ? zonaDelHogar(hogar).buscarEn : null;
+  const filas = ((data ?? []) as Fila[])
+    .filter((f) => !buscarEn || buscarEn.includes(f.supermercado_id))
+    .sort((a, b) => a.precio_por_unidad - b.precio_por_unidad);
+  const preferido = hogar && elegido
     ? (await supabase.from("inventario").select("producto_preferido_id").eq("grupo_id", hogar.id).eq("ingrediente_id", elegido!.id).maybeSingle()).data?.producto_preferido_id ?? null
     : null;
   const nombreSuper = new Map((supers ?? []).map((s) => [s.id, s.nombre]));
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">¿Dónde sale más barato?</h1>
+    <Pantalla>
+      <Cabecera titulo="Comparar" sub="¿Dónde sale más barato en tus supermercados?" volver={{ href: "/ajustes", texto: "Ajustes" }} />
 
       <form className="mb-4 flex gap-2">
         <select name="i" defaultValue={elegido?.id ?? ""} aria-label="Ingrediente"
@@ -76,6 +80,6 @@ export default async function Comparar({ searchParams }: { searchParams: Promise
         ))}
       </ol>
       {filas.length > 0 && <p className="mt-4 text-xs text-texto-suave">Precio por kg, litro o unidad, con la oferta aplicada. Los precios online pueden no coincidir con los de tu tienda.</p>}
-    </main>
+    </Pantalla>
   );
 }

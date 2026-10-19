@@ -23,6 +23,9 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Despensa por producto: nevera/congelador, caducidad y paso a la lista al acabarse
 - [x] Dieta: vista semana y mes, comidas a mano, IA opcional, repetir la semana en el mes
 - [x] Acciones más rápidas (avisos push tras responder, una consulta menos por pantalla)
+- [x] Esqueletos de carga con la forma de cada pantalla
+- [x] Aviso por la mañana de lo que caduca pronto en la despensa
+- [x] Pantallas secundarias (Hogar, Perfil, Nutri-em, Escanear, Comparar) con el diseño de la app; Comparar solo con tiendas cercanas
 - [ ] Aplicar migraciones 9, 10 y 11 (`npx supabase db push`)
 - [ ] Cargar supermercados de OSM (`npm run tiendas -- --local`) y rehacer enlaces de ingredientes
 - [ ] David prueba la app en el móvil

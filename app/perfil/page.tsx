@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
 import { prefiltro } from "@/lib/ia/prefiltro";
 import { calcularObjetivos } from "@/lib/ia/objetivos";
 import type { PerfilSalud } from "@/lib/ia/perfil";
 import { FormularioPerfil } from "./formulario";
+import { Cabecera, Pantalla } from "../ui";
 
 export const metadata: Metadata = { title: "Perfil · Eat-em" };
 
@@ -27,9 +27,8 @@ export default async function Perfil() {
     : null;
 
   return (
-    <main className="mx-auto max-w-md px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-10">
-      <Link href="/ajustes" className="text-sm font-medium text-marca">‹ Ajustes</Link>
-      <h1 className="mt-2 mb-4 text-2xl font-bold">Perfil</h1>
+    <Pantalla>
+      <Cabecera titulo="Perfil" volver={{ href: "/ajustes", texto: "Ajustes" }} />
 
       {objetivos && (
         <div className="mb-5 rounded-xl border border-marca/40 bg-superficie p-4">
@@ -55,6 +54,6 @@ export default async function Perfil() {
         embarazo: salud?.embarazo ?? false, lactancia: salud?.lactancia ?? false, consentimiento,
       }} />
       <p className="mt-8 text-xs text-texto-suave">Eat-em no sustituye a un profesional sanitario.</p>
-    </main>
+    </Pantalla>
   );
 }
