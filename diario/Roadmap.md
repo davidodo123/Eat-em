@@ -31,7 +31,6 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [/] Rehacer enlaces de ingredientes y Open Food Facts (`npm run off -- --solo-aplicar`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [x] Login con email y contraseña, con verificación del correo → [[Decisiones#Login con contraseña y correo verificado]]
-- [/] Correos de acceso propios en español (código hecho; falta migración 12 y SMTP) → [[Decisiones#Correos de acceso propios, no los de Supabase]]
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar

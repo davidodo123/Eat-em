@@ -66,7 +66,6 @@ export default async function Ajustes() {
         </Tarjeta>
       </Seccion>
 
-      <div id="contrasena" className="scroll-mt-4" />
       <Seccion titulo="Contraseña">
         <Tarjeta className="p-4">
           <p className="mb-3 text-sm text-texto-suave">Para entrar con tu email y contraseña. Si entraste con un enlace al correo, ponla aquí.</p>
