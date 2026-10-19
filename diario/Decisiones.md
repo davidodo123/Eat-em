@@ -24,5 +24,5 @@ tags: [decisiones]
 ## Diseño sin iconos
 *2026-10-19* — David pidió quitar los iconos y rediseñar. Todo pasa a tipografía: Bricolage Grotesque (títulos) y Figtree (texto), papel cálido con tinta casi negra y verde bosque de acento, cajas con borde fino en vez de sombras, barra inferior solo con texto. Desplegables, casillas, radios, fechas y `<details>` tienen estilo propio en `app/globals.css`; las casillas de Perfil y Ajustes son cajas que se marcan enteras (clase `opcion`).
 
-## Login con contraseña y correo verificado
-*2026-10-19* — Primero se probó a crear la cuenta ya confirmada (sin correo), pero David prefirió **verificar el email**: "Crear cuenta" usa `signUp` y manda un enlace de confirmación; hasta pulsarlo no se puede entrar. "Entrar" es email + contraseña, el enlace al correo sigue como alternativa y en Ajustes se puede poner contraseña a una cuenta antigua. Ojo: el correo de Supabase sin SMTP propio admite muy pocos envíos por hora.
+## Inicio de sesión normal, sin correos
+*2026-10-19* — La app se va a pasar a amigos: inicio de sesión normal con email y contraseña. "Crear cuenta" crea el usuario ya confirmado desde el servidor (service role, `email_confirm: true`) y entra al momento; no se envía ningún correo. Se probaron antes la verificación por correo de Supabase (muy pocos envíos por hora, en inglés) y un SMTP propio, y se descartaron por complicar el alta. Contras aceptadas: no hay "olvidé mi contraseña" (se cambia en Ajustes estando dentro) y cualquiera podría registrar un email que no es suyo.

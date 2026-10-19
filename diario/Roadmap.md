@@ -30,7 +30,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Cargar supermercados de OSM (18.895) y exclusiones de ingredientes
 - [/] Rehacer enlaces de ingredientes y Open Food Facts (`npm run off -- --solo-aplicar`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
-- [x] Login con email y contraseña, con verificación del correo → [[Decisiones#Login con contraseña y correo verificado]]
+- [x] Inicio de sesión normal con email y contraseña, sin correos → [[Decisiones#Inicio de sesión normal, sin correos]]
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar

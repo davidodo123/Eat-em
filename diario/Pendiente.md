@@ -49,7 +49,6 @@ Los precios tienen ya **2-3 días**: hasta que estén los secretos no se actuali
 - [ ] Cron de Vercel (`vercel.json`, 07:00 UTC): recordatorios de compra, comidas y caducidad. Solo funciona desplegado.
 - [ ] Probar en el iPhone: Safari → Compartir → *Añadir a pantalla de inicio* (necesario para las notificaciones).
 
-- [ ] SMTP propio en Supabase (Authentication → Emails → SMTP) si hay que enviar más de unos pocos correos por hora: con el correo incluido de Supabase el límite es muy bajo.
 
 ## 4. IA
 
