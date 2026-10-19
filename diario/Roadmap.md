@@ -30,7 +30,8 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Cargar supermercados de OSM (18.895) y exclusiones de ingredientes
 - [/] Rehacer enlaces de ingredientes y Open Food Facts (`npm run off -- --solo-aplicar`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
-- [x] Inicio de sesión normal con email y contraseña, sin correos → [[Decisiones#Inicio de sesión normal, sin correos]]
+- [/] Acceso con Google como en StatsRun (código hecho; falta activar Google en Supabase) → [[Decisiones#Acceso con Google, como en StatsRun]]
+- [ ] Quitar la protección de Vercel (pide iniciar sesión en Vercel en el móvil)
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar

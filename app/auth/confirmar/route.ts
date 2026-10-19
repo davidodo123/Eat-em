@@ -3,7 +3,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { rutaInterna } from "@/lib/rutas";
 
-// Destino del enlace magico. Con PKCE llega ?code=...; con la plantilla de email
+// Vuelta de Google (y de los enlaces de correo antiguos). Con PKCE llega ?code=...; con la plantilla de email
 // personalizada de Supabase, ?token_hash=...&type=magiclink.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
