@@ -4,7 +4,7 @@ import { actualizarSesion } from "@/lib/supabase/proxy";
 import { supabaseConfigurado } from "@/lib/env";
 
 // Rutas que no necesitan sesion
-const PUBLICAS = ["/entrar", "/auth/", "/api/salud", "/api/cron/"]; // el cron se protege con CRON_SECRET
+const PUBLICAS = ["/entrar", "/auth/", "/api/auth/", "/api/salud", "/api/cron/"]; // el cron se protege con CRON_SECRET
 
 export async function proxy(request: NextRequest) {
   if (!supabaseConfigurado) return NextResponse.next();
