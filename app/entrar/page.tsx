@@ -35,7 +35,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<{
       <div className="mt-10">
         {error && <p className="mb-3 rounded-xl bg-urgente/10 p-3 text-sm text-urgente" role="alert">El enlace no vale o ha caducado. Pide uno nuevo.</p>}
         <FormularioEntrar siguiente={rutaInterna(siguiente)} />
-        <p className="mt-4 text-center text-xs text-texto-suave">Sin contraseñas: te llega un enlace al correo. Eat-em no sustituye a un profesional sanitario.</p>
+        <p className="mt-4 text-center text-xs text-texto-suave">Eat-em no sustituye a un profesional sanitario.</p>
       </div>
     </main>
   );

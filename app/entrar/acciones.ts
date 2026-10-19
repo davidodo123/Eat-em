@@ -1,6 +1,7 @@
 "use server";
 import { headers } from "next/headers";
-import { crearClienteServidor } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { crearClienteAdmin, crearClienteServidor } from "@/lib/supabase/server";
 import { rutaInterna } from "@/lib/rutas";
 
 export interface EstadoEntrar {
@@ -32,4 +33,47 @@ export async function enviarEnlace(_previo: EstadoEntrar, datos: FormData): Prom
     };
   }
   return { estado: "enviado", email };
+}
+
+// --- Email y contrasena, sin verificar el correo ---
+
+export interface EstadoAcceso { error?: string; email?: string }
+const emailValido = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+export async function entrarConContrasena(_previo: EstadoAcceso, datos: FormData): Promise<EstadoAcceso> {
+  const email = String(datos.get("email") ?? "").trim().toLowerCase();
+  const contrasena = String(datos.get("contrasena") ?? "");
+  if (!emailValido(email) || !contrasena) return { error: "Escribe tu email y tu contraseña.", email };
+  const supabase = await crearClienteServidor();
+  const { error } = await supabase.auth.signInWithPassword({ email, password: contrasena });
+  if (error) {
+    const limite = error.status === 429 || /rate limit/i.test(error.message);
+    return { email, error: limite ? "Demasiados intentos. Espera un minuto." : "Email o contraseña incorrectos." };
+  }
+  redirect(rutaInterna(String(datos.get("siguiente") ?? "")));
+}
+
+// Crea la cuenta ya confirmada (sin correo de verificacion) y entra directamente
+export async function crearCuenta(_previo: EstadoAcceso, datos: FormData): Promise<EstadoAcceso> {
+  const email = String(datos.get("email") ?? "").trim().toLowerCase();
+  const contrasena = String(datos.get("contrasena") ?? "");
+  const nombre = String(datos.get("nombre") ?? "").trim().slice(0, 60);
+  if (!emailValido(email)) return { error: "Escribe un email válido.", email };
+  if (contrasena.length < 8) return { error: "La contraseña necesita al menos 8 caracteres.", email };
+
+  const { error: e1 } = await crearClienteAdmin().auth.admin.createUser({
+    email, password: contrasena, email_confirm: true, user_metadata: nombre ? { name: nombre } : undefined,
+  });
+  if (e1) {
+    const existe = /already|registered|exists/i.test(e1.message);
+    return {
+      email,
+      error: existe ? "Ya hay una cuenta con ese email. Entra con tu contraseña o, si no tienes, con un enlace al correo y ponla en Ajustes."
+        : "No se pudo crear la cuenta. Inténtalo de nuevo.",
+    };
+  }
+  const supabase = await crearClienteServidor();
+  const { error: e2 } = await supabase.auth.signInWithPassword({ email, password: contrasena });
+  if (e2) return { email, error: "Cuenta creada. Entra con tu email y contraseña." };
+  redirect(rutaInterna(String(datos.get("siguiente") ?? ""), "/grupo"));
 }

@@ -23,3 +23,6 @@ tags: [decisiones]
 
 ## Diseño sin iconos
 *2026-10-19* — David pidió quitar los iconos y rediseñar. Todo pasa a tipografía: Bricolage Grotesque (títulos) y Figtree (texto), papel cálido con tinta casi negra y verde bosque de acento, cajas con borde fino en vez de sombras, barra inferior solo con texto. Desplegables, casillas, radios, fechas y `<details>` tienen estilo propio en `app/globals.css`; las casillas de Perfil y Ajustes son cajas que se marcan enteras (clase `opcion`).
+
+## Login con contraseña sin verificar el correo
+*2026-10-19* — David quiere entrar sin pasar por el correo. "Crear cuenta" crea el usuario ya confirmado desde el servidor (service role, `email_confirm: true`) y entra al momento; "Entrar" es email + contraseña. El enlace al correo queda como alternativa y en Ajustes se puede poner contraseña a una cuenta antigua. Contra: cualquiera podría registrar un email que no es suyo; aceptable para una app de casa.

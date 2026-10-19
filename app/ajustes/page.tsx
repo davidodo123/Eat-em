@@ -5,6 +5,7 @@ import { hogarActual } from "@/lib/grupo";
 import { NOMBRE_CADENA, zonaDelHogar } from "@/lib/zona";
 import { ActivarNotificaciones, Preferencias } from "./notificaciones";
 import { SelectorTema } from "./tema";
+import { Contrasena } from "./contrasena";
 import { Cabecera, Pantalla, Seccion, Tarjeta } from "../ui";
 
 export const metadata: Metadata = { title: "Ajustes · Eat-em" };
@@ -62,6 +63,13 @@ export default async function Ajustes() {
             item_anadido: prefs?.item_anadido ?? true, stock_bajo: prefs?.stock_bajo ?? true,
             recordatorio_comidas: prefs?.recordatorio_comidas ?? false, recordatorio_compra: prefs?.recordatorio_compra ?? false,
           }} diaCompra={prefs?.dia_compra ?? null} />
+        </Tarjeta>
+      </Seccion>
+
+      <Seccion titulo="Contraseña">
+        <Tarjeta className="p-4">
+          <p className="mb-3 text-sm text-texto-suave">Para entrar con tu email y contraseña. Si entraste con un enlace al correo, ponla aquí.</p>
+          <Contrasena />
         </Tarjeta>
       </Seccion>
 
