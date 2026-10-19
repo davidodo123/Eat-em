@@ -26,3 +26,4 @@ data/osm/
 
 /diario/.obsidian/workspace*.json
 /diario/.obsidian/cache
+/migraciones-*.sql

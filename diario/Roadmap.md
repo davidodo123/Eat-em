@@ -26,8 +26,9 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Esqueletos de carga con la forma de cada pantalla
 - [x] Aviso por la mañana de lo que caduca pronto en la despensa
 - [x] Pantallas secundarias (Hogar, Perfil, Nutri-em, Escanear, Comparar) con el diseño de la app; Comparar solo con tiendas cercanas
-- [ ] Aplicar migraciones 9, 10 y 11 (`npx supabase db push`)
-- [ ] Cargar supermercados de OSM (`npm run tiendas -- --local`) y rehacer enlaces de ingredientes
+- [x] Aplicar migraciones 9, 10 y 11 (desde el SQL Editor de Supabase)
+- [x] Cargar supermercados de OSM (18.895) y exclusiones de ingredientes
+- [/] Rehacer enlaces de ingredientes y Open Food Facts (`npm run off -- --solo-aplicar`)
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar
