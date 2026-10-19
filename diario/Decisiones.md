@@ -26,3 +26,6 @@ tags: [decisiones]
 
 ## Login con contraseña y correo verificado
 *2026-10-19* — Primero se probó a crear la cuenta ya confirmada (sin correo), pero David prefirió **verificar el email**: "Crear cuenta" usa `signUp` y manda un enlace de confirmación; hasta pulsarlo no se puede entrar. "Entrar" es email + contraseña, el enlace al correo sigue como alternativa y en Ajustes se puede poner contraseña a una cuenta antigua. Ojo: el correo de Supabase sin SMTP propio admite muy pocos envíos por hora.
+
+## Correos de acceso propios, no los de Supabase
+*2026-10-19* — El correo incluido de Supabase permite muy pocos envíos por hora y llega en inglés, y la web se va a publicar. La app genera los enlaces con la API de administración de Supabase (`generateLink`) y los envía con su propio SMTP (nodemailer) con plantillas en español: confirmar cuenta, entrar sin contraseña y recuperar contraseña. Límite propio en `envios_correo` (1/min y 5/h por email, 20/h por IP; migración 12). Ojo: `generateLink` de tipo *magiclink* **crea la cuenta** si el email no existe, por eso antes se comprueba con `existe_cuenta`.

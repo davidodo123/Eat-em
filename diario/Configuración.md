@@ -17,6 +17,7 @@ Solo nombres. Los valores van en `.env.local`, en Vercel y en los secretos de Gi
 - `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODELO_CHAT`, `OPENAI_MODELO_EMBEDDINGS`
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`
 - `SCRAPER_USER_AGENT`, `MERCADONA_CODIGO_POSTAL`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_REMITENTE` (correos propios de acceso)
 - Opcionales: `CONTACTO_OSM`, `OVERPASS_URL`
 
 ## Secretos de GitHub Actions (Settings › Secrets and variables › Actions)

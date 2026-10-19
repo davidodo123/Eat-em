@@ -16,7 +16,7 @@ const db = new PGlite({ extensions: { vector, pg_trgm, unaccent } });
 // --- Simulacion minima de Supabase ---
 await db.exec(`
   CREATE SCHEMA auth;
-  CREATE TABLE auth.users (id UUID PRIMARY KEY, email TEXT, raw_user_meta_data JSONB DEFAULT '{}');
+  CREATE TABLE auth.users (id UUID PRIMARY KEY, email TEXT, raw_user_meta_data JSONB DEFAULT '{}', deleted_at TIMESTAMPTZ);
   CREATE FUNCTION auth.uid() RETURNS UUID LANGUAGE sql STABLE AS
     $$ SELECT nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   CREATE ROLE authenticated;
@@ -39,6 +39,11 @@ await db.exec(`
   GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
   GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
 `);
+// En Supabase esos permisos llegan al crear cada funcion y los REVOKE de las migraciones los quitan
+// despues; aqui se conceden al final, asi que se vuelven a aplicar los REVOKE para que cuenten.
+for (const f of fs.readdirSync(dirMig).filter((f) => f.endsWith(".sql")).sort()) {
+  for (const r of fs.readFileSync(path.join(dirMig, f), "utf8").match(/^REVOKE EXECUTE ON FUNCTION[^;]+;/gm) ?? []) await db.exec(r);
+}
 
 const A = "00000000-0000-0000-0000-00000000000a"; // hermano
 const B = "00000000-0000-0000-0000-00000000000b"; // novia
@@ -297,6 +302,22 @@ assert.ok(cerca[0].km < 0.2 && cerca[2].km > 1.5 && cerca[2].km < 2);
 assert.equal((await como(A, () => q("SELECT * FROM tiendas_cerca(36.7238, -3.5221, 100)"))).length, 4);
 await assert.rejects(como(A, () => q("INSERT INTO tiendas_osm (osm_id, nombre, lat, lon) VALUES ('x', 'x', 0, 0)")));
 console.log("OK supermercados cercanos (OpenStreetMap)");
+
+// 17. Correos propios: limite de envios y comprobacion de cuenta (solo servidor)
+const reservar = (email, ip) => uno("SELECT reservar_envio_correo($1, $2, 'enlace') ok", [email, ip]).then((r) => r.ok);
+assert.equal(await reservar("a@test.es", "1.1.1.1"), true);
+assert.equal(await reservar("a@test.es", "1.1.1.1"), false);                       // 1 por minuto
+await db.exec("UPDATE envios_correo SET enviado_en = now() - interval '2 minutes'");
+assert.equal(await reservar("a@test.es", "1.1.1.1"), true);
+await db.exec("UPDATE envios_correo SET enviado_en = now() - interval '10 minutes'");
+for (let i = 0; i < 3; i++) { assert.equal(await reservar("a@test.es", "1.1.1.1"), true); await db.exec("UPDATE envios_correo SET enviado_en = enviado_en - interval '2 minutes'"); }
+assert.equal(await reservar("a@test.es", "1.1.1.1"), false);                       // 5 por hora
+assert.equal((await uno("SELECT existe_cuenta('A@TEST.ES') e")).e, true);
+assert.equal((await uno("SELECT existe_cuenta('nadie@test.es') e")).e, false);
+await assert.rejects(como(A, () => q("SELECT existe_cuenta('b@test.es')")));
+await assert.rejects(como(A, () => q("SELECT reservar_envio_correo('x@test.es', null, 'enlace')")));
+assert.equal((await como(A, () => q("SELECT * FROM envios_correo"))).length, 0);
+console.log("OK correos propios: limite de envios y comprobacion de cuenta");
 
 console.log("\nTODO OK");
 await db.close();
