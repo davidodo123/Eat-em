@@ -10,7 +10,7 @@ Solo nombres. Los valores van en `.env.local`, en Vercel y en los secretos de Gi
 - **GitHub Actions**: `scrapers.yml` (diario), `open-food-facts.yml`, `ci.yml`.
 - **OpenRouter** (IA, modelo gratuito) por la API compatible con OpenAI.
 - **OpenStreetMap**: Nominatim (código postal) y copia de supermercados en `tiendas_osm`.
-- **Vercel**: pendiente.
+- **Vercel**: proyecto `eat-em` (cuenta davidodo123), https://eat-em.vercel.app. Variables copiadas de `.env.local`. Cron diario 07:00 UTC (`vercel.json`).
 
 ## Variables de entorno (`.env.local` / Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`

@@ -33,6 +33,6 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [ ] David prueba la app en el móvil
 
 ## Fase 3 · Publicar
-- [ ] Desplegar en Vercel con las variables de [[Configuración]]
+- [x] Desplegar en Vercel con las variables de [[Configuración]] (https://eat-em.vercel.app)
 - [ ] URL de redirección del login en Supabase
 - [ ] Evaluación completa de la IA gratuita (50 peticiones al día, en dos tandas)
