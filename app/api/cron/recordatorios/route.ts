@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       const { count } = await db.from("lista_items").select("id", { count: "exact", head: true }).eq("grupo_id", m.grupo_id).eq("comprado", false);
       compra += await avisar([m.usuario_id], {
         tipo: "recordatorio_compra", grupoId: m.grupo_id, url: "/lista", titulo: "Hoy toca compra",
-        cuerpo: count ? `Hay ${count} ${count === 1 ? "cosa" : "cosas"} en la lista. Antes de salir, pulsa «Calcular lo que falta».` : "La lista está vacía: calcula lo que falta antes de salir.",
+        cuerpo: count ? `Hay ${count} ${count === 1 ? "cosa" : "cosas"} en la lista. Antes de salir, pulsa «¿Qué me falta?».` : "La lista está vacía: pulsa «¿Qué me falta?» antes de salir.",
       });
     }
   }

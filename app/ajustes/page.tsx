@@ -68,7 +68,7 @@ export default async function Ajustes() {
 
       <Seccion titulo="Contraseña">
         <Tarjeta className="p-4">
-          <p className="mb-3 text-sm text-texto-suave">Para entrar con tu email y contraseña. Si entraste con un enlace al correo, ponla aquí.</p>
+          <p className="mb-3 text-sm text-texto-suave">Opcional: con Google no hace falta. Ponla si quieres entrar también con tu email y contraseña.</p>
           <Contrasena />
         </Tarjeta>
       </Seccion>

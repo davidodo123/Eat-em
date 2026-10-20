@@ -4,11 +4,12 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Eat-em",
     short_name: "Eat-em",
-    description: "Dieta, inventario y lista de la compra para tu hogar.",
+    description: "La compra, la despensa y la dieta de tu hogar, con los precios de tus supermercados.",
     start_url: "/",
     display: "standalone",
-    background_color: "#f7f7f4",
-    theme_color: "#1f7a55",
+    // Los mismos colores que la app (papel y verde bosque de app/globals.css)
+    background_color: "#f3efe6",
+    theme_color: "#f3efe6",
     lang: "es",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
   };

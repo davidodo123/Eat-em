@@ -52,7 +52,7 @@ export async function avisoDePrueba(): Promise<{ enviadas: number }> {
   return { enviadas: await avisar([u.user.id], { tipo: "item_anadido", titulo: "Eat-em", cuerpo: "Las notificaciones funcionan 👍", url: "/ajustes" }) };
 }
 
-// Poner o cambiar la contrasena (las cuentas creadas con enlace al correo no tienen)
+// Poner o cambiar la contrasena (opcional: las cuentas creadas con Google no tienen)
 export async function ponerContrasena(_previo: { error?: string; ok?: boolean }, datos: FormData): Promise<{ error?: string; ok?: boolean }> {
   const contrasena = String(datos.get("contrasena") ?? "");
   if (contrasena.length < 8) return { error: "Al menos 8 caracteres." };
