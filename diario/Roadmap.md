@@ -36,7 +36,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [ ] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto (y `agrupar_por_ean`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
-- [ ] Quitar la protección de Vercel (pide iniciar sesión en Vercel en el móvil)
+- [x] Quitar la protección de Vercel (20-10)
 - [/] David prueba la app en el móvil (entrar con Google ya funciona)
 
 ## Fase 3 · Publicar

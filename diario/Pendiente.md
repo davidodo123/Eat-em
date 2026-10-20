@@ -11,9 +11,9 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 ## 1. Lo que tiene que hacer David
 
 - [x] **Secretos de GitHub** creados el 20-10 (`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`). Prueba: Actions → **Scrapers** → *Run workflow* → `carrefour` con `--max-peticiones 5`.
-- [ ] **Variables de Google en Vercel** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`): si al entrar Google muestra el dominio de Supabase y no eat-em.vercel.app, faltan (la app usa entonces el proveedor de Supabase y funciona igual).
+- [x] **Variables de Google en Vercel** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) comprobadas el 20-10.
 - [ ] **IA de pago**: la gratuita da ~50 peticiones al día para todos; decidir si se pagan créditos cuando la usen amigos.
-- [ ] **Protección de Vercel**: proyecto eat-em → Settings → Deployment Protection → *Vercel Authentication* → Disabled (para que ninguna dirección pida iniciar sesión en Vercel).
+- [x] **Protección de Vercel** quitada el 20-10.
 - [ ] **Probar la app en el móvil** y apuntar lo que falle:
   1. Entrar con Google
   2. Ajustes → Ubicación → código postal o GPS
@@ -21,7 +21,7 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
   4. Despensa → que aparezca, +/−, caducidad
   5. Dieta → añadir comida, vista Mes, repetir semana
   6. Instalarla: iPhone (Safari → Compartir → *Añadir a pantalla de inicio*) o Android (Chrome → *Instalar aplicación*) y activar avisos en Ajustes
-- [ ] **Contraseña de la base de datos**: guardarla en un gestor. Si `npx supabase db push` falla, las migraciones se pegan en el SQL Editor (ver [[Decisiones]]).
+- [x] **Contraseña de la base de datos** guardada en un gestor (20-10). Si `npx supabase db push` falla, las migraciones se pegan en el SQL Editor (ver [[Decisiones]]).
 
 ## 2. Scraping
 
