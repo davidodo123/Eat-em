@@ -41,20 +41,23 @@ export function Buscador({ placeholder, onElegir, onTexto, textoBoton = "Añadir
     if (!msg) { setQ(""); setResultados(null); entrada.current?.blur(); }
     setTimeout(() => setAviso(null), 2200);
   };
+  const cerrar = () => { setQ(""); setResultados(null); entrada.current?.blur(); };
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2 rounded-2xl border border-borde bg-superficie pl-4 pr-2 transition-shadow focus-within:border-marca focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--marca)_22%,transparent)]">
+      {/* Fondo que tapa la pantalla mientras hay resultados: tocarlo los cierra */}
+      {resultados && <div aria-hidden onClick={cerrar} className="fixed inset-0 z-20 bg-fondo/75 backdrop-blur-[2px]" />}
+      <div className="relative z-30 flex items-center gap-2 rounded-2xl border border-borde bg-superficie pl-4 pr-2 transition-shadow focus-within:border-marca focus-within:shadow-[0_0_0_3px_color-mix(in_srgb,var(--marca)_22%,transparent)]">
         <input ref={entrada} type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={placeholder} enterKeyHint="search"
-          aria-label={placeholder} className="min-w-0 flex-1 !border-0 !bg-transparent py-3.5 text-base !shadow-none outline-none" />
+          onKeyDown={(e) => { if (e.key === "Escape") cerrar(); }} aria-label={placeholder} className="min-w-0 flex-1 !border-0 !bg-transparent py-3.5 text-base !shadow-none outline-none" />
         {buscando && <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-marca border-t-transparent" aria-label="Buscando" />}
         {q && !buscando && <button type="button" onClick={() => setQ("")} className="px-2 text-sm font-semibold text-texto-suave">Borrar</button>}
       </div>
 
-      {aviso && <p role="status" className="mt-2 px-1 text-sm font-medium text-marca">{aviso}</p>}
+      {aviso && <p role="status" className="relative z-30 mt-2 px-1 text-sm font-medium text-marca">{aviso}</p>}
 
       {resultados && (
-        <div className="caja mt-2 overflow-hidden shadow-[0_12px_32px_rgb(0_0_0/0.10)]">
+        <div className="caja absolute inset-x-0 top-full z-30 mt-2 overflow-hidden shadow-[0_16px_40px_rgb(0_0_0/0.16)]">
           {onTexto && q.trim().length >= 2 && (
             <button type="button" onClick={() => empezar(async () => hecho(await onTexto(q.trim()), q.trim()))}
               className="flex w-full items-center gap-3 border-b border-borde px-4 py-3 text-left active:bg-borde/40">
@@ -63,7 +66,7 @@ export function Buscador({ placeholder, onElegir, onTexto, textoBoton = "Añadir
             </button>
           )}
           {!resultados.length && !buscando && <p className="px-4 py-6 text-center text-sm text-texto-suave">Nada con «{q.trim()}» en tus supermercados.</p>}
-          <ul className="max-h-[60dvh] divide-y divide-borde overflow-y-auto overscroll-contain">
+          <ul className="max-h-[55dvh] divide-y divide-borde overflow-y-auto overscroll-contain">
             {resultados.map((r) => {
               const mejor = r.ofertas[0];
               return (
