@@ -74,7 +74,9 @@ async function main() {
     const mapeo = await mapearCategorias(db, scraper!.id, res.votosCategoria, categorias);
     for (const p of res.productos) p.categoria_id = p.categoria_origen ? mapeo.get(p.categoria_origen) ?? null : null;
 
-    const ultimoTotal = await ultimoTotalOk(db, scraper!.id, rapido);
+    // Con --max-peticiones la carga es parcial a proposito: no se compara con la ultima completa
+    // (la alerta de 0 productos sigue valiendo)
+    const ultimoTotal = maxPeticiones === undefined ? await ultimoTotalOk(db, scraper!.id, rapido) : null;
     const informe = informeCalidad(res.productos, anteriores, ultimoTotal);
     const resumen = {
       ...informe, peticiones: res.peticiones, errores_http: res.errores, avisos: res.avisos.slice(0, 30),
