@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: TEMA }} />
       </head>
-      <body className="min-h-dvh pb-20 antialiased">
+      <body className="min-h-dvh antialiased">
         {children}
         <Navegacion />
       </body>
