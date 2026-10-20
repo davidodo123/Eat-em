@@ -10,11 +10,9 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 
 ## 1. Lo que tiene que hacer David
 
-- [ ] **Secretos de GitHub** (sin ellos fallan todos los scrapers desde el 17 y los precios no se actualizan)
-  github.com/davidodo123/Eat-em → Settings → Secrets and variables → Actions → *New repository secret*:
-  - `SUPABASE_URL` = el valor de `NEXT_PUBLIC_SUPABASE_URL` de `.env.local`
-  - `SUPABASE_SERVICE_ROLE_KEY` = el de `.env.local`
-  Después: Actions → **Scrapers** → *Run workflow* → `carrefour` con `--max-peticiones 5` para comprobarlo.
+- [x] **Secretos de GitHub** creados el 20-10 (`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`). Prueba: Actions → **Scrapers** → *Run workflow* → `carrefour` con `--max-peticiones 5`.
+- [ ] **Variables de Google en Vercel** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`): si al entrar Google muestra el dominio de Supabase y no eat-em.vercel.app, faltan (la app usa entonces el proveedor de Supabase y funciona igual).
+- [ ] **IA de pago**: la gratuita da ~50 peticiones al día para todos; decidir si se pagan créditos cuando la usen amigos.
 - [ ] **Protección de Vercel**: proyecto eat-em → Settings → Deployment Protection → *Vercel Authentication* → Disabled (para que ninguna dirección pida iniciar sesión en Vercel).
 - [ ] **Probar la app en el móvil** y apuntar lo que falle:
   1. Entrar con Google
@@ -37,7 +35,7 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 | Caprabo | 12.701 | 12.701 | 16-10 | diario 06:30 | con cookies, 1,5 s |
 | Mercadona | 4.269 | 0 | 16-10 | lunes 02:30 | solo catálogo del sitemap: su robots.txt prohíbe `/api`; los precios llegan del escáner |
 
-Los precios tienen ya **3-4 días**: hasta que estén los secretos no se actualizan.
+Los secretos ya están (20-10): la primera carga diaria con ellos es la de la noche del 20 al 21. En esa carga Carrefour corrige los €/kg de los productos de peso variable.
 
 ### Procesos que quedan
 - [ ] Que los 5 scrapers corran una semana sin fallos (tras los secretos). Si alguno falla con código 2 es la alerta de calidad (0 productos o caída ≥ 30 %): mirar si la web ha cambiado.

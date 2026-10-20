@@ -12,7 +12,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Scrapers: Carrefour, Ahorramás, Gadis, Caprabo (con precios) y Mercadona (catálogo, sin precios: su robots.txt prohíbe la API)
 - [x] Open Food Facts: nutrición por EAN y emparejado por nombre entre tiendas
 - [x] Enlace de productos a ingredientes con palabras excluidas (migración 9) → [[Decisiones#Palabras excluidas por ingrediente]]
-- [ ] Crear los secretos SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en GitHub Actions (los scrapers fallan sin ellos)
+- [x] Crear los secretos SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en GitHub Actions (20-10)
 - [ ] Comprobar una semana de ejecuciones diarias sin fallos
 
 ## Fase 2 · App móvil
@@ -30,7 +30,10 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Cargar supermercados de OSM (18.895) y exclusiones de ingredientes
 - [x] Rehacer enlaces de ingredientes con las exclusiones (2.188 enlaces; leche, huevos, pollo y aceite ya cuadran)
 - [x] Corregir 1.187 formatos de Carrefour (la API trae a veces el factor x10) y que el scraper prefiera el texto del envase
-- [ ] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto
+- [x] Corregir los €/kg de los 1.959 productos de peso variable de Carrefour (la API da 0,001 kg)
+- [x] Buscador con resultados flotantes, sin scroll de más y textos, icono y Escanear al día
+- [x] Funciones de Vercel en Dublín, junto a la base de datos (las acciones tardaban por cruzar el Atlántico)
+- [ ] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto (y `agrupar_por_ean`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
 - [ ] Quitar la protección de Vercel (pide iniciar sesión en Vercel en el móvil)

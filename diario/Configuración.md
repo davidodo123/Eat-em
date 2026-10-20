@@ -6,12 +6,12 @@ tags: [configuracion]
 Solo nombres. Los valores van en `.env.local`, en Vercel y en los secretos de GitHub, **nunca aquí**.
 
 ## Servicios
-- **Supabase**: base de datos, login por enlace al correo, tiempo real. Migraciones en `supabase/migrations/`, se aplican con `npx supabase db push` (pide `SUPABASE_DB_PASSWORD`).
+- **Supabase**: base de datos (región `eu-west-1`, Irlanda), login (Google con `signInWithIdToken`; contraseña opcional), tiempo real. Migraciones en `supabase/migrations/`, se aplican con `npx supabase db push` (pide `SUPABASE_DB_PASSWORD`).
 - **GitHub Actions**: `scrapers.yml` (diario), `open-food-facts.yml`, `ci.yml`.
 - **OpenRouter** (IA, modelo gratuito) por la API compatible con OpenAI.
 - **OpenStreetMap**: Nominatim (código postal) y copia de supermercados en `tiendas_osm`.
 - **Google Cloud**: proyecto Run-In-Out, cliente OAuth web "Eat-em". Vueltas autorizadas: `https://eat-em.vercel.app/api/auth/google/callback`, `http://localhost:3000/api/auth/google/callback` y la de Supabase (`…supabase.co/auth/v1/callback`).
-- **Vercel**: proyecto `eat-em` (cuenta davidodo123), https://eat-em.vercel.app. Variables copiadas de `.env.local`. Cron diario 07:00 UTC (`vercel.json`).
+- **Vercel**: proyecto `eat-em` (cuenta davidodo123), https://eat-em.vercel.app. Variables copiadas de `.env.local`. Cron diario 07:00 UTC y funciones en Dublín, `dub1`, junto a la base de datos (`vercel.json`).
 
 ## Variables de entorno (`.env.local` / Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
