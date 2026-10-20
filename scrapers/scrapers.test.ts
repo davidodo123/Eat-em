@@ -45,6 +45,13 @@ test("carrefour: normalizar", () => {
   }, AHORA);
   assert.deepEqual([lata.cantidad_neta, lata.unidad, lata.precio_por_unidad], [95, "g", 22]);
 
+  // El envase tambien falla ("0,25 l." con "250 cl."): el nombre confirma la API y manda la API
+  const aceite = normalizarCarrefour({
+    product_id: "R-5", display_name: "Aceite de oliva virgen extra Manzuno 0,25 l.", measure_unit: "l",
+    unit_conversion_factor: 0.25, recipient: "250 cl.", active_price: 2.55,
+  }, AHORA);
+  assert.deepEqual([aceite.cantidad_neta, aceite.unidad, aceite.precio_por_unidad], [250, "ml", 10.2]);
+
   // Peso variable: la API trae 0,001 kg (1 g); manda el nombre, y sin el no hay formato
   const corte = normalizarCarrefour({
     product_id: "R-3", display_name: "Pechuga de Pollo Pollosí Noel al corte 250 g aprox", measure_unit: "kg",

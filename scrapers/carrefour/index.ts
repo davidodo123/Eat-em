@@ -145,17 +145,23 @@ const UNIDADES: Record<string, { unidad: Formato["unidad"]; factor: number }> = 
 
 export function normalizar(it: ItemCarrefour, ahora: string): ProductoNormalizado {
   const texto = it.recipient?.trim() || null;
-  // Formato: el factor que da la API, salvo que contradiga al texto del envase. La API a veces
-  // trae el factor multiplicado por 10 ("95 g." con 0,95 kg) y el precio por kilo sale 10 veces menor.
+  // Formato: el factor que da la API, salvo que no lo confirme ni el nombre ni el texto del envase.
+  // La API a veces trae el factor multiplicado por 10 ("95 g." con 0,95 kg) y el precio por kilo sale
+  // 10 veces menor. Pero el texto del envase tambien falla ("Aceite 0,25 l." con "250 cl."): si el
+  // nombre o el envase cuadran con la API, manda la API.
   // En los de peso variable ("al corte", "aprox") trae 0,001 kg: 1 g, que no es un formato real.
   let formato: Formato | null = null;
   const u = UNIDADES[(it.measure_unit ?? "").toLowerCase()];
-  const delTexto = parsearFormato(texto) ?? parsearFormato(it.display_name);
+  const delEnvase = parsearFormato(texto);
+  const delNombre = parsearFormato(it.display_name);
+  const delTexto = delEnvase ?? delNombre;
   const calculado = u && it.unit_conversion_factor && it.unit_conversion_factor > 0 ? Math.round(it.unit_conversion_factor * u.factor * 100) / 100 : null;
   const deApi = calculado !== null && (u!.unidad === "unidad" || calculado >= 5) ? calculado : null;
-  const contradice = deApi !== null && delTexto !== null && delTexto.unidad === u!.unidad && !delTexto.aproximado
-    && Math.abs(deApi - delTexto.cantidad) / delTexto.cantidad > 0.2;
-  if (contradice || deApi === null) formato = delTexto;
+  const comparables = [delNombre, delEnvase].filter((f): f is Formato => f !== null && f.unidad === u?.unidad && !f.aproximado);
+  const contradice = deApi !== null && comparables.length > 0
+    && !comparables.some((f) => Math.abs(deApi - f.cantidad) / f.cantidad <= 0.2);
+  if (contradice) formato = comparables[0];   // el nombre si trae cantidad; si no, el envase
+  else if (deApi === null) formato = delTexto;
   else {
     formato = {
       cantidad: deApi,
