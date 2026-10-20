@@ -44,6 +44,18 @@ test("carrefour: normalizar", () => {
     unit_conversion_factor: 0.95, recipient: "95 g.", active_price: 2.09,
   }, AHORA);
   assert.deepEqual([lata.cantidad_neta, lata.unidad, lata.precio_por_unidad], [95, "g", 22]);
+
+  // Peso variable: la API trae 0,001 kg (1 g); manda el nombre, y sin el no hay formato
+  const corte = normalizarCarrefour({
+    product_id: "R-3", display_name: "Pechuga de Pollo Pollosí Noel al corte 250 g aprox", measure_unit: "kg",
+    unit_conversion_factor: 0.001, recipient: "Bandeja de ", active_price: 1.97, variable_weight: true,
+  }, AHORA);
+  assert.deepEqual([corte.cantidad_neta, corte.unidad, corte.precio_por_unidad], [250, "g", 7.88]);
+  const sinTexto = normalizarCarrefour({
+    product_id: "R-4", display_name: "Pechuga de pollo Label", measure_unit: "kg",
+    unit_conversion_factor: 0.001, recipient: "Bandeja de ", active_price: 9.83, variable_weight: true,
+  }, AHORA);
+  assert.deepEqual([sinTexto.cantidad_neta, sinTexto.precio_por_unidad, sinTexto.precio], [null, null, 9.83]);
 });
 
 test("mercadona: pagina de producto", () => {

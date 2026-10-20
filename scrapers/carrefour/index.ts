@@ -147,21 +147,23 @@ export function normalizar(it: ItemCarrefour, ahora: string): ProductoNormalizad
   const texto = it.recipient?.trim() || null;
   // Formato: el factor que da la API, salvo que contradiga al texto del envase. La API a veces
   // trae el factor multiplicado por 10 ("95 g." con 0,95 kg) y el precio por kilo sale 10 veces menor.
+  // En los de peso variable ("al corte", "aprox") trae 0,001 kg: 1 g, que no es un formato real.
   let formato: Formato | null = null;
   const u = UNIDADES[(it.measure_unit ?? "").toLowerCase()];
   const delTexto = parsearFormato(texto) ?? parsearFormato(it.display_name);
-  const deApi = u && it.unit_conversion_factor && it.unit_conversion_factor > 0 ? Math.round(it.unit_conversion_factor * u.factor * 100) / 100 : null;
+  const calculado = u && it.unit_conversion_factor && it.unit_conversion_factor > 0 ? Math.round(it.unit_conversion_factor * u.factor * 100) / 100 : null;
+  const deApi = calculado !== null && (u!.unidad === "unidad" || calculado >= 5) ? calculado : null;
   const contradice = deApi !== null && delTexto !== null && delTexto.unidad === u!.unidad && !delTexto.aproximado
     && Math.abs(deApi - delTexto.cantidad) / delTexto.cantidad > 0.2;
-  if (contradice) formato = delTexto;
-  else if (u && it.unit_conversion_factor && it.unit_conversion_factor > 0) {
+  if (contradice || deApi === null) formato = delTexto;
+  else {
     formato = {
-      cantidad: Math.round(it.unit_conversion_factor * u.factor * 100) / 100,
-      unidad: u.unidad,
+      cantidad: deApi,
+      unidad: u!.unidad,
       pack: delTexto?.pack ?? 1,
       aproximado: Boolean(it.variable_weight) || Boolean(delTexto?.aproximado),
     };
-  } else formato = delTexto;
+  }
 
   const activo = numero(it.active_price);
   const lista = numero(it.list_price);
