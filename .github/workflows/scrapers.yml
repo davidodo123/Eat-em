@@ -6,7 +6,8 @@ on:
     - cron: "45 4 * * *"   # Ahorramas: todos los dias a las 04:45 UTC
     - cron: "15 5 * * 1-6" # Gadis: de lunes a sabado solo categorias (--rapido, ~10 min)
     - cron: "15 5 * * 0"   # Gadis: los domingos completo (categorias + fichas, ~2 h)
-    - cron: "30 6 * * *"   # Caprabo: todos los dias a las 06:30 UTC (~15 min)
+    # Caprabo no va aqui: desde el 2026-10-24 responde 403 a las IPs de GitHub (bloqueo de
+    # centros de datos; no se salta). Se carga a mano desde casa: npm run scraper -- caprabo
     - cron: "30 2 * * 1"   # Mercadona: los lunes a las 02:30 UTC (catalogo, sin precios)
   workflow_dispatch:
     inputs:
@@ -24,13 +25,12 @@ concurrency:
 jobs:
   scraper:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 240 # Carrefour tarda ~2 h; el 2026-10-27 se colgo y llego a 3 h
     env:
       SUPER: >-
         ${{ github.event.schedule == '30 2 * * 1' && 'mercadona'
          || github.event.schedule == '45 4 * * *' && 'ahorramas'
          || startsWith(github.event.schedule, '15 5 ') && 'gadis'
-         || github.event.schedule == '30 6 * * *' && 'caprabo'
          || inputs.supermercado || 'carrefour' }}
     steps:
       - name: Comprobar secretos

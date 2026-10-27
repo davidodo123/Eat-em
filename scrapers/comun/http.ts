@@ -59,7 +59,9 @@ export class ClienteHttp {
         // 4xx (salvo 429) no se arregla reintentando
         if (r.status !== 429 && r.status < 500) throw new ErrorHttp(r.status, url, false);
         const retry = Number(r.headers.get("retry-after"));
-        throw new ErrorHttp(r.status, url, true, Number.isFinite(retry) ? retry * 1000 : undefined);
+        // Si pide esperar mas de 2 min no se insiste: mejor fallar que colgar el job horas
+        if (retry > 120) throw new ErrorHttp(r.status, url, false);
+        throw new ErrorHttp(r.status, url, true, Number.isFinite(retry) && retry > 0 ? retry * 1000 : undefined);
       } catch (e) {
         const reintentable = !(e instanceof ErrorHttp) || e.reintentable;
         if (!reintentable || intento >= reintentos) {

@@ -206,17 +206,17 @@ async function aplicar(db: SupabaseClient) {
   };
 
   // Si un tramo supera el statement_timeout de la API, se parte en dos y se reintenta (hasta 25 ids)
-  const adaptativo = async (fn: string, sid: string, desde: number, hasta: number): Promise<number> => {
+  const adaptativo = async (fn: string, base: Record<string, unknown>, desde: number, hasta: number): Promise<number> => {
     try {
-      return await rpc(fn, { p_supermercado: sid, p_desde: desde, p_hasta: hasta });
+      return await rpc(fn, { ...base, p_desde: desde, p_hasta: hasta });
     } catch (e) {
       if (!/statement timeout/i.test((e as Error).message) || hasta - desde < 25) throw e;
       const mitad = Math.floor((desde + hasta) / 2);
-      return (await adaptativo(fn, sid, desde, mitad)) + (await adaptativo(fn, sid, mitad + 1, hasta));
+      return (await adaptativo(fn, base, desde, mitad)) + (await adaptativo(fn, base, mitad + 1, hasta));
     }
   };
   let agrupados = 0, emparejados = 0, enriquecidos = 0, enlaces = 0;
-  for (const t of tramos(TRAMO_IDS)) agrupados += await rpc("agrupar_por_ean", t);
+  for (const t of tramos(TRAMO_IDS)) agrupados += await adaptativo("agrupar_por_ean", {}, t.p_desde, t.p_hasta);
   console.log(`  agrupados por EAN: ${agrupados}`);
   const { data: supers } = await db.from("supermercados").select("id");
   const conProductos: string[] = [];
@@ -228,14 +228,14 @@ async function aplicar(db: SupabaseClient) {
     const { count } = await db.from("productos").select("id", { count: "exact", head: true }).eq("supermercado_id", id).is("ean", null);
     if (!count) continue;
     let n = 0;
-    for (const t of tramos(500)) n += await adaptativo("agrupar_por_similitud", id, t.p_desde, t.p_hasta);
+    for (const t of tramos(500)) n += await adaptativo("agrupar_por_similitud", { p_supermercado: id }, t.p_desde, t.p_hasta);
     console.log(`  emparejados por nombre en ${id}: ${n} de ${count} sin EAN`);
     emparejados += n;
   }
-  for (const t of tramos(TRAMO_IDS)) enriquecidos += await rpc("aplicar_off", t);
+  for (const t of tramos(TRAMO_IDS)) enriquecidos += await adaptativo("aplicar_off", {}, t.p_desde, t.p_hasta);
   console.log(`  enriquecidos con OFF: ${enriquecidos}`);
   // Enlace ingrediente -> productos de todas las tiendas (tambien lo hace cada carga)
-  for (const id of conProductos) for (const t of tramos(TRAMO_IDS)) enlaces += await adaptativo("enlazar_ingredientes", id, t.p_desde, t.p_hasta);
+  for (const id of conProductos) for (const t of tramos(TRAMO_IDS)) enlaces += await adaptativo("enlazar_ingredientes", { p_supermercado: id }, t.p_desde, t.p_hasta);
   return { productos_agrupados_ean: agrupados, emparejados_por_nombre: emparejados, productos_enriquecidos: enriquecidos, enlaces_ingredientes: enlaces };
 }
 

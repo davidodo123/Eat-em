@@ -55,6 +55,15 @@ async function main() {
       .insert({ supermercado_id: scraper!.id, parametros: { rapido, maxPeticiones: maxPeticiones ?? null, cargado_de: archivoCargar ?? null } })
       .select("id").single());
     ejecucionId = data!.id;
+    // Si GitHub corta el job por tiempo (SIGTERM) la ejecucion no se queda "en_curso" para siempre
+    for (const senal of ["SIGINT", "SIGTERM"] as const) {
+      process.once(senal, async () => {
+        await db.from("scraper_ejecuciones").update({
+          fin: new Date().toISOString(), estado: "error", error: `Cortado (${senal}) tras ${Math.round((Date.now() - inicio) / 60000)} min`,
+        }).eq("id", ejecucionId!);
+        process.exit(1);
+      });
+    }
   }
 
   // Dato bruto: JSONL comprimido, una linea por pagina descargada

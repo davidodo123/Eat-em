@@ -26,3 +26,6 @@ tags: [decisiones]
 
 ## Acceso con Google, como en StatsRun
 *2026-10-19* — Para pasársela a amigos, David quiere el mismo acceso que en StatsRun (run-in-out): **"Continuar con Google"**. Google verifica el email y quien entra lo acepta en su pantalla; la primera vez se crea la cuenta. La app hace el OAuth con Google ella misma (`/api/auth/google`, como StatsRun) para que Google muestre "Ir a eat-em.vercel.app" y no el dominio de Supabase, y entrega el `id_token` a Supabase (`signInWithIdToken` con nonce), así las sesiones y la seguridad por filas siguen igual. Sin las variables de Google se usa el proveedor de Supabase. Si ya existía una cuenta con ese email, Supabase la enlaza. Se queda "Ya tengo contraseña" para cuentas con contraseña. Descartados antes: alta con contraseña sin verificar, verificación por correo de Supabase y SMTP propio.
+
+## Caprabo fuera de GitHub Actions
+*2026-10-27* — Desde el 24-10 capraboacasa.com responde **403 al sitemap desde las IPs de GitHub** (desde casa da 200 con el mismo User-Agent y su robots.txt sigue permitiéndolo). Es un bloqueo de centros de datos y no se salta (ni proxies ni cambiar el User-Agent). Se quita su cron del workflow para que no falle cada día y se carga a mano desde casa con `npm run scraper -- caprabo` (~15 min). Alternativa pendiente de David: una tarea programada de Windows en su PC.

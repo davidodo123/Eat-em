@@ -13,7 +13,9 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Open Food Facts: nutrición por EAN y emparejado por nombre entre tiendas
 - [x] Enlace de productos a ingredientes con palabras excluidas (migración 9) → [[Decisiones#Palabras excluidas por ingrediente]]
 - [x] Crear los secretos SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en GitHub Actions (20-10)
-- [ ] Comprobar una semana de ejecuciones diarias sin fallos
+- [x] Caprabo bloquea las IPs de GitHub (403): fuera del cron, se carga a mano desde casa → [[Decisiones#Caprabo fuera de GitHub Actions]]
+- [x] Carrefour: timeout del job a 240 min, `Retry-After` largo ya no cuelga el job y la ejecución se cierra si GitHub la corta
+- [/] Comprobar una semana de ejecuciones diarias sin fallos (Carrefour, Ahorramás, Gadis y Mercadona bien del 21 al 26-10; desde el 28-10 sin Caprabo)
 
 ## Fase 2 · App móvil
 - [x] Barra inferior Lista · Despensa · Dieta · Ajustes → [[Decisiones#App móvil con tres secciones]]
@@ -33,7 +35,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Corregir los €/kg de los 1.959 productos de peso variable de Carrefour (la API da 0,001 kg)
 - [x] Buscador con resultados flotantes, sin scroll de más y textos, icono y Escanear al día
 - [x] Funciones de Vercel en Dublín, junto a la base de datos (las acciones tardaban por cruzar el Atlántico)
-- [ ] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto (y `agrupar_por_ean`)
+- [x] `aplicar_off` de Open Food Facts se corta por tiempo: hacerlo adaptativo como el resto (también `agrupar_por_ean`)
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
 - [x] Quitar la protección de Vercel (20-10)
