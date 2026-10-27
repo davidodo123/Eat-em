@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { crearClienteServidor } from "@/lib/supabase/server";
 import { hogarActual } from "@/lib/grupo";
 import { NOMBRE_CADENA, zonaDelHogar } from "@/lib/zona";
@@ -19,27 +20,39 @@ const precioDe = (p: Prod) => {
   return v === null ? null : Number(v);
 };
 
+type Barato = { precio: number; tienda: string; nombre: string };
+
+// El mas barato de cada ingrediente en las tiendas cercanas, en un solo viaje (migracion 12).
+// Si la migracion aun no esta aplicada, una llamada a comparar_precios por ingrediente.
+async function preciosMinimos(supabase: SupabaseClient, ids: string[], tiendas: string[] | null): Promise<Map<string, Barato | null>> {
+  if (!ids.length) return new Map();
+  const { data, error } = await supabase.rpc("precios_minimos", { p_ingredientes: ids, p_supermercados: tiendas });
+  if (!error) {
+    const filas = data as { ingrediente_id: string; supermercado_id: string; nombre: string; precio: number }[];
+    return new Map(filas.map((f) => [f.ingrediente_id, { precio: Number(f.precio), tienda: f.supermercado_id, nombre: f.nombre }]));
+  }
+  return new Map(await Promise.all(ids.map(async (id) => {
+    const { data } = await supabase.rpc("comparar_precios", { p_ingrediente: id });
+    const filas = ((data ?? []) as { supermercado_id: string; nombre: string; precio: number }[])
+      .filter((f) => !tiendas || tiendas.includes(f.supermercado_id));
+    const mejor = filas.sort((a, b) => Number(a.precio) - Number(b.precio))[0];
+    return [id, mejor ? { precio: Number(mejor.precio), tienda: mejor.supermercado_id, nombre: mejor.nombre } : null] as const;
+  })));
+}
+
 export default async function Lista() {
   const supabase = await crearClienteServidor();
   const hogar = await hogarActual(supabase);
   if (!hogar) return <Pantalla><Cabecera titulo="Lista" /><SinHogar que="La lista de la compra" /></Pantalla>;
 
   const zona = zonaDelHogar(hogar);
-  const [{ data: items }] = await Promise.all([
-    supabase.from("lista_items")
-      .select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente, origen, ingredientes (nombre, unidad), productos (nombre, imagen_url, supermercado_id, formato_texto, precio, precio_oferta, oferta_hasta)")
-      .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at"),
-  ]);
+  const { data: items } = await supabase.from("lista_items")
+    .select("id, ingrediente_id, texto_libre, cantidad, paquetes, urgente, origen, ingredientes (nombre, unidad), productos (nombre, imagen_url, supermercado_id, formato_texto, precio, precio_oferta, oferta_hasta)")
+    .eq("grupo_id", hogar.id).eq("comprado", false).order("created_at");
 
   // Lineas de ingrediente generico (las de la dieta): el mas barato de las tiendas cercanas
   const genericos = [...new Set((items ?? []).filter((i) => i.ingrediente_id && !i.productos).map((i) => i.ingrediente_id as string))];
-  const masBarato = new Map(await Promise.all(genericos.map(async (id) => {
-    const { data } = await supabase.rpc("comparar_precios", { p_ingrediente: id });
-    const filas = ((data ?? []) as { supermercado_id: string; nombre: string; precio: number }[])
-      .filter((f) => !zona.buscarEn || zona.buscarEn.includes(f.supermercado_id));
-    const mejor = filas.sort((a, b) => Number(a.precio) - Number(b.precio))[0];
-    return [id, mejor ? { precio: Number(mejor.precio), tienda: mejor.supermercado_id, nombre: mejor.nombre } : null] as const;
-  })));
+  const masBarato = await preciosMinimos(supabase, genericos, zona.buscarEn);
 
   let total = 0;
   const filas: (FilaLista & { auto: boolean })[] = (items ?? []).map((it) => {

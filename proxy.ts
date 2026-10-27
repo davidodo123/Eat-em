@@ -18,7 +18,7 @@ export async function proxy(request: NextRequest) {
     url.search = ruta === "/" ? "" : `?siguiente=${encodeURIComponent(ruta + request.nextUrl.search)}`;
     return NextResponse.redirect(url);
   }
-  if (usuario && ruta === "/entrar") return NextResponse.redirect(new URL("/", request.url));
+  if (usuario && ruta === "/entrar") return NextResponse.redirect(new URL("/lista", request.url));
   return respuesta;
 }
 

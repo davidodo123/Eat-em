@@ -67,14 +67,6 @@ export async function cambiarPaquetes(itemId: number, paquetes: number): Promise
   return {};
 }
 
-export async function marcarUrgente(itemId: number, urgente: boolean): Promise<{ error?: string }> {
-  const { supabase } = await contexto();
-  const { error } = await supabase.from("lista_items").update({ urgente }).eq("id", itemId);
-  if (error) return { error: "No se pudo cambiar." };
-  revalidatePath("/lista");
-  return {};
-}
-
 // Comprado: pasa a la despensa. Si es un ingrediente, marcar_comprado() ya lo suma al inventario.
 export async function marcarComprado(itemId: number): Promise<{ error?: string }> {
   const { supabase, usuario, hogar } = await contexto();

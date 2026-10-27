@@ -10,7 +10,9 @@ const PESTANAS = [
 ];
 const SIN_BARRA = ["/entrar", "/auth"];
 
-// Barra inferior solo con texto: la pestaña activa lleva una raya encima
+// Barra inferior solo con texto: la pestaña activa lleva una raya encima.
+// prefetch: las cuatro secciones se cargan en segundo plano y el cambio de pestaña es inmediato
+// (next.config.ts, staleTimes).
 export function Navegacion() {
   const ruta = usePathname();
   if (SIN_BARRA.some((r) => ruta.startsWith(r))) return null;
@@ -23,7 +25,7 @@ export function Navegacion() {
           const on = activa(p);
           return (
             <li key={p.href}>
-              <Link href={p.href} aria-current={on ? "page" : undefined}
+              <Link href={p.href} prefetch aria-current={on ? "page" : undefined}
                 className={`relative block py-4 text-center text-[0.9rem] tracking-tight ${on ? "font-bold text-texto" : "font-medium text-texto-suave"}`}>
                 <span aria-hidden className={`absolute inset-x-5 top-0 h-[3px] rounded-b-full bg-marca transition-opacity ${on ? "opacity-100" : "opacity-0"}`} />
                 {p.texto}

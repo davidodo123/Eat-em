@@ -16,7 +16,6 @@ export const CONDICIONES_MEDICAS = {
   tca: "Trastorno de la conducta alimentaria (actual o pasado)",
   otra: "Otra condición médica o medicación relevante",
 } as const;
-export type CondicionMedica = keyof typeof CONDICIONES_MEDICAS;
 
 export interface PerfilSalud {
   sexo: "hombre" | "mujer" | null;

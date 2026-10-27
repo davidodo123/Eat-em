@@ -40,6 +40,8 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Rediseño sin iconos, con campos y casillas propios → [[Decisiones#Diseño sin iconos]]
 - [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
 - [x] Quitar la protección de Vercel (20-10)
+- [x] Optimización: pestañas precargadas y en caché 30-60 s, Lista con un viaje a la base en vez de uno por ingrediente, Dieta con uno menos, la app abre directa en Lista y fuera código muerto → [[Decisiones#Velocidad entre pestañas]]
+- [ ] Aplicar la migración 12 (`precios_minimos`) en el SQL Editor de Supabase
 - [/] David prueba la app en el móvil (entrar con Google ya funciona)
 
 ## Fase 3 · Publicar

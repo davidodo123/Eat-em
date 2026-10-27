@@ -258,7 +258,12 @@ await db.exec(`
 const precios = await como(A, () => q("SELECT supermercado_id, nombre, precio::float, precio_por_unidad::float ppu, fuente FROM comparar_precios('aceite_oliva') ORDER BY ppu"));
 assert.deepEqual(precios.map((p) => [p.supermercado_id, p.ppu, p.fuente]),
   [["carrefour", 6.8, "web"], ["mercadona", 6.95, "usuario"], ["ahorramas", 7.2, "web"]]);
-console.log("OK comparador de precios por ingrediente");
+// Varios ingredientes de una vez (Lista): el mas barato de cada uno entre las tiendas pedidas
+const minimos = async (sql) => (await como(A, () => q(sql))).map((r) => [r.ingrediente_id, r.supermercado_id, r.precio]);
+const esperado = (t) => { const p = precios.filter((x) => !t || t.includes(x.supermercado_id)).sort((a, b) => a.precio - b.precio)[0]; return [["aceite_oliva", p.supermercado_id, p.precio]]; };
+assert.deepEqual(await minimos("SELECT ingrediente_id, supermercado_id, precio::float FROM precios_minimos(ARRAY['aceite_oliva', 'no_existe'])"), esperado(null));
+assert.deepEqual(await minimos("SELECT ingrediente_id, supermercado_id, precio::float FROM precios_minimos(ARRAY['aceite_oliva'], ARRAY['ahorramas'])"), esperado(["ahorramas"]));
+console.log("OK comparador de precios por ingrediente (tambien varios a la vez)");
 
 // 14. Busqueda en el catalogo de las tiendas cercanas (prefijo, filtro por cadena, erratas)
 await como(A, async () => {

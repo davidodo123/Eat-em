@@ -14,6 +14,7 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 - [x] **Variables de Google en Vercel** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) comprobadas el 20-10.
 - [ ] **IA de pago**: la gratuita da ~50 peticiones al día para todos; decidir si se pagan créditos cuando la usen amigos. El 27-10 OpenRouter retiró gratis el modelo de siempre; la app usa ya el de reserva `nvidia/nemotron-3.5-super-vl:free` → [[Decisiones#Modelo de IA de reserva]].
 - [ ] **Cambiar `OPENAI_MODELO_CHAT`** a `nvidia/nemotron-3.5-super-vl:free` en Vercel y en `.env.local` (ahora funciona igual gracias a la reserva, pero cada petición gasta un 404 antes).
+- [ ] **Migración 12** (`supabase/migrations/20261027000012_precios_minimos.sql`): pegarla en el SQL Editor de Supabase. Hasta entonces la Lista funciona igual pero más lenta (una consulta por ingrediente).
 - [ ] **Caprabo desde casa**: GitHub está bloqueado (403). Cargarlo a mano con `npm run scraper -- caprabo` (~20 min) o decidir si se crea una tarea programada de Windows → [[Decisiones#Caprabo fuera de GitHub Actions]].
 - [x] **Protección de Vercel** quitada el 20-10.
 - [ ] **Probar la app en el móvil** y apuntar lo que falle:

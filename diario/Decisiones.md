@@ -32,3 +32,11 @@ tags: [decisiones]
 
 ## Modelo de IA de reserva
 *2026-10-27* — OpenRouter retiró la versión gratuita de `nvidia/nemotron-3-super-120b-a12b:free` (404 "unavailable for free"): la IA de la app dejó de funcionar. Elegido como sustituto `nvidia/nemotron-3.5-super-vl:free`, el único gratuito con Structured Outputs de su familia (los otros: xing4.0-29b, dots-3-note-preview, lfm-2.5-2.6b, más pequeños o en preview); pasó 6 de 6 preguntas de prueba. El código prueba el modelo de reserva cuando el principal da 404 (`OPENAI_MODELO_RESERVA`, por defecto ese), así la app no se cae la próxima vez que retiren uno. Alternativa: pagar el modelo antiguo (decisión de David, ver [[Pendiente]]).
+
+## Velocidad entre pestañas
+*2026-10-27* — David pidió que las secciones carguen más rápido. Medido: cada viaje a Supabase cuesta 100-500 ms y la Lista hacía uno por ingrediente de la dieta (24 en paralelo ≈ 1,6 s). Elegido:
+- Las cuatro pestañas de la barra se precargan (`prefetch`) y el navegador las guarda 30 s si se han visitado y 60 s si solo se han precargado (`staleTimes`). Cualquier acción con `revalidatePath` y el tiempo real borran esa caché, así que lo que cambia uno mismo o el hogar se ve al momento. Coste: 3 renders más en el servidor al abrir la app.
+- Lista: `precios_minimos()` (migración 12) da el más barato de todos los ingredientes en un solo viaje, con el mismo criterio que `comparar_precios`. Si la migración aún no está aplicada, se usa la forma antigua.
+- Dieta: dietas y comidas en una sola consulta.
+- `/`, `/hoy` e `/inventario` pasan a redirecciones de `next.config.ts` (antes renderizaban una página solo para redirigir; abrir la PWA eran dos viajes al servidor). La PWA abre en `/lista`.
+Descartado: Cache Components / PPR (cambia cómo se escriben todas las páginas; mucho trabajo para lo que queda por ganar).

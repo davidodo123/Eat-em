@@ -35,21 +35,21 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
 
   const supabase = await crearClienteServidor();
   const { data: u } = await usuarioActual();
-  const { data: dietas } = await supabase.from("dietas").select("id, semana_inicio, objetivos")
-    .eq("usuario_id", u.user!.id).eq("estado", "activa").gte("semana_inicio", rejilla[0]).lte("semana_inicio", rejilla.at(-1)!);
-  const ids = (dietas ?? []).map((d) => d.id);
-  const [{ data: comidas }, { data: ings }, { data: consumos }] = await Promise.all([
-    ids.length ? supabase.from("dieta_comidas").select("id, dieta_id, dia, tipo, orden, nombre, preparacion, dieta_comida_ingredientes (ingrediente_id, cantidad)").in("dieta_id", ids)
-      : Promise.resolve({ data: [] as Comida[] }),
+  // Dietas con sus comidas en una sola consulta, a la vez que el resto
+  const [{ data: dietas }, { data: ings }, { data: consumos }] = await Promise.all([
+    supabase.from("dietas")
+      .select("id, semana_inicio, objetivos, dieta_comidas (id, dieta_id, dia, tipo, orden, nombre, preparacion, dieta_comida_ingredientes (ingrediente_id, cantidad))")
+      .eq("usuario_id", u.user!.id).eq("estado", "activa").gte("semana_inicio", rejilla[0]).lte("semana_inicio", rejilla.at(-1)!),
     supabase.from("ingredientes").select("id, nombre, unidad").eq("activo", true).order("nombre"),
     dia === hoy ? supabase.from("consumos").select("id, dieta_comida_id, estado, nombre, tipo").eq("usuario_id", u.user!.id).eq("fecha", hoy) : Promise.resolve({ data: [] }),
   ]);
   const ing = new Map((ings ?? []).map((i) => [i.id, i]));
+  const opciones = (ings ?? []).map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad }));
   const semanaDeDieta = new Map((dietas ?? []).map((d) => [d.id, d.semana_inicio as string]));
 
   // Comidas por fecha
   const porFecha = new Map<string, Comida[]>();
-  for (const c of (comidas ?? []) as Comida[]) {
+  for (const c of (dietas ?? []).flatMap((d) => d.dieta_comidas as Comida[])) {
     const lunes = semanaDeDieta.get(c.dieta_id)!;
     const f = semanaDe(lunes).find((x) => diaSemana(x) === c.dia)!;
     porFecha.set(f, [...(porFecha.get(f) ?? []), c]);
@@ -143,8 +143,8 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
             );
           })}
         </ul>
-        <div className="mt-3"><NuevaComida key={dia} fecha={dia} tipoInicial={dia === hoy ? momentoAhora() : "comida"} ingredientes={(ings ?? []).map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad }))} /></div>
-        {dia === hoy && <div className="mt-3"><NuevaExtra ingredientes={(ings ?? []).map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad }))} /></div>}
+        <div className="mt-3"><NuevaComida key={dia} fecha={dia} tipoInicial={dia === hoy ? momentoAhora() : "comida"} ingredientes={opciones} /></div>
+        {dia === hoy && <div className="mt-3"><NuevaExtra ingredientes={opciones} /></div>}
       </Seccion>
 
       {lunes >= lunesDeLaSemana(hoy) && (

@@ -3,6 +3,20 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Los scrapers y scripts no forman parte del despliegue en Vercel
   outputFileTracingExcludes: { "*": ["scrapers/**", "scripts/**", "tareas/**", "data/raw/**"] },
+  experimental: {
+    // Cache del navegador entre pestañas (node_modules/next/dist/docs/.../staleTimes.md): volver a una
+    // seccion vista hace menos de 30 s (o precargada hace menos de 60 s) no espera al servidor.
+    // Las Server Actions con revalidatePath y el tiempo real (router.refresh) la invalidan.
+    staleTimes: { dynamic: 30, static: 60 },
+  },
+  // Antes de pasar por el proxy ni renderizar nada: la app abre directamente en la Lista
+  async redirects() {
+    return [
+      { source: "/", destination: "/lista", permanent: false },
+      { source: "/hoy", destination: "/dieta", permanent: true },
+      { source: "/inventario", destination: "/despensa", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "prod-mercadona.imgix.net" },
