@@ -1,10 +1,10 @@
 ---
 tags: [pendiente]
-actualizado: 2026-10-20
+actualizado: 2026-10-27
 ---
 # Lo que queda
 
-Foto del 20 de octubre de 2026. Lo que se vaya haciendo se marca en el [[Roadmap]]; esta nota explica el contexto y los pasos.
+Foto del 27 de octubre de 2026. Lo que se vaya haciendo se marca en el [[Roadmap]]; esta nota explica el contexto y los pasos.
 
 La app está publicada en **https://eat-em.vercel.app** con acceso con Google. Comparte siempre esa dirección: las direcciones largas de cada despliegue (`eat-em-xxxx-davidodo123s-projects.vercel.app`) piden iniciar sesión en Vercel.
 
@@ -12,7 +12,9 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 
 - [x] **Secretos de GitHub** creados el 20-10 (`SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`). Prueba: Actions → **Scrapers** → *Run workflow* → `carrefour` con `--max-peticiones 5`.
 - [x] **Variables de Google en Vercel** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) comprobadas el 20-10.
-- [ ] **IA de pago**: la gratuita da ~50 peticiones al día para todos; decidir si se pagan créditos cuando la usen amigos.
+- [ ] **IA de pago**: la gratuita da ~50 peticiones al día para todos; decidir si se pagan créditos cuando la usen amigos. El 27-10 OpenRouter retiró gratis el modelo de siempre; la app usa ya el de reserva `nvidia/nemotron-3.5-super-vl:free` → [[Decisiones#Modelo de IA de reserva]].
+- [ ] **Cambiar `OPENAI_MODELO_CHAT`** a `nvidia/nemotron-3.5-super-vl:free` en Vercel y en `.env.local` (ahora funciona igual gracias a la reserva, pero cada petición gasta un 404 antes).
+- [ ] **Caprabo desde casa**: GitHub está bloqueado (403). Cargarlo a mano con `npm run scraper -- caprabo` (~20 min) o decidir si se crea una tarea programada de Windows → [[Decisiones#Caprabo fuera de GitHub Actions]].
 - [x] **Protección de Vercel** quitada el 20-10.
 - [ ] **Probar la app en el móvil** y apuntar lo que falle:
   1. Entrar con Google
@@ -38,10 +40,10 @@ La app está publicada en **https://eat-em.vercel.app** con acceso con Google. C
 Los secretos ya están (20-10): la primera carga diaria con ellos es la de la noche del 20 al 21. En esa carga Carrefour corrige los €/kg de los productos de peso variable.
 
 ### Procesos que quedan
-- [ ] Que los 5 scrapers corran una semana sin fallos (tras los secretos). Si alguno falla con código 2 es la alerta de calidad (0 productos o caída ≥ 30 %): mirar si la web ha cambiado.
+- [/] Que los scrapers de GitHub corran una semana sin fallos. Del 21 al 26-10 Carrefour, Ahorramás, Gadis y Mercadona bien; Caprabo 403 todos los días (fuera del cron desde el 27-10); Carrefour se colgó el 27-10 (>3 h, ver [[Diario/2026-10-27]]). Si alguno falla con código 2 es la alerta de calidad (0 productos o caída ≥ 30 %): mirar si la web ha cambiado.
 - [x] Enlaces ingrediente → producto rehechos con las palabras excluidas: 2.188 enlaces, la cesta cuadra (leche semidesnatada, huevos de gallina, pechuga fresca, aceite de oliva).
-- [ ] `aplicar_off` (nutrición de Open Food Facts) se corta por el tiempo máximo de la base de datos: hacerlo por tramos que se parten solos, como `enlazar_ingredientes`. Después, `npm run off -- --solo-aplicar` completo.
-- [ ] Workflow **Open Food Facts** (semanal): falla por los mismos secretos.
+- [x] `aplicar_off` por tramos que se parten solos (27-10). `npm run off -- --solo-aplicar` completo lanzado el 27-10.
+- [x] Workflow **Open Food Facts** (semanal): funciona desde el 25-10.
 - [ ] Supermercados de OpenStreetMap: recargar cada pocos meses con `npm run tiendas` (sin `--local` descarga de nuevo, ~1-2 min). Hoy: 18.895.
 - [ ] Más cadenas con catálogo: salen cerca a menudo **Dia, Lidl, Aldi, Alcampo, Eroski, Consum, Covirán**. Antes de escribir un scraper: leer su robots.txt y condiciones, ir despacio y **no saltar nunca protecciones anti-bot** (Cloudflare, WAF, Imperva). Si no se puede, se quedan como "cerca, sin datos".
 
@@ -54,7 +56,7 @@ Los secretos ya están (20-10): la primera carga diaria con ellos es la de la no
 ## 4. IA
 
 - Modelo gratuito de OpenRouter `nvidia/nemotron-3-super-120b-a12b:free`, unas **50 peticiones al día** para toda la app (todos los usuarios).
-- [ ] Evaluación completa: 50 preguntas en dos tandas de 25 (una por día) con `npm run eval:ia`.
+- [/] Evaluación completa con el modelo nuevo: tanda 1 (preguntas 1-25) **25/25** el 27-10. Falta la tanda 2: `npm run eval:ia -- --solo 26,27,...,50` otro día (gasta ~25 de las 50 peticiones diarias).
 - [ ] Con amigos usándola, 50 al día se quedan cortas enseguida: valorar créditos de pago (decisión de David).
 
 ## 5. Ideas sin ordenar
@@ -75,8 +77,8 @@ guardes claves en el diario; los scrapers respetan robots.txt y no saltan protec
 anti-bot. Antes de tocar Next lee node_modules/next/dist/docs/ (esta versión cambia cosas).
 El acceso es con Google (OAuth propio en /api/auth/google + signInWithIdToken de Supabase).
 
-Empieza por: comprobar si los scrapers de GitHub Actions ya funcionan (API pública de
-GitHub: /repos/davidodo123/Eat-em/actions/runs) y hacer adaptativo aplicar_off en
-scrapers/off/importar.ts. Luego lo siguiente pendiente del Roadmap. Al acabar, actualiza
+Empieza por: revisar las ejecuciones de los scrapers (tabla scraper_ejecuciones en Supabase o
+la API pública de GitHub /repos/davidodo123/Eat-em/actions/runs), sobre todo Carrefour, y
+hacer la tanda 2 de la evaluación de IA (preguntas 26-50). Luego lo siguiente del Roadmap. Al acabar, actualiza
 el Roadmap, Pendiente.md y la nota del día.
 ```

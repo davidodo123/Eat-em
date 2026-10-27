@@ -14,6 +14,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Enlace de productos a ingredientes con palabras excluidas (migración 9) → [[Decisiones#Palabras excluidas por ingrediente]]
 - [x] Crear los secretos SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en GitHub Actions (20-10)
 - [x] Caprabo bloquea las IPs de GitHub (403): fuera del cron, se carga a mano desde casa → [[Decisiones#Caprabo fuera de GitHub Actions]]
+- [x] Caprabo por subcategorías: la raíz da 403 pasada la página 100
 - [x] Carrefour: timeout del job a 240 min, `Retry-After` largo ya no cuelga el job y la ejecución se cierra si GitHub la corta
 - [/] Comprobar una semana de ejecuciones diarias sin fallos (Carrefour, Ahorramás, Gadis y Mercadona bien del 21 al 26-10; desde el 28-10 sin Caprabo)
 
@@ -45,4 +46,5 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Desplegar en Vercel con las variables de [[Configuración]] (https://eat-em.vercel.app)
 - [-] ~~URL de redirección del login en Supabase~~ (no hace falta: Google vuelve a la propia app)
 - [x] README con la explicación de la web
-- [ ] Evaluación completa de la IA gratuita (50 peticiones al día, en dos tandas)
+- [x] Modelo de IA de reserva: OpenRouter retiró gratis el de siempre → [[Decisiones#Modelo de IA de reserva]]
+- [/] Evaluación completa de la IA gratuita (50 peticiones al día, en dos tandas): tanda 1 25/25

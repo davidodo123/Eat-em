@@ -11,7 +11,7 @@ App de móvil (PWA) para la compra de casa: **Lista** de lo que falta, **Despens
 - Precios: scrapers diarios en GitHub Actions (Carrefour, Ahorramás, Gadis, Caprabo; Mercadona solo catálogo)
 
 ## Fase actual
-Fase 2 · App móvil — publicada en https://eat-em.vercel.app con acceso con Google; falta que David la pruebe a fondo en el móvil. Los scrapers de GitHub fallan por falta de secretos (ver [[Pendiente]]).
+Fase 2 · App móvil — publicada en https://eat-em.vercel.app con acceso con Google; falta que David la pruebe a fondo en el móvil. Scrapers diarios en GitHub salvo Caprabo (bloquea GitHub, se carga desde casa). IA con modelo gratuito nuevo (ver [[Pendiente]]).
 
 ## Cómo usamos el diario
 - [[Roadmap]]: fases y tareas con casillas (de aquí sale el % del panel).
