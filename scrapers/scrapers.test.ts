@@ -169,8 +169,10 @@ test("caprabo: sitemap", () => {
   const urls = ["https://www.capraboacasa.com/es/supermercado/2059806-alimentacion/",
     "https://www.capraboacasa.com/es/supermercado/2059806-alimentacion/2059818-yogures/",
     "https://www.capraboacasa.com/es/supermercado/6000072-papeleria-libros-y-juguetes/",
+    "https://www.capraboacasa.com/es/supermercado/2059698-frescos/",
     "https://www.capraboacasa.com/es/supermercado/danacol/"];
-  assert.deepEqual(caprabo.raicesCatalogo(urls), [urls[0]]);
+  // Segundo nivel si lo hay (la raiz da 403 pasada la pagina 100); si no, la raiz
+  assert.deepEqual(caprabo.raicesCatalogo(urls), [urls[1], urls[3]]);
   assert.equal(caprabo.nombresCategoria(urls).get("2059818"), "yogures");
 });
 

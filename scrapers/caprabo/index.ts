@@ -105,9 +105,17 @@ export function nombresCategoria(urls: string[]) {
   return m;
 }
 
-// Categorias raiz con id numerico (las demas son landings de marcas y promociones)
+// Categorias con id numerico (las demas son landings de marcas y promociones). Se recorre el
+// segundo nivel: la paginacion de una raiz da 403 a partir de la pagina 100 (comprobado el
+// 2026-10-27 en alimentacion, dulces e higiene). Las raices sin hijas se recorren enteras.
 export function raicesCatalogo(urls: string[]) {
-  return [...new Set(urls.filter((u) => /\/es\/supermercado\/\d+-[^/]+\/$/.test(u) && !EXCLUIR.test(u)))];
+  const cat = urls.filter((u) => /\/es\/supermercado\/\d+-/.test(u) && !EXCLUIR.test(u));
+  const primer = cat.filter((u) => /\/es\/supermercado\/\d+-[^/]+\/$/.test(u));
+  const segundo = cat.filter((u) => /\/es\/supermercado\/\d+-[^/]+\/\d+-[^/]+\/$/.test(u));
+  return [...new Set(primer.flatMap((r) => {
+    const hijas = segundo.filter((u) => u.startsWith(r));
+    return hijas.length ? hijas : [r];
+  }))];
 }
 
 const Q = `["']`;   // el html de loadpage usa comillas simples
