@@ -41,7 +41,7 @@ Leyenda: `[x]` hecho · `[ ]` pendiente · `[/]` empezado · `[-]` descartado
 - [x] Acceso con Google como en StatsRun (Google muestra eat-em.vercel.app) → [[Decisiones#Acceso con Google, como en StatsRun]]
 - [x] Quitar la protección de Vercel (20-10)
 - [x] Optimización: pestañas precargadas y en caché 30-60 s, Lista con un viaje a la base en vez de uno por ingrediente, Dieta con uno menos, la app abre directa en Lista y fuera código muerto → [[Decisiones#Velocidad entre pestañas]]
-- [ ] Aplicar la migración 12 (`precios_minimos`) en el SQL Editor de Supabase
+- [x] Aplicar la migración 12 (`precios_minimos`) en el SQL Editor de Supabase (27-10; mismos precios que antes, 170-300 ms estables frente a 220-790 ms)
 - [/] David prueba la app en el móvil (entrar con Google ya funciona)
 
 ## Fase 3 · Publicar
