@@ -29,3 +29,6 @@ tags: [decisiones]
 
 ## Caprabo fuera de GitHub Actions
 *2026-10-27* — Desde el 24-10 capraboacasa.com responde **403 al sitemap desde las IPs de GitHub** (desde casa da 200 con el mismo User-Agent y su robots.txt sigue permitiéndolo). Es un bloqueo de centros de datos y no se salta (ni proxies ni cambiar el User-Agent). Se quita su cron del workflow para que no falle cada día y se carga a mano desde casa con `npm run scraper -- caprabo` (~15 min). Alternativa pendiente de David: una tarea programada de Windows en su PC.
+
+## Modelo de IA de reserva
+*2026-10-27* — OpenRouter retiró la versión gratuita de `nvidia/nemotron-3-super-120b-a12b:free` (404 "unavailable for free"): la IA de la app dejó de funcionar. Elegido como sustituto `nvidia/nemotron-3.5-super-vl:free`, el único gratuito con Structured Outputs de su familia (los otros: xing4.0-29b, dots-3-note-preview, lfm-2.5-2.6b, más pequeños o en preview); pasó 6 de 6 preguntas de prueba. El código prueba el modelo de reserva cuando el principal da 404 (`OPENAI_MODELO_RESERVA`, por defecto ese), así la app no se cae la próxima vez que retiren uno. Alternativa: pagar el modelo antiguo (decisión de David, ver [[Pendiente]]).

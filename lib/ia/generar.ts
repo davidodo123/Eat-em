@@ -66,9 +66,21 @@ export async function generarDia(
 // formato "texto" es el MODO CHAT (respuesta libre, sin esquema).
 export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?: number; formato?: "plan" | "texto" } = {}): Modelo {
   const p = proveedorIA(op.clave);
-  const modelo = p.modelo(op.modelo ?? process.env.OPENAI_MODELO_CHAT ?? "gpt-4o-mini");
+  const principal = p.modelo(op.modelo ?? process.env.OPENAI_MODELO_CHAT ?? "gpt-4o-mini");
+  // Los modelos gratuitos de OpenRouter se retiran sin aviso (404): se prueba el de reserva
+  const reserva = p.modelo(process.env.OPENAI_MODELO_RESERVA ?? MODELO_RESERVA);
   return async (mensajes) => {
-    const r = await fetch(`${p.url}/chat/completions`, {
+    let r = await pedir(principal, mensajes);
+    if (r.status === 404 && reserva !== principal) r = await pedir(reserva, mensajes);
+    if (!r.ok) throw new ErrorIA(r.status, await r.text());
+    const j = await r.json();
+    const contenido = j.choices?.[0]?.message;
+    if (contenido?.refusal) throw new Error(`OpenAI rechazo la peticion: ${contenido.refusal}`);
+    return String(contenido?.content ?? "");
+  };
+
+  function pedir(modelo: string, mensajes: Mensaje[]) {
+    return fetch(`${p.url}/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${p.clave}`, "Content-Type": "application/json", ...p.cabeceras },
       body: JSON.stringify({
@@ -84,10 +96,8 @@ export function modeloOpenAI(op: { clave?: string; modelo?: string; temperatura?
       }),
       signal: AbortSignal.timeout(120_000), // los modelos gratuitos son lentos
     });
-    if (!r.ok) throw new ErrorIA(r.status, await r.text());
-    const j = await r.json();
-    const contenido = j.choices?.[0]?.message;
-    if (contenido?.refusal) throw new Error(`OpenAI rechazo la peticion: ${contenido.refusal}`);
-    return String(contenido?.content ?? "");
-  };
+  }
 }
+
+// Comprobado el 2026-10-27: gratuito en OpenRouter y admite Structured Outputs
+const MODELO_RESERVA = "nvidia/nemotron-3.5-super-vl:free";

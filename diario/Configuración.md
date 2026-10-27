@@ -15,7 +15,7 @@ Solo nombres. Los valores van en `.env.local`, en Vercel y en los secretos de Gi
 
 ## Variables de entorno (`.env.local` / Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-- `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODELO_CHAT`, `OPENAI_MODELO_EMBEDDINGS`
+- `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_MODELO_CHAT`, `OPENAI_MODELO_RESERVA` (opcional: modelo si el principal da 404), `OPENAI_MODELO_EMBEDDINGS`
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`
 - `SCRAPER_USER_AGENT`, `MERCADONA_CODIGO_POSTAL`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (cliente OAuth "Eat-em" del proyecto Run-In-Out de Google Cloud)
