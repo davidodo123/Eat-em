@@ -42,7 +42,7 @@ Los secretos ya están (20-10): la primera carga diaria con ellos es la de la no
 ### Procesos que quedan
 - [/] Que los scrapers de GitHub corran una semana sin fallos. Del 21 al 26-10 Carrefour, Ahorramás, Gadis y Mercadona bien; Caprabo 403 todos los días (fuera del cron desde el 27-10); Carrefour se colgó el 27-10 (>3 h, ver [[Diario/2026-10-27]]). Si alguno falla con código 2 es la alerta de calidad (0 productos o caída ≥ 30 %): mirar si la web ha cambiado.
 - [x] Enlaces ingrediente → producto rehechos con las palabras excluidas: 2.188 enlaces, la cesta cuadra (leche semidesnatada, huevos de gallina, pechuga fresca, aceite de oliva).
-- [x] `aplicar_off` por tramos que se parten solos (27-10). `npm run off -- --solo-aplicar` completo lanzado el 27-10.
+- [x] `aplicar_off` por tramos que se parten solos (27-10). `npm run off -- --solo-aplicar` completo sin cortes el 27-10 (45 enriquecidos, 2.101 enlaces).
 - [x] Workflow **Open Food Facts** (semanal): funciona desde el 25-10.
 - [ ] Supermercados de OpenStreetMap: recargar cada pocos meses con `npm run tiendas` (sin `--local` descarga de nuevo, ~1-2 min). Hoy: 18.895.
 - [ ] Más cadenas con catálogo: salen cerca a menudo **Dia, Lidl, Aldi, Alcampo, Eroski, Consum, Covirán**. Antes de escribir un scraper: leer su robots.txt y condiciones, ir despacio y **no saltar nunca protecciones anti-bot** (Cloudflare, WAF, Imperva). Si no se puede, se quedan como "cerca, sin datos".
