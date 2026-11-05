@@ -40,3 +40,18 @@ tags: [decisiones]
 - Dieta: dietas y comidas en una sola consulta.
 - `/`, `/hoy` e `/inventario` pasan a redirecciones de `next.config.ts` (antes renderizaban una página solo para redirigir; abrir la PWA eran dos viajes al servidor). La PWA abre en `/lista`.
 Descartado: Cache Components / PPR (cambia cómo se escriben todas las páginas; mucho trabajo para lo que queda por ganar).
+
+## Ahorramás avanza según lo que trae cada página
+*2026-11-05* — La web anuncia ~7.700 productos y el scraper veía ~5.700, un conjunto distinto cada día, y retiraba ~1.000 productos diarios que seguían a la venta. Las ejecuciones salían "ok" porque el total no caía de golpe. Causa: el tamaño de página cambia por categoría y día (14 propios + 3 patrocinados, 24…) y se avanzaba siempre de 24 en 24. Ahora se avanza lo que trae de nuevo cada página y, si una categoría no llega al 98 % de lo anunciado, no se retira nada. Comprobado: 497 de 497 en lácteos; 7.505 en total y 1.812 recuperados. Coste: de 23 a 33 min. Descartado: leer el sitemap de productos (no trae precios).
+
+## Tiempo real con el token de la sesión
+*2026-11-05* — Los cambios de otra persona del hogar nunca llegaban solos al navegador: el canal entraba sin `access_token`, Supabase aceptaba la suscripción y RLS descartaba los eventos sin ningún error. Se pasa el token antes de suscribirse. Además, al volver a una pestaña o a la app tras 30 s en segundo plano se pide la versión al día, porque la caché de pestañas de [[Decisiones#Velocidad entre pestañas]] enseñaba datos viejos. Coste: un render más al volver, y a veces la pestaña siguiente tarda ~0,8 s en vez de ~30 ms.
+
+## Movimientos de inventario con lo que salió de verdad
+*2026-11-05* — El stock no baja de 0, pero el movimiento guardaba lo pedido: con 0 g en casa, Hecha (-250) dejaba 0 y Deshacer (+250) dejaba 250 g que no existen. Migración 13: el movimiento guarda lo que salió de verdad y, si no salió nada, no se registra. Descartado: permitir stock negativo (la despensa enseñaría cantidades sin sentido).
+
+## Semana con IA por tandas
+*2026-11-05* — Uno a uno, 7 días con el modelo gratuito pasaban de los 5 min de la función de Vercel y no se guardaba nada. Ahora van 4 días a la vez y, a los 270 s o sin cupo, se guarda lo generado y se avisa de lo que falta. Coste: los días de una misma tanda no se ven entre sí, así que pueden variar menos.
+
+## Casos de uso con navegador real
+*2026-11-05* — `tareas/casos-de-uso.ts` con `playwright-core` y el Chrome instalado (no descarga navegadores), contra producción o un build local, con cuentas temporales que se borran al acabar. Solo se añade como dependencia de desarrollo. Encontró en su primer día el tiempo real roto, el stock fantasma, la pantalla rota con fechas imposibles y un fallo que había metido yo: tras quitar `app/page.tsx`, al entrar la URL se quedaba en `/` sin pestaña marcada.

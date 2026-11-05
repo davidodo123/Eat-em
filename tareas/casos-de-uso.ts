@@ -820,11 +820,13 @@ async function main() {
         await pb.getByRole("button", { name: /(Rellenar|Rehacer) la semana con IA/ }).click();
         await pb.waitForFunction(() => !/Preparando la semana/.test((document.querySelector("main") as HTMLElement).innerText), null, { timeout: 295_000 });
         await calma(pb);
-        const alerta = pb.getByRole("alert");
+        const alerta = pb.locator("main").last().getByRole("alert"); // hay otro alert vacio, el de Next para lectores de pantalla
         if (await alerta.count()) throw new Error(await alerta.first().innerText());
+        await incluye(pb, /Rehacer la semana con IA|No se pudo generar/);
+        const aviso = pb.locator("main").last().getByRole("status");
+        const nota = (await aviso.count()) ? `${await aviso.first().innerText()} | ` : "";
         await ir(pb, "/dieta");
-        await incluye(pb, /Rehacer la semana con IA/);
-        return (await texto(pb)).match(/HOY.{0,220}/)?.[0];
+        return nota + (await texto(pb)).match(/HOY.{0,220}/)?.[0];
       });
     }
 
