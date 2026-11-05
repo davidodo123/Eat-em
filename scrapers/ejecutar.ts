@@ -21,6 +21,7 @@ import { ahorramas } from "./ahorramas/index.ts";
 import { gadis } from "./gadis/index.ts";
 import { caprabo } from "./caprabo/index.ts";
 import { informeCalidad, type Anterior } from "./comun/calidad.ts";
+import { actividadHttp } from "./comun/http.ts";
 import type { ProductoNormalizado, Scraper } from "./comun/tipos.ts";
 
 const SCRAPERS: Record<string, Scraper> = { carrefour, mercadona, ahorramas, gadis, caprabo };
@@ -44,6 +45,24 @@ if (!scraper) {
 const LOTE = 500;
 const hoy = new Date().toISOString().slice(0, 10);
 const marca = new Date().toISOString().slice(11, 16).replace(":", "");
+// Antes del limite del job (240 min en scrapers.yml; el mas largo tarda ~170 min)
+const LIMITE_MIN = 225;
+let fase = "descarga";
+
+// Si una ejecucion se cuelga, GitHub la corta sin dejar rastro en la base: se cierra antes
+// desde dentro y queda apuntado donde estaba, para poder saber la causa.
+function vigilar(db: SupabaseClient, id: number, inicio: number) {
+  setTimeout(async () => {
+    const donde = fase === "descarga" && actividadHttp.ultima ? `${fase} (${actividadHttp.ultima})` : fase;
+    const error = `Colgada en ${donde} tras ${Math.round((Date.now() - inicio) / 60000)} min`;
+    console.error(error);
+    try {
+      await db.from("scraper_ejecuciones").update({ fin: new Date().toISOString(), estado: "error", error }).eq("id", id);
+    } finally {
+      process.exit(1);
+    }
+  }, LIMITE_MIN * 60_000).unref();
+}
 
 async function main() {
   const db = seco ? null : clienteAdmin();
@@ -55,15 +74,7 @@ async function main() {
       .insert({ supermercado_id: scraper!.id, parametros: { rapido, maxPeticiones: maxPeticiones ?? null, cargado_de: archivoCargar ?? null } })
       .select("id").single());
     ejecucionId = data!.id;
-    // Si GitHub corta el job por tiempo (SIGTERM) la ejecucion no se queda "en_curso" para siempre
-    for (const senal of ["SIGINT", "SIGTERM"] as const) {
-      process.once(senal, async () => {
-        await db.from("scraper_ejecuciones").update({
-          fin: new Date().toISOString(), estado: "error", error: `Cortado (${senal}) tras ${Math.round((Date.now() - inicio) / 60000)} min`,
-        }).eq("id", ejecucionId!);
-        process.exit(1);
-      });
-    }
+    vigilar(db, ejecucionId!, inicio);
   }
 
   // Dato bruto: JSONL comprimido, una linea por pagina descargada
@@ -74,6 +85,7 @@ async function main() {
     const res = archivoCargar ? leerRespaldo(archivoCargar) : await scraper!.ejecutar({
       maxPeticiones, rapido, conocidos: anteriores, guardarRaw: (p) => raw.push(JSON.stringify(p)),
     });
+    fase = "preparacion";
     const respaldo = db && !archivoCargar ? guardarRespaldo(res) : null;
     const rawGz = gzipSync(raw.join("\n"));
     const rawPath = `${scraper!.id}/${hoy}/${marca}.jsonl.gz`;
@@ -104,8 +116,10 @@ async function main() {
         .catch((e: Error) => ({ error: { message: e.message } }));
       if (subida.error) res.avisos.push("No se pudo subir el raw: " + subida.error.message);
 
+      fase = "guardado de productos";
       const ids = await guardarProductos(db, res.productos);
       await guardarPrecios(db, res.productos, ids);
+      fase = "enlace de ingredientes";
       const enlaces = await enlazarIngredientes(db, scraper!.id, ids);
       if (typeof enlaces === "string") res.avisos.push(enlaces);
       else Object.assign(resumen, { enlaces_ingredientes: enlaces });
@@ -114,6 +128,7 @@ async function main() {
       const pocosErrores = res.errores <= Math.max(5, res.peticiones * 0.01);
       const fiable = !informe.alerta && maxPeticiones === undefined && res.completo !== false && pocosErrores;
       if (!pocosErrores) res.avisos.push(`${res.errores} errores HTTP: no se descataloga nada en esta ejecucion`);
+      fase = "descatalogado";
       if (fiable) informe.descatalogados = await descatalogar(db, scraper!.id, res.productos, anteriores);
       else informe.descatalogados = 0;
 
@@ -190,7 +205,12 @@ function clienteAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const clave = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !clave) throw new Error("Faltan NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (o usa --seco)");
-  return createClient(url, clave, { auth: { persistSession: false } });
+  // Sin tiempo maximo, una peticion a Supabase que no responde dejaria colgado el job.
+  // El error de "timeout" lo reintenta reintentar().
+  return createClient(url, clave, {
+    auth: { persistSession: false },
+    global: { fetch: (u, o) => fetch(u, { ...o, signal: o?.signal ?? AbortSignal.timeout(180_000) }) },
+  });
 }
 
 async function cargarCategorias(db: SupabaseClient | null): Promise<Map<string, number>> {

@@ -10,6 +10,9 @@ export interface OpcionesHttp {
   cookies?: boolean;      // guardar y reenviar las cookies de sesion (como un navegador)
 }
 
+// Ultima URL pedida: el vigilante de ejecutar.ts la apunta si la ejecucion se queda colgada
+export const actividadHttp = { ultima: "" };
+
 export class ClienteHttp {
   peticiones = 0;
   errores = 0;
@@ -37,6 +40,7 @@ export class ClienteHttp {
     for (let intento = 0; ; intento++) {
       await this.esperarTurno();
       this.peticiones++;
+      actividadHttp.ultima = url;
       try {
         const galletas = [...this.galletas].map(([k, v]) => `${k}=${v}`).join("; ");
         const r = await fetch(url, {

@@ -8,7 +8,10 @@
 //    "frescos" solo la 1), data-gtm-layer (JSON con id, nombre, marca, precio y la
 //    subcategoria: category y categoryID), data-hasunitweight (al peso), imagen, precio tachado
 //    (strike-through list) si hay oferta, precio vigente (sales) y precio por kg/l/ud.
-//  - sz mayor de 24 se ignora. Cada pagina repite 1 producto patrocinado (se deduplica).
+//  - sz mayor de 24 se ignora. Cada pagina repite productos patrocinados (se deduplica).
+//  - Comprobado el 2026-11-05: el tamano de pagina cambia segun categoria y dia (14 productos
+//    propios + 3 patrocinados en lacteos, 24 en frescos). Avanzar de 24 en 24 se saltaba hasta
+//    un 26 % del catalogo, distinto cada dia: se avanza lo que trae de nuevo cada pagina.
 //  - Sin EAN ni nutricion. Precios de la tienda online (zona de Madrid).
 //  - Si distingue ofertas: precio = tachado, precio_oferta = vigente.
 import { ClienteHttp } from "../comun/http.ts";
@@ -19,10 +22,11 @@ import { decodificar, tituloMarca } from "../comun/texto.ts";
 
 const BASE = "https://www.ahorramas.com";
 const POR_PAGINA = 24;
+const COBERTURA_MINIMA = 0.98; // por debajo no se da el catalogo por completo (no se descataloga)
 // A 1 peticion/s Cloudflare devuelve un desafio (429, cf-mitigated: challenge) tras ~200
 // paginas (2026-10-16). Se va mucho mas despacio: ~400 paginas en ~30 min.
 const INTERVALO_MS = 4000;
-const MAX_PAGINAS = 400; // 9.600 productos por categoria raiz como maximo
+const MAX_PAGINAS = 400; // a 14 productos nuevos por pagina, 5.600 por categoria raiz como maximo
 // Categorias raiz del catalogo (sitemap_2-category.xml). Se excluyen las de temporada,
 // ofertas y novedades: repiten productos de estas.
 export const RAICES = [
@@ -55,25 +59,21 @@ export const ahorramas: Scraper = {
     let completo = true;
 
     for (const raiz of RAICES) {
-      let total: number | null = null;
-      for (let pagina = 0; pagina < MAX_PAGINAS && !http.agotado; pagina++) {
-        const start = pagina * POR_PAGINA;
-        let html: string;
-        try {
-          html = await http.texto(`${BASE}/${raiz}/?start=${start}&sz=${POR_PAGINA}`);
-        } catch (e) {
-          avisos.push(`${raiz} start=${start}: ${(e as Error).message}`);
-          completo = false;
-          break;
-        }
-        total ??= totalProductos(html);
-        const items = parsearListado(html);
-        guardarRaw({ raiz, start, total, items });
-        for (const it of items) vistos.set(it.pid, it);
-        if (items.length === 0 || (total !== null && start + POR_PAGINA >= total)) break;
+      if (http.agotado) break;
+      const r = await recorrerCategoria(async (start) => {
+        const html = await http.texto(`${BASE}/${raiz}/?start=${start}&sz=${POR_PAGINA}`);
+        return { html, parar: http.agotado };
+      }, (start, total, items) => guardarRaw({ raiz, start, total, items }));
+      for (const it of r.items) vistos.set(it.pid, it);
+      totales[raiz] = r.total;
+      if (r.error) {
+        avisos.push(`${raiz} start=${r.error.start}: ${r.error.mensaje}`);
+        completo = false;
+      } else if (r.total !== null && r.unicos < r.total * COBERTURA_MINIMA) {
+        avisos.push(`${raiz}: ${r.unicos} de ${r.total} anunciados, no se descataloga nada en esta ejecucion`);
+        completo = false;
       }
-      totales[raiz] = total;
-      console.log(`  ${raiz}: ${total ?? "?"} anunciados | productos ${vistos.size} | peticiones ${http.peticiones}`);
+      console.log(`  ${raiz}: ${r.total ?? "?"} anunciados, ${r.unicos} vistos | productos ${vistos.size} | peticiones ${http.peticiones}`);
     }
     if (http.bloqueado) avisos.push("Desafio anti-bots de Cloudflare: ejecucion parada, catalogo incompleto");
     else if (http.agotado) avisos.push(`Tope de ${maxPeticiones} peticiones alcanzado: catalogo incompleto`);
@@ -99,6 +99,37 @@ export const ahorramas: Scraper = {
     } satisfies ResultadoScraper;
   },
 };
+
+// Recorre una categoria avanzando lo que trae de nuevo cada pagina: asi no se salta nada aunque
+// la web devuelva menos de POR_PAGINA o repita patrocinados. Termina al ver todos los anunciados,
+// o tras 3 paginas sin nada nuevo.
+export async function recorrerCategoria(
+  pedir: (start: number) => Promise<{ html: string; parar?: boolean }>,
+  alLeer: (start: number, total: number | null, items: ItemAhorramas[]) => void = () => {},
+) {
+  const vistos = new Map<string, ItemAhorramas>();
+  let total: number | null = null, start = 0, sinNuevos = 0;
+  for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+    let leido: { html: string; parar?: boolean };
+    try {
+      leido = await pedir(start);
+    } catch (e) {
+      return { total, unicos: vistos.size, items: [...vistos.values()], error: { start, mensaje: (e as Error).message } };
+    }
+    total ??= totalProductos(leido.html);
+    const items = parsearListado(leido.html);
+    alLeer(start, total, items);
+    let nuevos = 0;
+    for (const it of items) {
+      if (!vistos.has(it.pid)) nuevos++;
+      vistos.set(it.pid, it);
+    }
+    sinNuevos = nuevos ? 0 : sinNuevos + 1;
+    if (leido.parar || !items.length || sinNuevos >= 3 || (total !== null && (vistos.size >= total || start >= total))) break;
+    start += Math.max(1, nuevos);
+  }
+  return { total, unicos: vistos.size, items: [...vistos.values()], error: null };
+}
 
 // "(2.689 productos)" -> 2689
 export function totalProductos(html: string): number | null {

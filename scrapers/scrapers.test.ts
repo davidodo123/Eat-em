@@ -106,6 +106,32 @@ test("ahorramas: listado de categoria", () => {
   assert.equal(adivinarCategoria(patata.ruta), "verdura");
 });
 
+test("ahorramas: el recorrido no se salta productos con paginas cortas y patrocinados", async () => {
+  // Catalogo de 50 productos: cada pagina trae 14 propios desde start + 3 patrocinados repetidos
+  const tarjeta = (pid: number) => `<div class="product" data-pid="${pid}"><a class="link product-name-gtm" >P${pid}</a></div>`;
+  const pedidos: number[] = [];
+  const r = await ahorramas.recorrerCategoria(async (start) => {
+    pedidos.push(start);
+    const propios = Array.from({ length: 14 }, (_, k) => start + k).filter((n) => n < 50);
+    return { html: `<span class="plp-result-count">(50 productos)</span>` + [...propios, 0, 1, 2].map(tarjeta).join("") };
+  });
+  assert.equal(r.total, 50);
+  assert.equal(r.unicos, 50);
+  assert.deepEqual(new Set(r.items.map((i) => Number(i.pid))), new Set(Array.from({ length: 50 }, (_, k) => k)));
+  assert.equal(r.error, null);
+  assert.ok(pedidos.length <= 5, `demasiadas paginas: ${pedidos}`);
+});
+
+test("ahorramas: un error de red se devuelve con lo leido hasta entonces", async () => {
+  let n = 0;
+  const r = await ahorramas.recorrerCategoria(async () => {
+    if (n++) throw new Error("HTTP 500");
+    return { html: `<span class="plp-result-count">(50 productos)</span><div class="product" data-pid="7"></div>` };
+  });
+  assert.equal(r.unicos, 1);
+  assert.deepEqual(r.error, { start: 1, mensaje: "HTTP 500" });
+});
+
 test("ahorramas: docena", () => {
   const p = ahorramas.normalizar({
     pid: "1", nombre: "Huevos L Ahorramas 12 uds", marca: null, ruta: [], categoria: null, alPeso: false,
