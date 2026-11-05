@@ -23,5 +23,6 @@ test("cuadricula del mes", () => {
 test("fechas validas", () => {
   assert.ok(esFecha("2026-02-28"));
   assert.ok(!esFecha("2026-02-30"));
+  assert.ok(!esFecha("2026-13-45"));
   assert.ok(!esFecha("17/10/2026"));
 });

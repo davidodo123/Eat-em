@@ -217,6 +217,7 @@ async function main() {
     await caso("A8", "Una pagina que no existe da 404, no un error", async () => {
       const r = await pa.goto(`${BASE}/no-existe-esto`);
       cierto(r?.status() === 404, String(r?.status()));
+      await ve(pa, "Esta página no existe");
     });
 
     // ---- Hogar ----
@@ -402,8 +403,7 @@ async function main() {
       await calma(pb);
       await nav2.getByRole("link", { name: "Lista" }).click();
       await pb.waitForURL("**/lista");
-      // La lista guardada puede tener hasta 30 s: se comprueba que se pone al dia sola
-      await pb.getByText("Galletas mientras no miras").first().waitFor({ timeout: 45_000 });
+      await pb.getByText("Galletas mientras no miras").first().waitFor({ timeout: ESPERA });
     });
     await caso("C4", "Lo que compra una persona aparece en la despensa de la otra", async () => {
       await ir(pb, "/lista");
@@ -573,7 +573,7 @@ async function main() {
       cierto(dias >= 1, "sin puntos");
     });
     await caso("T5", "Fecha rara en la direccion: va a hoy, no rompe", async () => {
-      for (const d of ["xx", "2026-13-45", "<b>"]) {
+      for (const d of ["xx", "2026-13-45", "2026-02-31", "<b>"]) {
         const r = await pc.goto(`${BASE}/dieta?d=${encodeURIComponent(d)}`);
         cierto(r?.status() === 200, `${d}: ${r?.status()}`);
         await incluye(pc, "Dieta");

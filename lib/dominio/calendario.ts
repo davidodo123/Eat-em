@@ -5,7 +5,8 @@ export type DiaSemana = (typeof DIAS_SEMANA)[number];
 const fecha = (iso: string) => new Date(`${iso}T12:00:00Z`);
 const texto = (d: Date) => d.toISOString().slice(0, 10);
 
-export const esFecha = (iso: string) => /^\d{4}-\d{2}-\d{2}$/.test(iso) && texto(fecha(iso)) === iso;
+// Un mes o dia imposibles ("2026-13-45") dan una fecha invalida y toISOString() lanzaria una excepcion
+export const esFecha = (iso: string) => /^\d{4}-\d{2}-\d{2}$/.test(iso) && !Number.isNaN(fecha(iso).getTime()) && texto(fecha(iso)) === iso;
 
 export function sumarDias(iso: string, n: number): string {
   const d = fecha(iso);
