@@ -54,6 +54,11 @@ async function abrir(nav: Browser, c: Cuenta | null, ancho = 390): Promise<Omit<
   const page = await ctx.newPage();
   const errores: string[] = [];
   page.on("dialog", (d) => d.accept());
+  abiertas.set(page, 0);
+  page.on("request", () => abiertas.set(page, (abiertas.get(page) ?? 0) + 1));
+  const terminada = () => abiertas.set(page, Math.max(0, (abiertas.get(page) ?? 0) - 1));
+  page.on("requestfinished", terminada);
+  page.on("requestfailed", terminada);
   page.on("pageerror", (e) => errores.push(`${new URL(page.url()).pathname}: ${e.message.slice(0, 200)}`));
   page.on("response", (r) => { if (r.status() >= 500) errores.push(`${r.status()} ${r.url().slice(0, 120)}`); });
   if (c) await entrar(page, c);
@@ -71,8 +76,17 @@ async function entrar(page: Page, c: Cuenta, ruta = "/entrar") {
 
 const ir = (p: Page, r: string) => p.goto(BASE + r, { waitUntil: "networkidle" });
 const ve = (p: Page, t: string | RegExp) => p.getByText(t).first().waitFor({ timeout: ESPERA });
-// Espera a que terminen la accion y la recarga en curso (el tiempo real va por websocket y no cuenta)
-const calma = async (p: Page) => { await p.waitForTimeout(400); await p.waitForLoadState("networkidle"); };
+// Espera a que terminen la accion y la recarga en curso: ninguna peticion abierta durante 600 ms
+// (waitForLoadState no sirve: solo mira la ultima navegacion. El tiempo real va por websocket y no cuenta)
+const abiertas = new WeakMap<Page, number>();
+const calma = async (p: Page) => {
+  await p.waitForTimeout(300);
+  let quieto = 0;
+  for (let t = 0; t < ESPERA && quieto < 600; t += 100) {
+    quieto = (abiertas.get(p) ?? 0) > 0 ? 0 : quieto + 100;
+    await p.waitForTimeout(100);
+  }
+};
 const texto = async (p: Page) => {
   await p.waitForLoadState("networkidle");
   return (await p.locator("main").last().innerText()).replace(/\s+/g, " ");
@@ -155,6 +169,14 @@ async function main() {
       await x.page.fill("#contrasena", ca.password);
       await x.page.getByRole("button", { name: "Entrar", exact: true }).click();
       await x.page.waitForURL("**/dieta", { timeout: ESPERA });
+      await x.page.context().close();
+    });
+    await caso("A9", "Al entrar sin destino queda en /lista con su pestana marcada", async () => {
+      const x = await abrir(nav, null);
+      await entrar(x.page, ca);
+      await x.page.waitForURL("**/lista", { timeout: ESPERA });
+      const activa = await x.page.getByRole("navigation", { name: "Principal" }).locator('[aria-current="page"]').innerText();
+      cierto(activa === "Lista", activa);
       await x.page.context().close();
     });
     await caso("A4", "Un enlace de entrada no puede mandar a otra web", async () => {
@@ -681,6 +703,7 @@ async function main() {
     });
     await caso("P8", "Enfermedad marcada: deriva", async () => {
       await ir(pb, "/perfil");
+      await pb.getByText("Situaciones médicas").click();
       await pb.locator('input[name="condiciones_medicas"]').first().check();
       await pb.getByRole("button", { name: "Guardar" }).click();
       await calma(pb);
@@ -786,8 +809,11 @@ async function main() {
         await ir(pb, "/nutriem");
         await pb.getByLabel("Pregunta para Nutri-em").fill("¿Qué desayuno me aguanta hasta mediodía?");
         await pb.getByRole("button", { name: /Enviar/ }).click();
-        await pb.waitForFunction(() => (document.querySelector("main") as HTMLElement).innerText.length > 300, null, { timeout: 120_000 });
-        return (await texto(pb)).slice(40, 190);
+        await ve(pb, "Pensando…");
+        await pb.getByText("Pensando…").first().waitFor({ state: "detached", timeout: 120_000 });
+        const t = await texto(pb);
+        cierto(t.length > 150 && !/No se pudo|error/i.test(t), t.slice(0, 200));
+        return t.slice(40, 220);
       });
       await caso("I2", "Rellenar la semana con IA con los objetivos del perfil", async () => {
         await ir(pb, "/dieta");

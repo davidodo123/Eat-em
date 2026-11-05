@@ -11,7 +11,7 @@ export function BotonGenerar({ semana, hayPlan, iaLista }: { semana: string; hay
       <button type="submit" disabled={generando || !iaLista}
         className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-borde/40 disabled:opacity-60">
         <span className="flex-1">
-          <span className="block font-medium">{generando ? "Preparando la semana… (≈1 min)" : hayPlan ? "Rehacer la semana con IA" : "Rellenar la semana con IA"}</span>
+          <span className="block font-medium">{generando ? "Preparando la semana… (1-3 min)" : hayPlan ? "Rehacer la semana con IA" : "Rellenar la semana con IA"}</span>
           <span className="block text-xs text-texto-suave">{iaLista ? "Según tu perfil, tus objetivos y lo que hay en casa" : "La IA aún no está configurada"}</span>
         </span>
       </button>

@@ -15,6 +15,8 @@ export interface EstadoDieta { error?: string; aviso?: string; ok?: boolean }
 
 // Fichas que acompanan siempre a la generacion del plan (ademas de las de salvaguarda)
 const FICHAS_PLAN = ["FICHA-003", "FICHA-012", "FICHA-013"];
+const DIAS_POR_TANDA = 4; // el modelo gratuito admite ~20 peticiones por minuto
+const TIEMPO_GENERAR_MS = 270_000; // antes de los 300 s de maxDuration, para que de tiempo a guardar
 
 export async function generarSemana(_previo: EstadoDieta, datos: FormData): Promise<EstadoDieta> {
   const pedida = String(datos.get("semana") ?? "");
@@ -61,7 +63,9 @@ export async function generarSemana(_previo: EstadoDieta, datos: FormData): Prom
   const dias: ReturnType<typeof filasDelDia>[] = [];
   const fallidos: string[] = [];
   const nombresPrevios: string[] = [];
-  for (const dia of DIAS) {
+  const hasta = Date.now() + TIEMPO_GENERAR_MS;
+
+  const generar = (dia: string) => {
     const mensaje = mensajeUsuario({
       perfil: { edad: filtro.edad, sexo: perfil.sexo!, objetivo: perfil.objetivo!, actividad: perfil.actividad!, comidas_dia: s.comidas_dia,
         dieta_tipo: dieta, alergias: s.alergias ?? [], exclusiones: s.exclusiones ?? [] },
@@ -73,22 +77,38 @@ export async function generarSemana(_previo: EstadoDieta, datos: FormData): Prom
       tarea: `Genera el plan del ${dia} con ${s.comidas_dia} comidas.` +
         (nombresPrevios.length ? ` Varía respecto a lo ya planificado esta semana: ${nombresPrevios.slice(-12).join("; ")}.` : ""),
     });
-    try {
-      // La peticion la redacta la app (sin texto libre del usuario) y el perfil ya paso el prefiltro
-      const r = await generarDia(modelo, mensaje, ctx, 2, { sinRiesgo: true });
+    // La peticion la redacta la app (sin texto libre del usuario) y el perfil ya paso el prefiltro
+    return Promise.race([
+      generarDia(modelo, mensaje, ctx, 2, { sinRiesgo: true }),
+      new Promise<never>((_, mal) => setTimeout(() => mal(new Error("sin tiempo")), Math.max(0, hasta - Date.now()))),
+    ]);
+  };
+
+  // Por tandas en paralelo: uno a uno, 7 dias con un modelo gratuito pasan de los 5 min de la
+  // funcion y se perderia todo. Si se acaba el tiempo o el cupo se guarda lo que haya y se avisa.
+  for (let k = 0; k < DIAS.length; k += DIAS_POR_TANDA) {
+    const tanda = DIAS.slice(k, k + DIAS_POR_TANDA);
+    if (Date.now() >= hasta) { fallidos.push(...DIAS.slice(k)); break; }
+    const resultados = await Promise.allSettled(tanda.map(generar));
+    let sinCupo: ErrorIA | null = null;
+    for (const [j, resultado] of resultados.entries()) {
+      const dia = tanda[j];
+      if (resultado.status === "rejected") {
+        fallidos.push(dia);
+        if (resultado.reason instanceof ErrorIA && resultado.reason.cupo) sinCupo = resultado.reason;
+        continue;
+      }
+      const r = resultado.value;
       if (r.respuesta?.estado === "derivar_profesional") return { aviso: r.respuesta.mensaje ?? "Te recomendamos consultar con un profesional sanitario." };
       if (r.errores.length || !r.respuesta?.plan) { fallidos.push(dia); continue; }
       const filas = filasDelDia({ ...r.respuesta.plan, dia }, todos);
       dias.push(filas);
       nombresPrevios.push(...filas.map((f) => f.nombre));
-    } catch (e) {
-      fallidos.push(dia);
-      // Sin cupo no merece la pena seguir: se guarda lo que haya y se avisa
-      if (e instanceof ErrorIA && e.cupo) {
-        fallidos.push(...DIAS.slice(DIAS.indexOf(dia) + 1));
-        if (!dias.length) return { error: mensajeErrorIA(e) };
-        break;
-      }
+    }
+    if (sinCupo) {
+      fallidos.push(...DIAS.slice(k + DIAS_POR_TANDA));
+      if (!dias.length) return { error: mensajeErrorIA(sinCupo) };
+      break;
     }
   }
   if (!dias.length) return { error: "No se pudo generar ningún día válido. Inténtalo más tarde." };
