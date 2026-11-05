@@ -104,6 +104,17 @@ assert.deepEqual(await stock(), { arroz_blanco: 780, pechuga_pollo: 600 });
 await como(B, () => q(`SELECT registrar_consumo($1,'extra',NULL,'merienda','2026-10-14',$2,'Tortitas')`,
   [grupo.id, JSON.stringify([{ ingrediente_id: "arroz_blanco", cantidad: 30 }])]));
 assert.deepEqual(await stock(), { arroz_blanco: 750, pechuga_pollo: 600 });
+// Consumir mas de lo que hay y deshacer: devuelve lo que salio, no crea stock de la nada
+const exceso = async (cantidad) => (await como(A, () => q(`SELECT registrar_consumo($1,'extra',NULL,'merienda','2026-10-15',$2,'Exceso') AS id`,
+  [grupo.id, JSON.stringify([{ ingrediente_id: "arroz_blanco", cantidad }])])))[0].id;
+const deshacer = (id) => como(A, () => q("SELECT deshacer_consumo($1)", [id]));
+const conStock = await exceso(1000);
+assert.equal((await stock()).arroz_blanco, 0);
+const sinStock = await exceso(50);
+await deshacer(sinStock);
+assert.equal((await stock()).arroz_blanco, 0);
+await deshacer(conStock);
+assert.equal((await stock()).arroz_blanco, 750);
 console.log("OK consumo: hecha, editada, re-registro, saltada y extra");
 
 // 6. Lista: item de pollo, marcar comprado -> pasa al inventario

@@ -57,5 +57,6 @@ export async function deshacerComida(consumoId: number): Promise<{ error?: strin
   if (error) return { error: "No se pudo deshacer." };
   revalidatePath("/dieta");
   revalidatePath("/despensa");
+  revalidatePath("/lista");
   return {};
 }

@@ -16,6 +16,7 @@
     "scraper": "tsx --env-file-if-exists=.env.local scrapers/ejecutar.ts",
     "off": "tsx --env-file-if-exists=.env.local scrapers/off/importar.ts",
     "tiendas": "tsx --env-file-if-exists=.env.local scripts/cargar-tiendas.ts",
+    "casos": "tsx --env-file-if-exists=.env.local tareas/casos-de-uso.ts",
     "eval:ia": "tsx --env-file-if-exists=.env.local tareas/evaluar-ia.ts",
     "ia:embeddings": "tsx --env-file-if-exists=.env.local tareas/embeddings-fichas.ts",
     "test": "tsx --test lib/**/*.test.ts scrapers/**/*.test.ts"
@@ -39,6 +40,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "playwright-core": "^1.64.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3"
