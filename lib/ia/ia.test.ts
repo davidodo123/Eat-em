@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { prefiltro } from "./prefiltro.ts";
-import { calcularObjetivos } from "./objetivos.ts";
+import { objetivosDeFila, calcularObjetivos } from "./objetivos.ts";
 import { edad, type PerfilSalud } from "./perfil.ts";
 import { leerFormularioSalud } from "./formulario.ts";
 
@@ -74,4 +74,20 @@ test("objetivos: Mifflin-St Jeor, ajuste y minimos", () => {
 
   const g = calcularObjetivos({ sexo: "mujer", edad: 25, altura_cm: 165, peso_kg: 60, actividad: "alto", objetivo: "ganar_musculo" });
   assert.equal(g.kcal, Math.round((10 * 60 + 6.25 * 165 - 125 - 161) * 1.725 * 1.07 / 10) * 10);
+});
+
+test("objetivos de la fila del perfil: salvaguardas", () => {
+  const fila = {
+    consentimiento_salud_en: "2026-11-01T00:00:00Z", sexo: "hombre" as const, fecha_nacimiento: "1994-03-10", altura_cm: "176", peso_kg: "78",
+    actividad: "moderado" as const, objetivo: "mantenimiento" as const, embarazo: false, lactancia: false, condiciones_medicas: [],
+  };
+  const hoy = new Date("2026-11-05T12:00:00Z");
+  const r = objetivosDeFila(fila, hoy);
+  assert.ok(typeof r === "object");
+  assert.equal(r.proteina_g, 140);
+  assert.equal(objetivosDeFila(null, hoy), "falta_perfil");
+  assert.equal(objetivosDeFila({ ...fila, consentimiento_salud_en: null }, hoy), "falta_perfil");
+  assert.equal(objetivosDeFila({ ...fila, peso_kg: null }, hoy), "falta_perfil");
+  assert.equal(objetivosDeFila({ ...fila, embarazo: true }, hoy), "derivar");
+  assert.equal(objetivosDeFila({ ...fila, fecha_nacimiento: "2012-01-01" }, hoy), "derivar");
 });

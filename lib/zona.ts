@@ -6,7 +6,7 @@ import type { TiendaCerca } from "@/lib/dominio/cadenas";
 export const CON_CATALOGO = ["carrefour", "mercadona", "ahorramas", "gadis", "caprabo"];
 export const NOMBRE_CADENA: Record<string, string> = {
   mercadona: "Mercadona", carrefour: "Carrefour", ahorramas: "Ahorramás", gadis: "Gadis", caprabo: "Caprabo",
-  dia: "Dia", lidl: "Lidl", aldi: "Aldi", alcampo: "Alcampo", eroski: "Eroski", consum: "Consum",
+  dia: "Dia", lidl: "Lidl", aldi: "Aldi", alcampo: "Alcampo", eroski: "Eroski", consum: "Consum", coviran: "Covirán",
 };
 
 export interface Zona {

@@ -10,6 +10,7 @@ const texto = Figtree({ subsets: ["latin"], weight: ["400", "500", "600", "700"]
 export const metadata: Metadata = {
   title: "Eat-em",
   description: "Tu dieta, tu despensa y tu lista de la compra, sincronizadas.",
+  icons: { icon: "/icon.svg" },
   appleWebApp: { capable: true, title: "Eat-em", statusBarStyle: "default" },
 };
 

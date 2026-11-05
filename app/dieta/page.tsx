@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { crearClienteServidor, usuarioActual } from "@/lib/supabase/server";
+import { objetivosDeFila } from "@/lib/ia/objetivos";
 import { formatearCantidad } from "@/lib/dominio/cantidad";
 import type { UnidadBase } from "@/lib/dominio/formato";
 import { cuadriculaMes, diaSemana, esFecha, lunesDeLaSemana, mismoMes, numeroDia, semanaDe, sumarDias } from "@/lib/dominio/calendario";
@@ -36,12 +37,13 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
   const supabase = await crearClienteServidor();
   const { data: u } = await usuarioActual();
   // Dietas con sus comidas en una sola consulta, a la vez que el resto
-  const [{ data: dietas }, { data: ings }, { data: consumos }] = await Promise.all([
+  const [{ data: dietas }, { data: ings }, { data: consumos }, { data: salud }] = await Promise.all([
     supabase.from("dietas")
       .select("id, semana_inicio, objetivos, dieta_comidas (id, dieta_id, dia, tipo, orden, nombre, preparacion, dieta_comida_ingredientes (ingrediente_id, cantidad))")
       .eq("usuario_id", u.user!.id).eq("estado", "activa").gte("semana_inicio", rejilla[0]).lte("semana_inicio", rejilla.at(-1)!),
     supabase.from("ingredientes").select("id, nombre, unidad").eq("activo", true).order("nombre"),
     dia === hoy ? supabase.from("consumos").select("id, dieta_comida_id, estado, nombre, tipo").eq("usuario_id", u.user!.id).eq("fecha", hoy) : Promise.resolve({ data: [] }),
+    supabase.from("perfiles_salud").select("consentimiento_salud_en, sexo, fecha_nacimiento, altura_cm, peso_kg, actividad, objetivo, embarazo, lactancia, condiciones_medicas").eq("usuario_id", u.user!.id).maybeSingle(),
   ]);
   const ing = new Map((ings ?? []).map((i) => [i.id, i]));
   const opciones = (ings ?? []).map((i) => ({ id: i.id, nombre: i.nombre, unidad: i.unidad }));
@@ -58,7 +60,9 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
 
   const delDia = porFecha.get(dia) ?? [];
   const consumo = new Map((consumos ?? []).filter((c) => c.dieta_comida_id).map((c) => [c.dieta_comida_id as number, c]));
-  const objetivos = (dietas ?? []).find((d) => d.semana_inicio === lunesDeLaSemana(dia))?.objetivos as { kcal: number; proteina_g: number } | null;
+  // Los del plan de esa semana (generado con IA) y, si es un plan a mano o no hay, los del perfil
+  const delPlan = (dietas ?? []).find((d) => d.semana_inicio === lunesDeLaSemana(dia))?.objetivos as { kcal: number; proteina_g: number } | null;
+  const objetivos = delPlan ?? objetivosDeFila(salud);
   const lunes = lunesDeLaSemana(dia);
   const enlace = (d: string, v = vista) => `/dieta?d=${d}${v === "mes" ? "&v=mes" : ""}`;
   const anterior = vista === "mes" ? `${sumarDias(`${dia.slice(0, 7)}-01`, -1).slice(0, 7)}-01` : sumarDias(dia, -7);
@@ -69,7 +73,9 @@ export default async function Dieta({ searchParams }: { searchParams: Promise<{ 
   return (
     <Pantalla>
       <Cabecera titulo="Dieta"
-        sub={objetivos ? `Objetivo: ${objetivos.kcal.toLocaleString("es-ES")} kcal · ${objetivos.proteina_g} g de proteína al día` : <Link href="/perfil" className="text-marca">Completa tu perfil para calcular tus objetivos</Link>}
+        sub={objetivos === "falta_perfil" ? <Link href="/perfil" className="text-marca">Completa tu perfil para calcular tus objetivos</Link>
+          : objetivos === "derivar" ? undefined
+          : `Objetivo: ${objetivos.kcal.toLocaleString("es-ES")} kcal · ${objetivos.proteina_g} g de proteína al día`}
         accion={
           <nav aria-label="Vista" className="grid grid-cols-2 caja p-0.5 text-sm font-semibold">
             {(["semana", "mes"] as const).map((v) => (
